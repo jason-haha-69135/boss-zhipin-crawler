@@ -1,0 +1,788 @@
+{
+  "evaluation_mode": "llm_as_a_judge_atomic_9_fields",
+  "extract_model": "gemini-3.8-flash",
+  "judge_model": "gemini-3.8-flash",
+  "qualified_total": 3,
+  "qualified_valid_and_pii_safe": 3,
+  "qualified_mean_score_10": 10.0,
+  "qualified_mean_score": 1.0,
+  "qualified_mean_entity_match_rate": 1.0,
+  "qualified_zero_hallucination_samples": 3,
+  "per_field_mean_scores_10": {
+    "candidate_title": 10.0,
+    "years_of_experience": 10.0,
+    "education_summary": 10.0,
+    "target_cities": 10.0,
+    "industry_background": 10.0,
+    "core_skills": 10.0,
+    "experience_highlights": 10.0,
+    "inferred_salary_floor": 10.0,
+    "inferred_welfare_prefs": 10.0
+  },
+  "by_extension_summary": {
+    ".docx": {
+      "sample_count": 1,
+      "mean_score_10": 10.0
+    },
+    ".md": {
+      "sample_count": 1,
+      "mean_score_10": 10.0
+    },
+    ".pdf": {
+      "sample_count": 1,
+      "mean_score_10": 10.0
+    }
+  },
+  "disqualified_total": 20,
+  "disqualified_correctly_rejected": 20,
+  "disqualified_rejection_accuracy": 1.0,
+  "qualified_details": [
+    {
+      "id": "QUAL-001",
+      "file_name": "QUAL-001_retail_regional_supervisor.pdf",
+      "extension": ".pdf",
+      "industry_category": "零售与连锁运营",
+      "file_validation_passed": true,
+      "file_validation_code": "OK",
+      "extract_latency_s": 11.08,
+      "judge_latency_s": 11.91,
+      "ground_truth": {
+        "candidate_title": "资深零售区域运营 / 店面督导",
+        "years_of_experience": "6年时尚连锁零售门店督导与区域团队管理经验",
+        "education_summary": "本科 · 市场营销",
+        "target_cities": [
+          "深圳",
+          "广州"
+        ],
+        "industry_background": [
+          "服装/鞋帽零售",
+          "时尚连锁品牌",
+          "百货/购物中心"
+        ],
+        "core_skills": [
+          "多店巡店督导",
+          "SOP标准化落地",
+          "商品陈列管理",
+          "店长赋能培训",
+          "门店损益与连带率提升",
+          "会员私域复购运营"
+        ],
+        "experience_highlights": [
+          "统筹华南区18家直营门店日常营运，2025年实现区域年度GMV达8600万元，同比增长24%",
+          "主导门店SOP标准化与连带率专项改进，将区域平均连带率从1.65提升至2.18",
+          "搭建店长分级训战体系，累计培养储备店长15名，核心员工年度流失率降低18%"
+        ],
+        "inferred_salary_floor": "1.5w",
+        "inferred_welfare_prefs": [
+          "五险一金",
+          "周末双休",
+          "绩效年终奖"
+        ]
+      },
+      "extracted_profile": {
+        "candidate_title": "资深零售区域运营 / 店面督导",
+        "years_of_experience": "6年时尚连锁零售门店督导与区域团队管理经验",
+        "education_summary": "本科 · 市场营销",
+        "target_cities": [
+          "深圳",
+          "广州"
+        ],
+        "industry_background": [
+          "时尚女装连锁",
+          "快时尚鞋帽零售",
+          "购物中心/百货零售"
+        ],
+        "core_skills": [
+          "多店巡店督导",
+          "SOP标准化落地",
+          "商品陈列管理",
+          "店长赋能培训",
+          "门店损益与连带率提升",
+          "会员私域复购运营"
+        ],
+        "experience_highlights": [
+          "统筹华南区18家直营门店日常营运，2025年实现区域年度GMV达8600万元，同比增长24%",
+          "主导门店SOP标准化与连带率专项改进，将区域平均连带率从1.65提升至2.18，VIP会员季度复购率提升15%",
+          "搭建店长分级训战体系，累计培养储备店长15名，核心员工年度流失率降低18%",
+          "负责10家购物中心门店视觉陈列焕新与库存周转监控，季末滞销款清仓消化率达92%"
+        ],
+        "inferred_salary_floor": "1.5w",
+        "inferred_welfare_prefs": [
+          "五险一金",
+          "周末双休",
+          "绩效年终奖"
+        ]
+      },
+      "judge_model": "gemini-3.8-flash",
+      "schema_and_pii_valid": true,
+      "violations": [],
+      "overall_score_10": 10.0,
+      "overall_score": 1.0,
+      "entity_match_rate": 1.0,
+      "entity_mismatch_fields": [],
+      "hallucination_field_count": 0,
+      "hallucinated_fields": [],
+      "overall_comment": "待测模型表现极其优异，全部9个字段与基准事实100%对齐。所有核心数字、实体、量化指标均精确无误，且有效过滤了原文混杂的敏感手机号，无任何幻觉编造，提取质量达到满分水准。",
+      "field_scores": {
+        "candidate_title": 10.0,
+        "years_of_experience": 10.0,
+        "education_summary": 10.0,
+        "target_cities": 10.0,
+        "industry_background": 10.0,
+        "core_skills": 10.0,
+        "experience_highlights": 10.0,
+        "inferred_salary_floor": 10.0,
+        "inferred_welfare_prefs": 10.0
+      },
+      "field_evaluations": [
+        {
+          "field_name": "candidate_title",
+          "ground_truth_value": "\"资深零售区域运营 / 店面督导\"",
+          "extracted_value": "\"资深零售区域运营 / 店面督导\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "职位职级与职能方向与基准完全一致，字符级匹配，无任何虚构与偏差。"
+        },
+        {
+          "field_name": "years_of_experience",
+          "ground_truth_value": "\"6年时尚连锁零售门店督导与区域团队管理经验\"",
+          "extracted_value": "\"6年时尚连锁零售门店督导与区域团队管理经验\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "工作年限6年及行业与管理范畴表述与基准完全一致，核心数字准确无误。"
+        },
+        {
+          "field_name": "education_summary",
+          "ground_truth_value": "\"本科 · 市场营销\"",
+          "extracted_value": "\"本科 · 市场营销\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "最高学历等级（本科）与专业名称（市场营销）与基准完全一致，准确无误。"
+        },
+        {
+          "field_name": "target_cities",
+          "ground_truth_value": "[\"深圳\", \"广州\"]",
+          "extracted_value": "[\"深圳\", \"广州\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "目标城市均为市级标准城市，集合完全匹配，且无敏感详细地址泄露。"
+        },
+        {
+          "field_name": "industry_background",
+          "ground_truth_value": "[\"服装/鞋帽零售\", \"时尚连锁品牌\", \"百货/购物中心\"]",
+          "extracted_value": "[\"时尚女装连锁\", \"快时尚鞋帽零售\", \"购物中心/百货零售\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "细分行业标签与原文及基准完全语义对齐，忠实反映候选人过往两段零售经历。"
+        },
+        {
+          "field_name": "core_skills",
+          "ground_truth_value": "[\"多店巡店督导\", \"SOP标准化落地\", \"商品陈列管理\", \"店长赋能培训\", \"门店损益与连带率提升\", \"会员私域复购运营\"]",
+          "extracted_value": "[\"多店巡店督导\", \"SOP标准化落地\", \"商品陈列管理\", \"店长赋能培训\", \"门店损益与连带率提升\", \"会员私域复购运营\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "核心技能标签集合与基准完全一致，完整覆盖专业技能与运营管理能力。"
+        },
+        {
+          "field_name": "experience_highlights",
+          "ground_truth_value": "[\"统筹华南区18家直营门店日常营运，2025年实现区域年度GMV达8600万元，同比增长24%\", \"主导门店SOP标准化与连带率专项改进，将区域平均连带率从1.65提升至2.18\", \"搭建店长分级训战体系，累计培养储备店长15名，核心员工年度流失率降低18%\"]",
+          "extracted_value": "[\"统筹华南区18家直营门店日常营运，2025年实现区域年度GMV达8600万元，同比增长24%\", \"主导门店SOP标准化与连带率专项改进，将区域平均连带率从1.65提升至2.18，VIP会员季度复购率提升15%\", \"搭建店长分级训战体系，累计培养储备店长15名，核心员工年度流失率降低18%\", \"负责10家购物中心门店视觉陈列焕新与库存周转监控，季末滞销款清仓消化率达92%\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "完全覆盖基准中所有量化关键业绩且数字100%准确；额外补充的一条业绩完全忠于原文，无幻觉与张冠李戴。"
+        },
+        {
+          "field_name": "inferred_salary_floor",
+          "ground_truth_value": "\"1.5w\"",
+          "extracted_value": "\"1.5w\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "月薪底线提取数值与基准标注完全一致（15k对应1.5w），数值准确。"
+        },
+        {
+          "field_name": "inferred_welfare_prefs",
+          "ground_truth_value": "[\"五险一金\", \"周末双休\", \"绩效年终奖\"]",
+          "extracted_value": "[\"五险一金\", \"周末双休\", \"绩效年终奖\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "福利期望标签与基准完全一致，完整提取了候选人的核心福利需求。"
+        }
+      ]
+    },
+    {
+      "id": "QUAL-002",
+      "file_name": "QUAL-002_catering_store_manager.docx",
+      "extension": ".docx",
+      "industry_category": "餐饮与生活服务",
+      "file_validation_passed": true,
+      "file_validation_code": "OK",
+      "extract_latency_s": 11.55,
+      "judge_latency_s": 17.6,
+      "ground_truth": {
+        "candidate_title": "连锁餐饮营运店长",
+        "years_of_experience": "8年连锁餐饮与精品茶饮门店全盘营运管理经验",
+        "education_summary": "大专 · 连锁经营管理",
+        "target_cities": [
+          "上海",
+          "杭州"
+        ],
+        "industry_background": [
+          "连锁餐饮",
+          "新式茶饮/咖啡",
+          "商业综合体餐饮"
+        ],
+        "core_skills": [
+          "门店P&L损益管控",
+          "食品安全QSC稽核",
+          "高峰期排班与人效优化",
+          "食材损耗率控制",
+          "美团大众点评口碑运营"
+        ],
+        "experience_highlights": [
+          "管理上海陆家嘴A级旗舰店（月均营收180万+），连续4个季度蝉联华东区单店坪效第一",
+          "推行数字化订货与动态备料机制，将门店食材综合损耗率由4.2%压降至1.8%",
+          "优化灵活用工与高峰期动线排班，门店人效提升22%，大众点评保持4.9分星级口碑"
+        ],
+        "inferred_salary_floor": "1.4w",
+        "inferred_welfare_prefs": [
+          "五险一金",
+          "包吃住或房补",
+          "门店分红激励"
+        ]
+      },
+      "extracted_profile": {
+        "candidate_title": "连锁餐饮营运店长",
+        "years_of_experience": "8年连锁餐饮与新式茶饮门店全盘营运管理经验",
+        "education_summary": "大专 · 连锁经营管理",
+        "target_cities": [
+          "上海",
+          "杭州"
+        ],
+        "industry_background": [
+          "连锁餐饮",
+          "新式茶饮/轻食",
+          "火锅餐饮"
+        ],
+        "core_skills": [
+          "门店P&L损益管控",
+          "食品安全QSC稽核",
+          "人效优化与高峰排班",
+          "食材损耗率控制",
+          "数字化订货与动态备料",
+          "新店筹备与开业带教"
+        ],
+        "experience_highlights": [
+          "统筹管理上海核心商圈A级旗舰店（团队32人，月均营收180万+），连续4个季度蝉联华东区单店坪效第一，大众点评保持4.9分高口碑。",
+          "推行数字化订货与动态备料机制，将门店食材综合损耗率从4.2%大幅降至1.8%，年化节约运营成本逾35万元。",
+          "优化灵活用工机制与高峰期出品动线排班，推动门店人效显著提升22%；此前主导3家连锁火锅新店开业，首月翻台率均突破4.5轮/天。"
+        ],
+        "inferred_salary_floor": "1.4w",
+        "inferred_welfare_prefs": [
+          "五险一金",
+          "包吃住或住房补贴",
+          "门店分红/业绩激励"
+        ]
+      },
+      "judge_model": "gemini-3.8-flash",
+      "schema_and_pii_valid": true,
+      "violations": [],
+      "overall_score_10": 10.0,
+      "overall_score": 1.0,
+      "entity_match_rate": 1.0,
+      "entity_mismatch_fields": [],
+      "hallucination_field_count": 0,
+      "hallucinated_fields": [],
+      "overall_comment": "整份画像提取质量极其出色。全字段硬实体与关键量化数字（工作年限、学历等级、核心指标数据）100%吻合，亮点挖掘充分且零幻觉，无任何隐私泄露。",
+      "field_scores": {
+        "candidate_title": 10.0,
+        "years_of_experience": 10.0,
+        "education_summary": 10.0,
+        "target_cities": 10.0,
+        "industry_background": 10.0,
+        "core_skills": 10.0,
+        "experience_highlights": 10.0,
+        "inferred_salary_floor": 10.0,
+        "inferred_welfare_prefs": 10.0
+      },
+      "field_evaluations": [
+        {
+          "field_name": "candidate_title",
+          "ground_truth_value": "\"连锁餐饮营运店长\"",
+          "extracted_value": "\"连锁餐饮营运店长\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "职位职级与职能方向提取与基准完全一致，无虚构头衔。"
+        },
+        {
+          "field_name": "years_of_experience",
+          "ground_truth_value": "\"8年连锁餐饮与精品茶饮门店全盘营运管理经验\"",
+          "extracted_value": "\"8年连锁餐饮与新式茶饮门店全盘营运管理经验\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "8年工作年限完全一致，新式茶饮与精品茶饮语义等价且忠于原文经历。"
+        },
+        {
+          "field_name": "education_summary",
+          "ground_truth_value": "\"大专 · 连锁经营管理\"",
+          "extracted_value": "\"大专 · 连锁经营管理\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "最高学历大专与专业连锁经营管理完全匹配，实体准确无误。"
+        },
+        {
+          "field_name": "target_cities",
+          "ground_truth_value": "[\"上海\", \"杭州\"]",
+          "extracted_value": "[\"上海\", \"杭州\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "标准市级城市集合完全一致，且无多余行政区或详细地址泄露。"
+        },
+        {
+          "field_name": "industry_background",
+          "ground_truth_value": "[\"连锁餐饮\", \"新式茶饮/咖啡\", \"商业综合体餐饮\"]",
+          "extracted_value": "[\"连锁餐饮\", \"新式茶饮/轻食\", \"火锅餐饮\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "行业标签紧密契合简历茶饮、轻食与火锅经历，细分覆盖精准且无幻觉。"
+        },
+        {
+          "field_name": "core_skills",
+          "ground_truth_value": "[\"门店P&L损益管控\", \"食品安全QSC稽核\", \"高峰期排班与人效优化\", \"食材损耗率控制\", \"美团大众点评口碑运营\"]",
+          "extracted_value": "[\"门店P&L损益管控\", \"食品安全QSC稽核\", \"人效优化与高峰排班\", \"食材损耗率控制\", \"数字化订货与动态备料\", \"新店筹备与开业带教\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "覆盖全部核心技能，补充项均来自原文真实工作内容，语义完整度极高。"
+        },
+        {
+          "field_name": "experience_highlights",
+          "ground_truth_value": "[\"管理上海陆家嘴A级旗舰店（月均营收180万+），连续4个季度蝉联华东区单店坪效第一\", \"推行数字化订货与动态备料机制，将门店食材综合损耗率由4.2%压降至1.8%\", \"优化灵活用工与高峰期动线排班，门店人效提升22%，大众点评保持4.9分星级口碑\"]",
+          "extracted_value": "[\"统筹管理上海核心商圈A级旗舰店（团队32人，月均营收180万+），连续4个季度蝉联华东区单店坪效第一，大众点评保持4.9分高口碑。\", \"推行数字化订货与动态备料机制，将门店食材综合损耗率从4.2%大幅降至1.8%，年化节约运营成本逾35万元。\", \"优化灵活用工机制与高峰期出品动线排班，推动门店人效显著提升22%；此前主导3家连锁火锅新店开业，首月翻台率均突破4.5轮/天。\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "关键业绩及所有量化数字（32人、180万+、4个季度、4.2%至1.8%、35万、22%、4.9分、3家、4.5轮）100%精准且完全忠于原文。"
+        },
+        {
+          "field_name": "inferred_salary_floor",
+          "ground_truth_value": "\"1.4w\"",
+          "extracted_value": "\"1.4w\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "底线薪资数值完全一致，提取准确。"
+        },
+        {
+          "field_name": "inferred_welfare_prefs",
+          "ground_truth_value": "[\"五险一金\", \"包吃住或房补\", \"门店分红激励\"]",
+          "extracted_value": "[\"五险一金\", \"包吃住或住房补贴\", \"门店分红/业绩激励\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "福利标签语义高度重合，表达专业贴切，无事实冲突。"
+        }
+      ]
+    },
+    {
+      "id": "QUAL-003",
+      "file_name": "QUAL-003_backend_golang_architect.md",
+      "extension": ".md",
+      "industry_category": "互联网与软件工程",
+      "file_validation_passed": true,
+      "file_validation_code": "OK",
+      "extract_latency_s": 12.05,
+      "judge_latency_s": 20.27,
+      "ground_truth": {
+        "candidate_title": "资深后端研发工程师 (Go / 云原生架构)",
+        "years_of_experience": "7年高并发分布式后端系统与云原生微服务架构研发经验",
+        "education_summary": "硕士 · 计算机科学与技术",
+        "target_cities": [
+          "北京",
+          "上海"
+        ],
+        "industry_background": [
+          "互联网平台",
+          "云计算/SaaS",
+          "高并发交易系统"
+        ],
+        "core_skills": [
+          "Golang高并发编程",
+          "Kubernetes与云原生微服务",
+          "分布式缓存Redis与Kafka消息队列",
+          "MySQL分库分表与性能调优",
+          "Service Mesh服务治理",
+          "全链路压测与高可用容灾"
+        ],
+        "experience_highlights": [
+          "主导核心交易网关从单体向Golang微服务重构，支撑双十一峰值45万QPS，P99延迟由85ms降至12ms",
+          "设计基于K8s与Istio的多活容灾架构，核心服务全年可用性SLA达99.995%",
+          "优化分布式账务分库分表方案与异步对账引擎，日均处理订单流水超8000万笔零差错"
+        ],
+        "inferred_salary_floor": "3.5w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "六险一金",
+          "弹性打卡",
+          "年终奖"
+        ]
+      },
+      "extracted_profile": {
+        "candidate_title": "资深后端研发工程师 / 架构师 (Go / 云原生)",
+        "years_of_experience": "7年高并发分布式系统与云原生微服务架构研发经验",
+        "education_summary": "硕士 · 计算机科学与技术（北京邮电大学）",
+        "target_cities": [
+          "北京",
+          "上海"
+        ],
+        "industry_background": [
+          "互联网电商",
+          "云计算/PaaS平台",
+          "分布式基础架构"
+        ],
+        "core_skills": [
+          "Golang高并发编程",
+          "Kubernetes与云原生容器化",
+          "Service Mesh/Istio服务治理",
+          "高并发网关架构设计",
+          "分布式账务与分库分表",
+          "Redis与Kafka消息中间件"
+        ],
+        "experience_highlights": [
+          "主导电商核心交易网关微服务重构，成功支撑双十一峰值45万QPS，P99延迟由85ms大幅降至12ms",
+          "设计基于K8s与Istio的多活容灾架构，核心服务全年可用性SLA达成99.995%",
+          "优化分布式账务分库分表方案与异步对账引擎，日均稳定支撑超8000万笔订单流水且保持零差错"
+        ],
+        "inferred_salary_floor": "3.5w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "六险一金",
+          "弹性打卡",
+          "年终奖"
+        ]
+      },
+      "judge_model": "gemini-3.8-flash",
+      "schema_and_pii_valid": true,
+      "violations": [],
+      "overall_score_10": 10.0,
+      "overall_score": 1.0,
+      "entity_match_rate": 1.0,
+      "entity_mismatch_fields": [],
+      "hallucination_field_count": 0,
+      "hallucinated_fields": [],
+      "overall_comment": "整份画像提取质量极其出色。关键量化指标（QPS峰值、延迟改善、SLA指标、流水笔数）与实体年限完全做到零误差匹配，学历信息规范补充院校名称，技能与行业抽取高度贴合原文，零幻觉且严格脱敏。",
+      "field_scores": {
+        "candidate_title": 10.0,
+        "years_of_experience": 10.0,
+        "education_summary": 10.0,
+        "target_cities": 10.0,
+        "industry_background": 10.0,
+        "core_skills": 10.0,
+        "experience_highlights": 10.0,
+        "inferred_salary_floor": 10.0,
+        "inferred_welfare_prefs": 10.0
+      },
+      "field_evaluations": [
+        {
+          "field_name": "candidate_title",
+          "ground_truth_value": "\"资深后端研发工程师 (Go / 云原生架构)\"",
+          "extracted_value": "\"资深后端研发工程师 / 架构师 (Go / 云原生)\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "职级与技术方向与基准一致，符合原文Tech Lead角色，语义完全等价且无事实冲突。"
+        },
+        {
+          "field_name": "years_of_experience",
+          "ground_truth_value": "\"7年高并发分布式后端系统与云原生微服务架构研发经验\"",
+          "extracted_value": "\"7年高并发分布式系统与云原生微服务架构研发经验\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "工作年限关键数字“7年”完全一致，核心研发领域概括精准，无任何事实偏差。"
+        },
+        {
+          "field_name": "education_summary",
+          "ground_truth_value": "\"硕士 · 计算机科学与技术\"",
+          "extracted_value": "\"硕士 · 计算机科学与技术（北京邮电大学）\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "最高学历等级“硕士”及专业名称完全一致，忠实补充了原文真实院校北京邮电大学，符合评分规范。"
+        },
+        {
+          "field_name": "target_cities",
+          "ground_truth_value": "[\"北京\", \"上海\"]",
+          "extracted_value": "[\"北京\", \"上海\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "目标城市均为标准市级名称，与基准标注完全一致，且无隐私泄露。"
+        },
+        {
+          "field_name": "industry_background",
+          "ground_truth_value": "[\"互联网平台\", \"云计算/SaaS\", \"高并发交易系统\"]",
+          "extracted_value": "[\"互联网电商\", \"云计算/PaaS平台\", \"分布式基础架构\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "细分行业标签精准匹配候选人电商与PaaS经历，语义完全等价且更具针对性。"
+        },
+        {
+          "field_name": "core_skills",
+          "ground_truth_value": "[\"Golang高并发编程\", \"Kubernetes与云原生微服务\", \"分布式缓存Redis与Kafka消息队列\", \"MySQL分库分表与性能调优\", \"Service Mesh服务治理\", \"全链路压测与高可用容灾\"]",
+          "extracted_value": "[\"Golang高并发编程\", \"Kubernetes与云原生容器化\", \"Service Mesh/Istio服务治理\", \"高并发网关架构设计\", \"分布式账务与分库分表\", \"Redis与Kafka消息中间件\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "核心技术栈覆盖完全，专业术语规范准确，无任何无中生有的虚构技能。"
+        },
+        {
+          "field_name": "experience_highlights",
+          "ground_truth_value": "[\"主导核心交易网关从单体向Golang微服务重构，支撑双十一峰值45万QPS，P99延迟由85ms降至12ms\", \"设计基于K8s与Istio的多活容灾架构，核心服务全年可用性SLA达99.995%\", \"优化分布式账务分库分表方案与异步对账引擎，日均处理订单流水超8000万笔零差错\"]",
+          "extracted_value": "[\"主导电商核心交易网关微服务重构，成功支撑双十一峰值45万QPS，P99延迟由85ms大幅降至12ms\", \"设计基于K8s与Istio的多活容灾架构，核心服务全年可用性SLA达成99.995%\", \"优化分布式账务分库分表方案与异步对账引擎，日均稳定支撑超8000万笔订单流水且保持零差错\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "全部量化指标（45万QPS、85ms降至12ms、99.995% SLA、8000万笔流水零差错）100%精准，业务表述高度吻合。"
+        },
+        {
+          "field_name": "inferred_salary_floor",
+          "ground_truth_value": "\"3.5w\"",
+          "extracted_value": "\"3.5w\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "薪酬底线数值与原文期望及基准标注完全一致，推断准确无误。"
+        },
+        {
+          "field_name": "inferred_welfare_prefs",
+          "ground_truth_value": "[\"周末双休\", \"六险一金\", \"弹性打卡\", \"年终奖\"]",
+          "extracted_value": "[\"周末双休\", \"六险一金\", \"弹性打卡\", \"年终奖\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "福利偏好标签与基准标注完全一致，完全忠于原文事实。"
+        }
+      ]
+    }
+  ],
+  "disqualified_details": [
+    {
+      "id": "DISQ-001",
+      "file_name": "DISQ-001_legacy_word_97_2003.doc",
+      "dimension": "format_and_size",
+      "expected_error_code": "UNSUPPORTED_EXTENSION",
+      "actual_error_code": "UNSUPPORTED_EXTENSION",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "不支持的文件扩展名 '.doc'，仅允许: .docx, .jpeg, .jpg, .md, .pdf, .png, .txt, .webp"
+    },
+    {
+      "id": "DISQ-002",
+      "file_name": "DISQ-002_candidate_roster_table.xlsx",
+      "dimension": "format_and_size",
+      "expected_error_code": "UNSUPPORTED_EXTENSION",
+      "actual_error_code": "UNSUPPORTED_EXTENSION",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "不支持的文件扩展名 '.xlsx'，仅允许: .docx, .jpeg, .jpg, .md, .pdf, .png, .txt, .webp"
+    },
+    {
+      "id": "DISQ-003",
+      "file_name": "DISQ-003_resume_bundle_archive.zip",
+      "dimension": "format_and_size",
+      "expected_error_code": "UNSUPPORTED_EXTENSION",
+      "actual_error_code": "UNSUPPORTED_EXTENSION",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "不支持的文件扩展名 '.zip'，仅允许: .docx, .jpeg, .jpg, .md, .pdf, .png, .txt, .webp"
+    },
+    {
+      "id": "DISQ-004",
+      "file_name": "DISQ-004_malicious_executable.exe",
+      "dimension": "format_and_size",
+      "expected_error_code": "UNSUPPORTED_EXTENSION",
+      "actual_error_code": "UNSUPPORTED_EXTENSION",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "不支持的文件扩展名 '.exe'，仅允许: .docx, .jpeg, .jpg, .md, .pdf, .png, .txt, .webp"
+    },
+    {
+      "id": "DISQ-005",
+      "file_name": "DISQ-005_oversized_portfolio_10_5mb.pdf",
+      "dimension": "format_and_size",
+      "expected_error_code": "FILE_TOO_LARGE",
+      "actual_error_code": "FILE_TOO_LARGE",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "文件大小 (11010048 bytes) 超过最大限制 MAX_RESUME_BYTES (10485760 bytes / 10 MB)"
+    },
+    {
+      "id": "DISQ-006",
+      "file_name": "DISQ-006_xml_zip_bomb_22mb.docx",
+      "dimension": "format_and_size",
+      "expected_error_code": "DOCX_XML_BOMB_DETECTED",
+      "actual_error_code": "DOCX_XML_BOMB_DETECTED",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "DOCX 解压后总大小 (23079147 bytes) 超过上限 MAX_DOCX_UNCOMPRESSED_BYTES (20971520 bytes / 20 MB)"
+    },
+    {
+      "id": "DISQ-007",
+      "file_name": "DISQ-007_spoofed_exe_renamed_as_pdf.pdf",
+      "dimension": "corruption_and_spoofing",
+      "expected_error_code": "INVALID_MAGIC_BYTES",
+      "actual_error_code": "INVALID_MAGIC_BYTES",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "文件头不是合法的 PDF 签名 (%PDF-)，疑似伪造扩展名"
+    },
+    {
+      "id": "DISQ-008",
+      "file_name": "DISQ-008_spoofed_html_xss_as_png.png",
+      "dimension": "corruption_and_spoofing",
+      "expected_error_code": "INVALID_MAGIC_BYTES",
+      "actual_error_code": "INVALID_MAGIC_BYTES",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "文件头不是合法的 PNG 签名，疑似伪造扩展名"
+    },
+    {
+      "id": "DISQ-009",
+      "file_name": "DISQ-009_truncated_corrupted_stream.pdf",
+      "dimension": "corruption_and_spoofing",
+      "expected_error_code": "CORRUPTED_FILE",
+      "actual_error_code": "CORRUPTED_FILE",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "PDF 文件缺少 %%EOF 结束标记，文件已截断或损坏"
+    },
+    {
+      "id": "DISQ-010",
+      "file_name": "DISQ-010_corrupted_zip_structure.docx",
+      "dimension": "corruption_and_spoofing",
+      "expected_error_code": "CORRUPTED_FILE",
+      "actual_error_code": "CORRUPTED_FILE",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "DOCX ZIP 归档结构损坏，无法解压"
+    },
+    {
+      "id": "DISQ-011",
+      "file_name": "DISQ-011_truncated_corrupted_image.jpg",
+      "dimension": "corruption_and_spoofing",
+      "expected_error_code": "CORRUPTED_FILE",
+      "actual_error_code": "CORRUPTED_FILE",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "JPEG 文件缺少 EOI 结束标记 (FF D9)，文件已截断或损坏"
+    },
+    {
+      "id": "DISQ-012",
+      "file_name": "DISQ-012_zero_byte_empty.pdf",
+      "dimension": "corruption_and_spoofing",
+      "expected_error_code": "EMPTY_FILE",
+      "actual_error_code": "EMPTY_FILE",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "文件大小为 0 字节（空文件）"
+    },
+    {
+      "id": "DISQ-013",
+      "file_name": "DISQ-013_whitespace_only_blank.txt",
+      "dimension": "corruption_and_spoofing",
+      "expected_error_code": "EMPTY_FILE",
+      "actual_error_code": "EMPTY_FILE",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "文本文件仅包含空白字符，无实质内容"
+    },
+    {
+      "id": "DISQ-014",
+      "file_name": "DISQ-014_garbled_invalid_utf8_binary.txt",
+      "dimension": "corruption_and_spoofing",
+      "expected_error_code": "CORRUPTED_FILE",
+      "actual_error_code": "CORRUPTED_FILE",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "文本文件中包含二进制空字节 (NUL)，疑似二进制文件或乱码"
+    },
+    {
+      "id": "DISQ-015",
+      "file_name": "DISQ-015_non_resume_restaurant_menu.pdf",
+      "dimension": "content_and_adversarial",
+      "expected_error_code": "NOT_A_RESUME",
+      "actual_error_code": "NOT_A_RESUME",
+      "rejection_stage": "content_guardrail_or_parser_rejection",
+      "correctly_rejected": true,
+      "message": "文档内容缺少简历核心特征词（仅命中 0 项），疑似非简历文档（如菜单、发票或代码文件）"
+    },
+    {
+      "id": "DISQ-016",
+      "file_name": "DISQ-016_non_resume_vat_invoice.docx",
+      "dimension": "content_and_adversarial",
+      "expected_error_code": "NOT_A_RESUME",
+      "actual_error_code": "NOT_A_RESUME",
+      "rejection_stage": "content_guardrail_or_parser_rejection",
+      "correctly_rejected": true,
+      "message": "文档内容缺少简历核心特征词（仅命中 0 项），疑似非简历文档（如菜单、发票或代码文件）"
+    },
+    {
+      "id": "DISQ-017",
+      "file_name": "DISQ-017_non_resume_python_algorithm_code.md",
+      "dimension": "content_and_adversarial",
+      "expected_error_code": "NOT_A_RESUME",
+      "actual_error_code": "NOT_A_RESUME",
+      "rejection_stage": "content_guardrail_or_parser_rejection",
+      "correctly_rejected": true,
+      "message": "文档内容缺少简历核心特征词（仅命中 0 项），疑似非简历文档（如菜单、发票或代码文件）"
+    },
+    {
+      "id": "DISQ-018",
+      "file_name": "DISQ-018_prompt_injection_and_pii_exfiltration.txt",
+      "dimension": "content_and_adversarial",
+      "expected_error_code": "PROMPT_INJECTION_DETECTED",
+      "actual_error_code": "PROMPT_INJECTION_DETECTED",
+      "rejection_stage": "content_guardrail_or_parser_rejection",
+      "correctly_rejected": true,
+      "message": "检测到疑似 Prompt Injection（提示词注入）或越权覆盖指令文本"
+    },
+    {
+      "id": "DISQ-019",
+      "file_name": "DISQ-019_docx_xxe_external_entity_attack.docx",
+      "dimension": "content_and_adversarial",
+      "expected_error_code": "XXE_PAYLOAD_DETECTED",
+      "actual_error_code": "XXE_PAYLOAD_DETECTED",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "DOCX XML 中包含禁止的 DOCTYPE/ENTITY 声明（疑似 XXE 攻击）"
+    },
+    {
+      "id": "DISQ-020",
+      "file_name": "DISQ-020_docx_zip_slip_path_traversal.docx",
+      "dimension": "content_and_adversarial",
+      "expected_error_code": "ZIP_SLIP_DETECTED",
+      "actual_error_code": "ZIP_SLIP_DETECTED",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "DOCX 内部包含非法路径条目: ../../evil_traversal_payload.xml"
+    }
+  ],
+  "run_id": "run_stage1_profile_20261112_175434",
+  "stage_id": "stage1_profile",
+  "created_at": "2026-11-12 17:54:34"
+}

@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Local runtime secrets & credentials (NEVER commit)
+.gemini_runtime.json
+.env
+*.pem
+*.key
+
+# Browser profile & runtime crawl output data
+chrome-profile/
+output/
+*.xlsx
+*.csv
+
+# macOS / IDE
+.DS_Store
+.idea/
+.vscode/

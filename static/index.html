@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOSS直聘 智能求职分析 Agent & 全链路评测工作台</title>
+  <link rel="stylesheet" href="/static/styles.css?v=20261112eval" />
+  <!-- 引入 Apache ECharts 用于六维数据可视化与评测大盘 -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- 顶部导航与模型配置栏 -->
+    <header class="top-header">
+      <div class="brand-area">
+        <div class="brand-logo">BOSS · AI</div>
+        <div>
+          <h1 class="brand-title">BOSS直聘 智能求职分析助手</h1>
+          <p class="brand-subtitle">实时两阶段爬虫采集 + Gemini 六维可视化总结 + 统一三层协议评测工作台</p>
+        </div>
+      </div>
+
+      <!-- 顶层工作台切换：智能求职分析 vs 全链路评测工作台 (Option A) -->
+      <div class="workspace-nav-tabs" role="tablist">
+        <button type="button" id="nav-tab-search" class="workspace-tab-btn active">
+          智能求职采集与六维分析
+        </button>
+        <button type="button" id="nav-tab-eval" class="workspace-tab-btn">
+          全链路评测工作台 (Eval Dashboard)
+        </button>
+      </div>
+
+      <div id="search-config-bar" class="config-bar">
+        <div class="config-item">
+          <label for="model-select">Gemini 模型 (Interactions API)</label>
+          <select id="model-select" class="select-control">
+            <option value="gemini-3.8-flash" selected>Gemini 3.8 Flash</option>
+            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Light</option>
+            <option value="gemini-3.1-pro">Gemini 3.1 Pro</option>
+            <option value="gemini-4-argon">Gemini 4 Argon</option>
+          </select>
+        </div>
+
+        <div class="config-item">
+          <label for="batches-select">采集深度</label>
+          <select id="batches-select" class="select-control">
+            <option value="5">快速 (5批 / 约75条)</option>
+            <option value="10" selected>标准 (10批 / 约150条)</option>
+            <option value="30">全量 (30批 / 最高450条)</option>
+          </select>
+        </div>
+
+        <div class="config-item">
+          <label for="top-count-input">Top 候选岗 (3-20)</label>
+          <input
+            type="number"
+            id="top-count-input"
+            class="input-control top-count-input"
+            min="3"
+            max="20"
+            step="1"
+            value="8"
+            title="自定义深度抓取完整 JD 并由 Gemini 逐一评分的 Top 候选岗位数量（范围 3-20）"
+          />
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== 工作台 1：智能求职采集与六维分析 ==================== -->
+    <div id="search-workspace-wrapper" class="workspace-wrapper">
+    <!-- 对话式自然语言输入区（含前置简历上传与 AI 智能生成 Query） -->
+    <section class="chat-search-section card">
+      <div class="chat-prompt-header">
+        <span class="agent-avatar">AI</span>
+        <div class="agent-greeting">
+          <strong>您好！您可以先上传个人简历由 Gemini 智能生成求职方案，或直接输入求职要求：</strong>
+          <span>支持上传简历（PDF / Word / 简历截图 / TXT）深度解析您的履历亮点并预生成定制化 Query；后续分析还将结合您的真实简历进行人岗契合度诊断。</span>
+        </div>
+      </div>
+
+      <!-- Step 0: 简历上传与 Gemini 深度解析面板 -->
+      <div id="resume-dropzone" class="resume-upload-bar">
+        <div class="resume-upload-left">
+          <span class="resume-icon-badge">简历解析</span>
+          <div class="resume-upload-text">
+            <strong id="resume-status-title">上传个人简历，让 Gemini 为您量身定制求职 Query</strong>
+            <span id="resume-status-desc">支持拖拽或点击上传 .pdf / .docx / .png / .jpg / .txt（最大 10MB，纯内存安全解析）</span>
+          </div>
+        </div>
+        <div class="resume-upload-actions">
+          <input
+            type="file"
+            id="resume-file-input"
+            class="hidden"
+            accept=".pdf,.docx,.png,.jpg,.jpeg,.webp,.txt,.md"
+          />
+          <button type="button" id="resume-upload-btn" class="secondary-btn">
+            上传简历智能生成 Query
+          </button>
+          <button type="button" id="resume-clear-btn" class="ghost-btn hidden">
+            清除简历
+          </button>
+        </div>
+      </div>
+
+      <!-- Gemini 简历解析结果：阶段一（个人画像摘要） + 阶段二（按画像生成/重生成求职 Query 卡片） -->
+      <div id="resume-parsed-container" class="resume-parsed-container hidden">
+        <div class="resume-profile-box">
+          <div class="resume-profile-header">
+            <span class="profile-badge">Stage 1 · Gemini 简历深度理解画像</span>
+            <span id="resume-profile-headline" class="resume-profile-headline"></span>
+          </div>
+          <div id="resume-profile-tags" class="resume-profile-tags"></div>
+          <ul id="resume-highlights-list" class="resume-highlights-list"></ul>
+        </div>
+
+        <div class="resume-queries-box">
+          <div class="resume-queries-header-bar">
+            <div class="resume-queries-title-group">
+              <span class="profile-badge stage2-badge">Stage 2 · 多策略求职 Query 生成服务</span>
+              <strong id="resume-queries-status-text">基于您的简历画像生成 5 条定制化求职 Query（点击卡片即可填入下方搜索框）：</strong>
+            </div>
+            <div class="profile-query-controls">
+              <label class="mini-control-label">
+                意向城市
+                <input
+                  type="text"
+                  id="profile-city-override"
+                  class="mini-input"
+                  placeholder="如 深圳"
+                  title="可修改意向城市并基于当前简历画像秒级重生成 Query（无需重传简历）"
+                />
+              </label>
+              <label class="mini-control-label">
+                月薪底线
+                <input
+                  type="text"
+                  id="profile-salary-override"
+                  class="mini-input mini-input-narrow"
+                  placeholder="如 1.2w"
+                  title="可修改期望最低月薪并重新生成 Query"
+                />
+              </label>
+              <label class="mini-control-label">
+                附加方向
+                <input
+                  type="text"
+                  id="profile-focus-override"
+                  class="mini-input mini-input-wide"
+                  placeholder="可选：如 偏向买手/品牌总部"
+                  title="可选：补充细分方向或特定偏好后重新生成 Query"
+                />
+              </label>
+              <button type="button" id="regenerate-queries-btn" class="regen-query-btn">
+                基于画像重生成 Query
+              </button>
+            </div>
+          </div>
+          <div id="resume-queries-grid" class="resume-queries-grid"></div>
+        </div>
+      </div>
+
+      <form id="query-form" class="query-form">
+        <input
+          type="text"
+          id="query-input"
+          class="query-input"
+          value="深圳的服装店面督导，月薪至少1w，周末要双休"
+          placeholder="例如：深圳的服装店面督导，月薪至少1w，周末要双休"
+          required
+        />
+        <button type="submit" id="submit-btn" class="primary-btn">
+          开始采集与智能分析
+        </button>
+      </form>
+
+      <div class="quick-examples">
+        <span class="example-label">快捷示例：</span>
+        <button type="button" class="chip-btn" data-query="深圳的服装店面督导，月薪至少1w，周末要双休">
+          深圳的服装店面督导，月薪至少1w，周末要双休
+        </button>
+        <button type="button" class="chip-btn" data-query="广州的连锁餐饮店长，月薪10k以上">
+          广州的连锁餐饮店长，月薪10k以上
+        </button>
+        <button type="button" class="chip-btn" data-query="上海的美妆陈列督导，月薪至少1.2w，周末双休">
+          上海的美妆陈列督导，月薪至少1.2w，周末双休
+        </button>
+      </div>
+
+      <!-- 错误提示横幅（不使用 alert） -->
+      <div id="error-banner" class="error-banner hidden" role="alert"></div>
+    </section>
+
+    <!-- 实时进度条与意图解析展示面板 -->
+    <section id="progress-section" class="progress-section card hidden">
+      <div class="progress-header">
+        <div class="progress-title-wrap">
+          <span class="spinner" id="progress-spinner"></span>
+          <span id="progress-status-text" class="progress-status-text">正在准备任务...</span>
+        </div>
+        <span id="progress-percent-text" class="progress-percent-text">0%</span>
+      </div>
+      <div class="progress-track">
+        <div id="progress-bar-fill" class="progress-bar-fill"></div>
+      </div>
+      <div id="intent-tags-container" class="intent-tags-container"></div>
+    </section>
+
+    <!-- 分析结果可视化主面板 -->
+    <main id="dashboard-section" class="dashboard-section hidden">
+      <!-- 1. 顶部：整体匹配度评分与核心结论摘要 -->
+      <section class="match-hero-card card">
+        <div class="match-gauge-col">
+          <h2 class="section-title">综合匹配度评估</h2>
+          <div id="chart-match-gauge" class="gauge-chart-box"></div>
+          <p id="match-verdict-text" class="match-verdict-text"></p>
+          <p class="section-subtitle" style="font-size: 12px; margin-top: 8px; line-height: 1.5;">
+            评估依据：结合全量样本六维统计（目标行业占比、期望薪资达标率、双休/排班占比、企业规模）与 <span id="gauge-top-count-label">Top 8</span> 岗位详情页完整 JD 深度语义契合度综合计算。
+          </p>
+        </div>
+
+        <div class="match-summary-col">
+          <div class="summary-header-row">
+            <div>
+              <span id="result-meta-badge" class="meta-badge"></span>
+              <h2 class="section-title">Gemini 市场全景总结与匹配意见</h2>
+            </div>
+            <a id="download-excel-link" class="download-btn hidden" href="#" download>
+              导出完整 Excel 岗位表 (.xlsx)
+            </a>
+          </div>
+
+          <p id="executive-summary-text" class="executive-summary-text"></p>
+
+          <div class="match-breakdown-grid">
+            <div class="breakdown-box box-strengths">
+              <h3>契合优势 (Strengths)</h3>
+              <ul id="match-strengths-list" class="styled-list"></ul>
+            </div>
+            <div class="breakdown-box box-risks">
+              <h3>潜在落差与风险 (Risks)</h3>
+              <ul id="match-risks-list" class="styled-list"></ul>
+            </div>
+            <div class="breakdown-box box-advice">
+              <h3>求职与沟通建议 (Actionable Advice)</h3>
+              <ul id="match-advice-list" class="styled-list"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. 六维可视化图表与 Gemini 深度洞察 -->
+      <section class="dimensions-grid">
+        <!-- 维度 1：所属行业 -->
+        <article class="dim-card card">
+          <div class="dim-card-header">
+            <span class="dim-index">01</span>
+            <h3>所属行业分布</h3>
+          </div>
+          <div id="chart-industry" class="dim-chart-box"></div>
+          <div class="dim-insight-box">
+            <strong>Gemini 行业洞察：</strong>
+            <p id="insight-industry"></p>
+          </div>
+        </article>
+
+        <!-- 维度 2：薪资水平 -->
+        <article class="dim-card card">
+          <div class="dim-card-header">
+            <span class="dim-index">02</span>
+            <h3>薪资水平与多薪分布</h3>
+          </div>
+          <div id="salary-kpi-row" class="kpi-row"></div>
+          <div id="chart-salary" class="dim-chart-box"></div>
+          <div class="dim-insight-box">
+            <strong>Gemini 薪资洞察：</strong>
+            <p id="insight-salary"></p>
+          </div>
+        </article>
+
+        <!-- 维度 3：技能要求 -->
+        <article class="dim-card card">
+          <div class="dim-card-header">
+            <span class="dim-index">03</span>
+            <h3>核心技能要求 Top 15</h3>
+          </div>
+          <div id="chart-skills" class="dim-chart-box"></div>
+          <div class="dim-insight-box">
+            <strong>Gemini 技能洞察：</strong>
+            <p id="insight-skills"></p>
+          </div>
+        </article>
+
+        <!-- 维度 4：经验与学历门槛 -->
+        <article class="dim-card card">
+          <div class="dim-card-header">
+            <span class="dim-index">04</span>
+            <h3>经验要求与学历门槛</h3>
+          </div>
+          <div id="chart-experience" class="dim-chart-box"></div>
+          <div class="dim-insight-box">
+            <strong>Gemini 门槛洞察：</strong>
+            <p id="insight-experience"></p>
+          </div>
+        </article>
+
+        <!-- 维度 5：招聘公司品牌知名度 -->
+        <article class="dim-card card">
+          <div class="dim-card-header">
+            <span class="dim-index">05</span>
+            <h3>招聘公司规模与品牌知名度</h3>
+          </div>
+          <div id="notable-brands-row" class="tag-cloud-row"></div>
+          <div id="chart-brand" class="dim-chart-box"></div>
+          <div class="dim-insight-box">
+            <strong>Gemini 品牌洞察：</strong>
+            <p id="insight-brand"></p>
+          </div>
+        </article>
+
+        <!-- 维度 6：福利待遇与周末作息 -->
+        <article class="dim-card card">
+          <div class="dim-card-header">
+            <span class="dim-index">06</span>
+            <h3>福利待遇与双休/排班作息制度</h3>
+          </div>
+          <div id="chart-welfare" class="dim-chart-box"></div>
+          <div class="dim-insight-box">
+            <strong>Gemini 福利与作息洞察：</strong>
+            <p id="insight-welfare"></p>
+          </div>
+        </article>
+      </section>
+
+      <!-- 3. Top N (3-20) 候选岗位深度匹配评分与原因 -->
+      <section class="top-jobs-section card">
+        <div class="top-jobs-header">
+          <div>
+            <h2 id="top-jobs-title" class="section-title">Top 8 候选岗位深度匹配榜（已补全详情页完整 JD）</h2>
+            <p class="section-subtitle">
+              以下岗位由爬虫自动进入详情页拉取完整职位描述（Post Description），并由 Gemini 结合您的诉求逐一打分与点评：
+            </p>
+          </div>
+          <div class="top-jobs-controls">
+            <label for="top-count-inline-input">自定义 Top 候选岗数量 (3-20)：</label>
+            <input
+              type="number"
+              id="top-count-inline-input"
+              class="top-count-inline-input"
+              min="3"
+              max="20"
+              step="1"
+              value="8"
+            />
+          </div>
+        </div>
+        <div id="recommended-jobs-container" class="recommended-jobs-grid"></div>
+      </section>
+    </main>
+    </div>
+
+    <!-- ==================== 工作台 2：全链路评测工作台 (Option A: Unified 3-Layer Protocol) ==================== -->
+    <section id="eval-workspace-section" class="workspace-wrapper hidden">
+      <!-- 1. 全链路 Stage 1 ~ Stage 5 统一三层协议架构栏 -->
+      <div class="eval-pipeline-card card">
+        <div class="eval-pipeline-header">
+          <div>
+            <span class="profile-badge">Unified 3-Layer Evaluation Protocol · 零外部框架依赖</span>
+            <h2 class="section-title" style="margin-top: 4px;">全链路 5 阶段评测架构 (Stage 1 已就绪 · Stage 2~5 协议无缝兼容)</h2>
+          </div>
+          <span class="eval-protocol-hint">三层统一结构：Run Metadata -> Aggregated Metrics -> Sample Atomic Checks</span>
+        </div>
+        <div id="eval-stage-stepper" class="eval-stage-stepper"></div>
+        <div id="eval-stage-protocol-banner" class="eval-stage-protocol-banner"></div>
+      </div>
+
+      <!-- 2. 视图切换 (Aggregated vs Single-Use) + 历史 Run 选择器 + 批量运行触发器 -->
+      <div class="eval-toolbar-card card">
+        <div class="eval-view-switch-group">
+          <button type="button" id="eval-view-btn-aggregated" class="eval-view-btn active">
+            Aggregated View · 全局聚合大盘
+          </button>
+          <button type="button" id="eval-view-btn-single" class="eval-view-btn">
+            Single-Use View · 单样本原子核对与实时评测
+          </button>
+        </div>
+
+        <div class="eval-toolbar-controls">
+          <label class="eval-control-item">
+            <span>历史评测批次 (Eval Run)</span>
+            <select id="eval-run-select" class="eval-select-light"></select>
+          </label>
+
+          <div class="eval-batch-runner-bar">
+            <label class="eval-control-item">
+              <span>格式筛选</span>
+              <select id="eval-batch-ext-select" class="eval-select-light eval-select-compact">
+                <option value="">全部格式</option>
+                <option value=".pdf">.pdf</option>
+                <option value=".docx">.docx</option>
+                <option value=".png">.png</option>
+                <option value=".jpg">.jpg</option>
+                <option value=".jpeg">.jpeg</option>
+                <option value=".webp">.webp</option>
+                <option value=".txt">.txt</option>
+                <option value=".md">.md</option>
+              </select>
+            </label>
+            <label class="eval-control-item">
+              <span>抽样数量</span>
+              <input
+                type="number"
+                id="eval-batch-limit-input"
+                class="eval-input-light eval-input-compact"
+                min="1"
+                max="25"
+                value="2"
+                title="指定本次在线运行 LLM-as-a-Judge 评测的样本数 (1~25)"
+              />
+            </label>
+            <button type="button" id="eval-run-batch-btn" class="secondary-btn">
+              运行新批次 LLM-Judge 评测
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 评测状态/错误提示横幅 -->
+      <div id="eval-status-banner" class="eval-status-banner hidden" role="status"></div>
+
+      <!-- ==================== 视图 A：Aggregated View (全局聚合大盘) ==================== -->
+      <div id="eval-aggregated-view" class="eval-subview">
+        <!-- 5 大核心 KPI 卡片 -->
+        <div id="eval-kpi-grid" class="eval-kpi-grid"></div>
+
+        <!-- 3 大 ECharts 聚合可视化面板 -->
+        <div class="eval-charts-grid">
+          <article class="dim-card card eval-chart-card-wide">
+            <div class="dim-card-header">
+              <span class="dim-index">A1</span>
+              <div>
+                <h3>9 个输出字段原子核对平均分 (0 ~ 10 Scale)</h3>
+                <p class="section-subtitle">基于 LLM-as-a-Judge 逐字段 Atomic Classification 统计，直观定位最易失分的薄弱字段</p>
+              </div>
+            </div>
+            <div id="chart-eval-fields" class="eval-chart-box"></div>
+          </article>
+
+          <article class="dim-card card">
+            <div class="dim-card-header">
+              <span class="dim-index">A2</span>
+              <div>
+                <h3>多模态文件格式得分对比 (.pdf / .docx / 图片 / 文本)</h3>
+                <p class="section-subtitle">监控不同简历载体格式的图文解析与字段提取质量</p>
+              </div>
+            </div>
+            <div id="chart-eval-formats" class="eval-chart-box"></div>
+          </article>
+
+          <article class="dim-card card">
+            <div class="dim-card-header">
+              <span class="dim-index">A3</span>
+              <div>
+                <h3>历史评测批次趋势对比 (Cross-Run Benchmark)</h3>
+                <p class="section-subtitle">对比不同评测批次的 0~10 综合均分与实体/数字完全一致率</p>
+              </div>
+            </div>
+            <div id="chart-eval-runs" class="eval-chart-box"></div>
+          </article>
+        </div>
+
+        <!-- 正例样本矩阵表（支持点击任意行下钻到 Single-Use 原子核对视图） -->
+        <section class="card eval-table-section">
+          <div class="eval-table-header">
+            <div>
+              <h3 class="section-title">Stage 1 正例样本评测矩阵 (点击任意样本行查看 9 字段原子核对详情)</h3>
+              <p class="section-subtitle">
+                展示当前评测批次中各样本的综合得分、数字/实体一致性、幻觉数、PII 脱敏门禁及 9 字段得分热力胶囊
+              </p>
+            </div>
+            <div class="eval-table-filters">
+              <label class="mini-control-label">
+                文件格式
+                <select id="eval-agg-ext-filter" class="eval-select-light eval-select-compact">
+                  <option value="">全部格式</option>
+                  <option value=".pdf">.pdf</option>
+                  <option value=".docx">.docx</option>
+                  <option value=".png">.png</option>
+                  <option value=".jpg">.jpg</option>
+                  <option value=".jpeg">.jpeg</option>
+                  <option value=".webp">.webp</option>
+                  <option value=".txt">.txt</option>
+                  <option value=".md">.md</option>
+                </select>
+              </label>
+              <label class="mini-control-label">
+                诊断筛选
+                <select id="eval-agg-issue-filter" class="eval-select-light">
+                  <option value="all">全部已测样本</option>
+                  <option value="deducted">存在扣分 (&lt; 10.0 分)</option>
+                  <option value="entity_mismatch">存在实体/数字偏差</option>
+                  <option value="hallucination">存在幻觉 (Hallucination &gt; 0)</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="eval-table-scroll">
+            <table class="eval-matrix-table">
+              <thead>
+                <tr>
+                  <th>样本 ID</th>
+                  <th>文件名与格式</th>
+                  <th>所属行业</th>
+                  <th>综合均分 (0~10)</th>
+                  <th>数字/实体一致率</th>
+                  <th>幻觉字段数</th>
+                  <th>Schema &amp; PII 门禁</th>
+                  <th>9 字段原子得分速览 (点击下钻)</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="eval-samples-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 反例安全门禁拦截明细 (20 个 Disqualified 样本) -->
+        <details class="card eval-details-card">
+          <summary class="eval-details-summary">
+            <span>安全防线与异常文件拦截明细 (Disqualified Guardrail Benchmark · 20 个反例样本)</span>
+            <span id="eval-disq-summary-badge" class="status-pill status-ok">20 / 20 精准拦截</span>
+          </summary>
+          <div class="eval-table-scroll" style="margin-top: 14px;">
+            <table class="eval-matrix-table">
+              <thead>
+                <tr>
+                  <th>反例 ID</th>
+                  <th>文件名</th>
+                  <th>攻击/异常维度</th>
+                  <th>期望拦截错误码</th>
+                  <th>实际返回错误码</th>
+                  <th>拦截阶段</th>
+                  <th>结果</th>
+                </tr>
+              </thead>
+              <tbody id="eval-disq-table-body"></tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+
+      <!-- ==================== 视图 B：Single-Use View (单样本原子核对与实时评测沙盒) ==================== -->
+      <div id="eval-single-view" class="eval-subview hidden">
+        <!-- 单样本选择与实时重跑控制栏 -->
+        <div class="card eval-single-control-card">
+          <div class="eval-single-picker-group">
+            <button type="button" id="eval-prev-sample-btn" class="ghost-btn" title="切换到上一个样本">
+              ◀ 上一题
+            </button>
+            <label class="eval-control-item">
+              <span>选择基准测试样本 (QUAL-001 ~ QUAL-025)</span>
+              <select id="eval-single-sample-select" class="eval-select-light eval-sample-select-wide"></select>
+            </label>
+            <button type="button" id="eval-next-sample-btn" class="ghost-btn" title="切换到下一个样本">
+              下一题 ▶
+            </button>
+          </div>
+
+          <div class="eval-single-runner-group">
+            <label class="eval-control-item">
+              <span>Stage 1 提取模型</span>
+              <select id="eval-single-extract-model" class="eval-select-light eval-select-compact">
+                <option value="gemini-3.8-flash" selected>Gemini 3.8 Flash</option>
+                <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Light</option>
+                <option value="gemini-3.1-pro">Gemini 3.1 Pro</option>
+                <option value="gemini-4-argon">Gemini 4 Argon</option>
+              </select>
+            </label>
+            <label class="eval-control-item">
+              <span>LLM-Judge 裁判模型</span>
+              <select id="eval-single-judge-model" class="eval-select-light eval-select-compact">
+                <option value="gemini-3.8-flash" selected>Gemini 3.8 Flash</option>
+                <option value="gemini-3.1-pro">Gemini 3.1 Pro</option>
+                <option value="gemini-4-argon">Gemini 4 Argon</option>
+              </select>
+            </label>
+            <button type="button" id="eval-run-single-btn" class="primary-btn eval-live-btn">
+              实时运行此样本 (Stage 1 提取 + LLM-Judge 核对)
+            </button>
+          </div>
+        </div>
+
+        <!-- 单样本诊断总览卡片 -->
+        <div id="eval-single-summary-card" class="card eval-single-summary-card"></div>
+
+        <!-- 可折叠：原始简历文本与 PII 隐私脱敏红线词核查 -->
+        <details class="card eval-details-card">
+          <summary class="eval-details-summary">
+            <span>查看样本原始简历全文 (Raw Resume Text) 与 PII 隐私脱敏红线词表 (含姓名/电话/家庭与学校地址)</span>
+            <span class="use-query-hint">点击展开核对原文依据</span>
+          </summary>
+          <div class="eval-raw-inspect-grid">
+            <div class="eval-raw-box">
+              <h4>简历原文内容 (Ground Truth Source Text)</h4>
+              <pre id="eval-single-raw-text" class="eval-raw-pre"></pre>
+            </div>
+            <div class="eval-raw-box">
+              <h4>严禁泄露的 PII 敏感词红线 (Forbidden PII Tokens)</h4>
+              <p class="section-subtitle" style="margin-bottom: 8px;">
+                以下敏感信息（姓名、手机号、邮箱、微信号、证件号、家庭住址或学校详细门牌地址）若在提取结果任意字段中出现即判定为脱敏违规：
+              </p>
+              <div id="eval-single-pii-tokens" class="resume-profile-tags"></div>
+            </div>
+          </div>
+        </details>
+
+        <!-- 核心：9 字段原子核对 (Atomic Classification) 逐项对比表 -->
+        <section class="card eval-table-section">
+          <div class="eval-table-header">
+            <div>
+              <h3 class="section-title">Stage 1 九字段原子核对表 (Atomic 9-Field Side-by-Side Verification)</h3>
+              <p class="section-subtitle">
+                逐一比对 9 个输出字段的 Ground Truth 与 Stage 1 实际提取值，核验关键数字/实体（年限、门店数、百分比、学校名、金额）是否完全一致并检测幻觉
+              </p>
+            </div>
+          </div>
+
+          <div class="eval-table-scroll">
+            <table class="eval-atomic-table">
+              <thead>
+                <tr>
+                  <th style="width: 155px;">字段名称 (Field)</th>
+                  <th style="width: 24%;">Ground Truth (标准真值)</th>
+                  <th style="width: 24%;">Stage 1 Extracted (模型实际输出)</th>
+                  <th style="width: 110px;">数字/实体核对</th>
+                  <th style="width: 105px;">幻觉检测</th>
+                  <th style="width: 120px;">原子得分 (0~10)</th>
+                  <th>LLM-as-a-Judge 评分依据与诊断原因 (Reason)</th>
+                </tr>
+              </thead>
+              <tbody id="eval-atomic-diff-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <script src="/static/app.js?v=20261112eval"></script>
+</body>
+</html>
