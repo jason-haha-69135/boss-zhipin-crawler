@@ -118,7 +118,7 @@
           <div class="resume-queries-header-bar">
             <div class="resume-queries-title-group">
               <span class="profile-badge stage2-badge">Stage 2 · 多策略求职 Query 生成服务</span>
-              <strong id="resume-queries-status-text">基于您的简历画像生成 5 条定制化求职 Query（点击卡片即可填入下方搜索框）：</strong>
+              <strong id="resume-queries-status-text">基于您的简历画像生成 10 条定制化求职 Query（点击卡片即可填入下方搜索框）：</strong>
             </div>
             <div class="profile-query-controls">
               <label class="mini-control-label">
@@ -366,7 +366,7 @@
         <div class="eval-pipeline-header">
           <div>
             <span class="profile-badge">Unified 3-Layer Evaluation Protocol · 零外部框架依赖</span>
-            <h2 class="section-title" style="margin-top: 4px;">全链路 5 阶段评测架构 (Stage 1 已就绪 · Stage 2~5 协议无缝兼容)</h2>
+            <h2 class="section-title" style="margin-top: 4px;">全链路 5 阶段评测架构 (Stage 1 &amp; Stage 2 已就绪 · 点击下方阶段卡片切换视图)</h2>
           </div>
           <span class="eval-protocol-hint">三层统一结构：Run Metadata -> Aggregated Metrics -> Sample Atomic Checks</span>
         </div>
@@ -439,8 +439,8 @@
             <div class="dim-card-header">
               <span class="dim-index">A1</span>
               <div>
-                <h3>9 个输出字段原子核对平均分 (0 ~ 10 Scale)</h3>
-                <p class="section-subtitle">基于 LLM-as-a-Judge 逐字段 Atomic Classification 统计，直观定位最易失分的薄弱字段</p>
+                <h3 id="eval-chart-a1-title">9 个输出字段原子核对平均分 (0 ~ 10 Scale)</h3>
+                <p id="eval-chart-a1-sub" class="section-subtitle">基于 LLM-as-a-Judge 逐字段 Atomic Classification 统计，直观定位最易失分的薄弱字段</p>
               </div>
             </div>
             <div id="chart-eval-fields" class="eval-chart-box"></div>
@@ -450,8 +450,8 @@
             <div class="dim-card-header">
               <span class="dim-index">A2</span>
               <div>
-                <h3>多模态文件格式得分对比 (.pdf / .docx / 图片 / 文本)</h3>
-                <p class="section-subtitle">监控不同简历载体格式的图文解析与字段提取质量</p>
+                <h3 id="eval-chart-a2-title">多模态文件格式得分对比 (.pdf / .docx / 图片 / 文本)</h3>
+                <p id="eval-chart-a2-sub" class="section-subtitle">监控不同简历载体格式的图文解析与字段提取质量</p>
               </div>
             </div>
             <div id="chart-eval-formats" class="eval-chart-box"></div>
@@ -461,8 +461,8 @@
             <div class="dim-card-header">
               <span class="dim-index">A3</span>
               <div>
-                <h3>历史评测批次趋势对比 (Cross-Run Benchmark)</h3>
-                <p class="section-subtitle">对比不同评测批次的 0~10 综合均分与实体/数字完全一致率</p>
+                <h3 id="eval-chart-a3-title">历史评测批次趋势对比 (Cross-Run Benchmark)</h3>
+                <p id="eval-chart-a3-sub" class="section-subtitle">对比不同评测批次的 0~10 综合均分与实体/数字完全一致率</p>
               </div>
             </div>
             <div id="chart-eval-runs" class="eval-chart-box"></div>
@@ -473,8 +473,8 @@
         <section class="card eval-table-section">
           <div class="eval-table-header">
             <div>
-              <h3 class="section-title">Stage 1 正例样本评测矩阵 (点击任意样本行查看 9 字段原子核对详情)</h3>
-              <p class="section-subtitle">
+              <h3 id="eval-matrix-title" class="section-title">Stage 1 正例样本评测矩阵 (点击任意样本行查看 9 字段原子核对详情)</h3>
+              <p id="eval-matrix-sub" class="section-subtitle">
                 展示当前评测批次中各样本的综合得分、数字/实体一致性、幻觉数、PII 脱敏门禁及 9 字段得分热力胶囊
               </p>
             </div>
@@ -507,7 +507,7 @@
 
           <div class="eval-table-scroll">
             <table class="eval-matrix-table">
-              <thead>
+              <thead id="eval-samples-table-head">
                 <tr>
                   <th>样本 ID</th>
                   <th>文件名与格式</th>
@@ -525,11 +525,11 @@
           </div>
         </section>
 
-        <!-- 反例安全门禁拦截明细 (20 个 Disqualified 样本) -->
-        <details class="card eval-details-card">
+        <!-- 反例安全门禁拦截明细 (9 个 Disqualified 样本) -->
+        <details id="eval-disq-details-card" class="card eval-details-card">
           <summary class="eval-details-summary">
-            <span>安全防线与异常文件拦截明细 (Disqualified Guardrail Benchmark · 20 个反例样本)</span>
-            <span id="eval-disq-summary-badge" class="status-pill status-ok">20 / 20 精准拦截</span>
+            <span>安全防线与异常文件拦截明细 (Disqualified Guardrail Benchmark · 9 个反例样本)</span>
+            <span id="eval-disq-summary-badge" class="status-pill status-ok">9 / 9 精准拦截</span>
           </summary>
           <div class="eval-table-scroll" style="margin-top: 14px;">
             <table class="eval-matrix-table">
@@ -559,7 +559,7 @@
               ◀ 上一题
             </button>
             <label class="eval-control-item">
-              <span>选择基准测试样本 (QUAL-001 ~ QUAL-025)</span>
+              <span>选择基准测试样本 (QUAL-01 ~ QUAL-09)</span>
               <select id="eval-single-sample-select" class="eval-select-light eval-sample-select-wide"></select>
             </label>
             <button type="button" id="eval-next-sample-btn" class="ghost-btn" title="切换到下一个样本">
@@ -580,9 +580,9 @@
             <label class="eval-control-item">
               <span>LLM-Judge 裁判模型</span>
               <select id="eval-single-judge-model" class="eval-select-light eval-select-compact">
-                <option value="gemini-3.8-flash" selected>Gemini 3.8 Flash</option>
+                <option value="gemini-4-argon" selected>Gemini 4 Argon</option>
+                <option value="gemini-3.8-flash">Gemini 3.8 Flash</option>
                 <option value="gemini-3.1-pro">Gemini 3.1 Pro</option>
-                <option value="gemini-4-argon">Gemini 4 Argon</option>
               </select>
             </label>
             <button type="button" id="eval-run-single-btn" class="primary-btn eval-live-btn">
@@ -615,12 +615,26 @@
           </div>
         </details>
 
-        <!-- 核心：9 字段原子核对 (Atomic Classification) 逐项对比表 -->
+        <!-- Stage 2 专属：单样本候选人输入画像与 10 条可视化策略 Query 卡片墙 -->
+        <section id="eval-stage2-cards-section" class="card eval-table-section hidden">
+          <div class="eval-table-header">
+            <div>
+              <h3 class="section-title">Stage 2 生成的 10 条多策略求职 Query 卡片总览 (gemini-3.8-flash · temp=0.4)</h3>
+              <p class="section-subtitle">
+                每条 Query 严格包含【① 目标行业 + ② 单一标准核心岗位 + ③ 月薪底线】三要素（已移除城市名称与福利套话），下方附带逐条推荐理由
+              </p>
+            </div>
+          </div>
+          <div id="eval-stage2-profile-bar" style="margin-bottom: 14px;"></div>
+          <div id="eval-stage2-queries-grid" class="resume-queries-grid"></div>
+        </section>
+
+        <!-- 核心：原子核对 (Atomic Classification) 逐项对比表 -->
         <section class="card eval-table-section">
           <div class="eval-table-header">
             <div>
-              <h3 class="section-title">Stage 1 九字段原子核对表 (Atomic 9-Field Side-by-Side Verification)</h3>
-              <p class="section-subtitle">
+              <h3 id="eval-atomic-title" class="section-title">Stage 1 九字段原子核对表 (Atomic 9-Field Side-by-Side Verification)</h3>
+              <p id="eval-atomic-sub" class="section-subtitle">
                 逐一比对 9 个输出字段的 Ground Truth 与 Stage 1 实际提取值，核验关键数字/实体（年限、门店数、百分比、学校名、金额）是否完全一致并检测幻觉
               </p>
             </div>
@@ -628,7 +642,7 @@
 
           <div class="eval-table-scroll">
             <table class="eval-atomic-table">
-              <thead>
+              <thead id="eval-atomic-table-head">
                 <tr>
                   <th style="width: 155px;">字段名称 (Field)</th>
                   <th style="width: 24%;">Ground Truth (标准真值)</th>
@@ -647,6 +661,6 @@
     </section>
   </div>
 
-  <script src="/static/app.js?v=20261112eval"></script>
+  <script src="/static/app.js?v=20261117stage2"></script>
 </body>
 </html>

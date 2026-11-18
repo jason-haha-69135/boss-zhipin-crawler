@@ -1,0 +1,1767 @@
+{
+  "evaluation_mode": "llm_as_a_judge_atomic_9_fields",
+  "extract_model": "gemini-3.8-flash",
+  "judge_model": "gemini-3.8-flash",
+  "qualified_total": 9,
+  "qualified_valid_and_pii_safe": 9,
+  "qualified_mean_score_10": 8.86,
+  "qualified_mean_score": 0.886,
+  "qualified_mean_entity_match_rate": 0.9383,
+  "qualified_zero_hallucination_samples": 8,
+  "per_field_mean_scores_10": {
+    "candidate_title": 9.22,
+    "years_of_experience": 8.17,
+    "education_summary": 8.83,
+    "target_cities": 9.78,
+    "industry_background": 9.56,
+    "core_skills": 8.83,
+    "experience_highlights": 8.39,
+    "inferred_salary_floor": 7.44,
+    "inferred_welfare_prefs": 9.56
+  },
+  "by_extension_summary": {
+    ".docx": {
+      "sample_count": 2,
+      "mean_score_10": 8.22
+    },
+    ".jpg": {
+      "sample_count": 2,
+      "mean_score_10": 8.95
+    },
+    ".md": {
+      "sample_count": 1,
+      "mean_score_10": 9.78
+    },
+    ".pdf": {
+      "sample_count": 4,
+      "mean_score_10": 8.92
+    }
+  },
+  "disqualified_total": 9,
+  "disqualified_correctly_rejected": 9,
+  "disqualified_rejection_accuracy": 1.0,
+  "qualified_details": [
+    {
+      "id": "QUAL-01",
+      "file_name": "QUAL-01.pdf",
+      "extension": ".pdf",
+      "industry_category": "互联网/新媒体运营",
+      "file_validation_passed": true,
+      "file_validation_code": "OK",
+      "extract_latency_s": 13.5,
+      "judge_latency_s": 20.51,
+      "ground_truth": {
+        "candidate_title": "新媒体运营专员",
+        "years_of_experience": "应届毕业生 / 具备新媒体运营与校园推广实习经验",
+        "education_summary": "本科 · 市场营销（中国社会大学）",
+        "target_cities": [
+          "上海"
+        ],
+        "industry_background": [
+          "互联网/新媒体",
+          "市场营销/品牌传播",
+          "校园渠道推广"
+        ],
+        "core_skills": [
+          "微博与微信公众号运营",
+          "品牌传播策略制定",
+          "软文与创意文案撰写",
+          "校园推广与活动策划",
+          "用户习惯洞察分析",
+          "大学英语六级(CET-6)"
+        ],
+        "experience_highlights": [
+          "在北京乔布有限公司担任运营实习生期间，所负责的微博热点活动单条参与人数超过1000人，获得1000次转发与500条回复",
+          "参与“OPPO校园俱乐部”官方微博新媒体运营项目，负责全国高校粉丝集结、品牌传播策略构想及传播策划方案撰写",
+          "荣获2015年全国大学生数学建模竞赛三等奖、校学业一等奖学金及校一等优秀学生奖学金"
+        ],
+        "inferred_salary_floor": "0.8w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金"
+        ]
+      },
+      "extracted_profile": {
+        "candidate_title": "新媒体运营专员",
+        "years_of_experience": "具备新媒体运营实习与校园项目经验（市场营销专业应届/初级）",
+        "education_summary": "本科 · 市场营销",
+        "target_cities": [
+          "上海"
+        ],
+        "industry_background": [
+          "互联网/新媒体",
+          "消费电子/数码",
+          "广告/文化传播"
+        ],
+        "core_skills": [
+          "自媒体内容运营",
+          "新媒体活动策划",
+          "文案撰写与创意构想",
+          "双微平台运维（微博/微信）",
+          "用户洞察与社群运营",
+          "数据分析与复盘"
+        ],
+        "experience_highlights": [
+          "在OPPO官方微博深度打造“OPPO校园俱乐部”概念，聚集全国高校粉丝建立核心阵地，主导产品传播策略与文案策划",
+          "独立负责微博热点运营活动，实现单条活动参与人数突破1,000人，获得1,000次转发及500条互动回复"
+        ],
+        "inferred_salary_floor": "0.7w",
+        "inferred_welfare_prefs": [
+          "五险一金",
+          "周末双休",
+          "带薪年假",
+          "定期体检"
+        ]
+      },
+      "judge_model": "gemini-3.8-flash",
+      "schema_and_pii_valid": true,
+      "violations": [],
+      "overall_score_10": 9.33,
+      "overall_score": 0.933,
+      "entity_match_rate": 1.0,
+      "entity_mismatch_fields": [],
+      "hallucination_field_count": 0,
+      "hallucinated_fields": [],
+      "overall_comment": "本次提取整体质量优秀。核心硬实体（学历等级、专业、目标城市）及经历关键量化数字（1000人、1000次转发、500条回复）完全精准无误，零幻觉编造；主要扣分项在于亮点中遗漏了奖学金荣誉，但整体完整度与可用性极高。",
+      "field_scores": {
+        "candidate_title": 10.0,
+        "years_of_experience": 10.0,
+        "education_summary": 9.5,
+        "target_cities": 10.0,
+        "industry_background": 9.0,
+        "core_skills": 9.0,
+        "experience_highlights": 8.5,
+        "inferred_salary_floor": 8.5,
+        "inferred_welfare_prefs": 9.5
+      },
+      "field_evaluations": [
+        {
+          "field_name": "candidate_title",
+          "ground_truth_value": "\"新媒体运营专员\"",
+          "extracted_value": "\"新媒体运营专员\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "职位职级与职能方向提取完全一致，准确对应候选人求职意向与经历，无虚构头衔。"
+        },
+        {
+          "field_name": "years_of_experience",
+          "ground_truth_value": "\"应届毕业生 / 具备新媒体运营与校园推广实习经验\"",
+          "extracted_value": "\"具备新媒体运营实习与校园项目经验（市场营销专业应届/初级）\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "准确识别候选人为应届/初级身份，并完整概括其新媒体运营与校园项目实习背景，语义高度一致。"
+        },
+        {
+          "field_name": "education_summary",
+          "ground_truth_value": "\"本科 · 市场营销（中国社会大学）\"",
+          "extracted_value": "\"本科 · 市场营销\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "最高学历等级“本科”与专业“市场营销”提取100%准确，仅未保留院校名，不影响核心硬实体判定。"
+        },
+        {
+          "field_name": "target_cities",
+          "ground_truth_value": "[\"上海\"]",
+          "extracted_value": "[\"上海\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "标准城市名提取完全一致，且规范脱敏剥离了原文中的区级地址，符合隐私合规要求。"
+        },
+        {
+          "field_name": "industry_background",
+          "ground_truth_value": "[\"互联网/新媒体\", \"市场营销/品牌传播\", \"校园渠道推广\"]",
+          "extracted_value": "[\"互联网/新媒体\", \"消费电子/数码\", \"广告/文化传播\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.0,
+          "reason": "核心互联网新媒体背景完全覆盖，提取的消费电子与文化传播紧扣OPPO项目与软文推广，合理贴切。"
+        },
+        {
+          "field_name": "core_skills",
+          "ground_truth_value": "[\"微博与微信公众号运营\", \"品牌传播策略制定\", \"软文与创意文案撰写\", \"校园推广与活动策划\", \"用户习惯洞察分析\", \"大学英语六级(CET-6)\"]",
+          "extracted_value": "[\"自媒体内容运营\", \"新媒体活动策划\", \"文案撰写与创意构想\", \"双微平台运维（微博/微信）\", \"用户洞察与社群运营\", \"数据分析与复盘\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.0,
+          "reason": "新媒体专业技能覆盖全面，活动策划与文案撰写精准，仅未提取大学英语六级证书标签。"
+        },
+        {
+          "field_name": "experience_highlights",
+          "ground_truth_value": "[\"在北京乔布有限公司担任运营实习生期间，所负责的微博热点活动单条参与人数超过1000人，获得1000次转发与500条回复\", \"参与“OPPO校园俱乐部”官方微博新媒体运营项目，负责全国高校粉丝集结、品牌传播策略构想及传播策划方案撰写\", \"荣获2015年全国大学生数学建模竞赛三等奖、校学业一等奖学金及校一等优秀学生奖学金\"]",
+          "extracted_value": "[\"在OPPO官方微博深度打造“OPPO校园俱乐部”概念，聚集全国高校粉丝建立核心阵地，主导产品传播策略与文案策划\", \"独立负责微博热点运营活动，实现单条活动参与人数突破1,000人，获得1,000次转发及500条互动回复\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.5,
+          "reason": "关键量化数字（1000人、1000次转发、500条回复）100%精准吻合，两段经历总结到位，仅漏提奖学金荣誉。"
+        },
+        {
+          "field_name": "inferred_salary_floor",
+          "ground_truth_value": "\"0.8w\"",
+          "extracted_value": "\"0.7w\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.5,
+          "reason": "推断薪资底线为0.7w，与基准0.8w偏差在12.5%以内，符合上海初级新媒体运营合理区间。"
+        },
+        {
+          "field_name": "inferred_welfare_prefs",
+          "ground_truth_value": "[\"周末双休\", \"五险一金\"]",
+          "extracted_value": "[\"五险一金\", \"周末双休\", \"带薪年假\", \"定期体检\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "完全覆盖基准中的双休与五险一金，合理扩展应届生常规通用福利诉求，无事实冲突。"
+        }
+      ]
+    },
+    {
+      "id": "QUAL-02",
+      "file_name": "QUAL-02.pdf",
+      "extension": ".pdf",
+      "industry_category": "互联网广告/电子商务",
+      "file_validation_passed": true,
+      "file_validation_code": "OK",
+      "extract_latency_s": 12.51,
+      "judge_latency_s": 33.63,
+      "ground_truth": {
+        "candidate_title": "市场营销 / 互联网广告销售 / 电商项目经理",
+        "years_of_experience": "4年以上互联网广告销售、市场营销与电商系统项目管理经验",
+        "education_summary": "本科 · 市场营销（免费科技大学 / 简历模板资源网科技大学）",
+        "target_cities": [
+          "北京"
+        ],
+        "industry_background": [
+          "互联网广告/数字营销",
+          "电子商务",
+          "企业软件与信息服务"
+        ],
+        "core_skills": [
+          "线上广告资源销售与客户开拓",
+          "信息流广告投放规划(广点通/智汇推/百度)",
+          "客户数据跟踪与投放优化",
+          "网上商城系统产品功能设计",
+          "客户需求分析与方案撰写",
+          "大型电商项目策划与项目管理"
+        ],
+        "experience_highlights": [
+          "负责广点通、智汇推、百度、小米、360、沃门户等线上广告资源销售，合作服务珍爱网、世纪佳缘、56视频、京东等头部客户并制定投放计划",
+          "参与公司网上商城系统产品功能设计及多个大型电子商务项目策划，担任大商集团网上商城一期建设项目经理",
+          "曾任校园大使主席，带领团队协助五百丁公司完成高校“伏龙计划”，向AXA金融公司推送实习生资源"
+        ],
+        "inferred_salary_floor": "1.2w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金",
+          "绩效奖金"
+        ]
+      },
+      "extracted_profile": {
+        "candidate_title": "市场营销 / 互联网广告销售与商务拓展",
+        "years_of_experience": "3年以上互联网数字营销、广告投放及电商项目策划经验",
+        "education_summary": "本科 · 市场营销",
+        "target_cities": [
+          "北京"
+        ],
+        "industry_background": [
+          "互联网/电子商务",
+          "数字营销/广告传媒",
+          "IT软件与服务"
+        ],
+        "core_skills": [
+          "数字广告资源销售",
+          "广告投放方案定制",
+          "KA大客户开拓与维护",
+          "电商系统产品策划",
+          "客户需求调研与分析",
+          "跨部门项目管理"
+        ],
+        "experience_highlights": [
+          "负责广点通、智汇推、百度、小米、360等多平台线上资源销售开拓，成功为京东、珍爱网、世纪佳缘、56视频等头部客户定制投放计划与执行方案",
+          "参与多个大型电子商务项目策划，担任大商集团网上商城一期建设副项目经理，深度参与业务系统设计、需求调研与方案编写",
+          "具备校园大型项目组织管理经验，曾任校园大使主席统筹线上线下宣传活动，并成功协同推进五百丁及AXA金融人才输送项目"
+        ],
+        "inferred_salary_floor": "1w",
+        "inferred_welfare_prefs": [
+          "五险一金",
+          "周末双休",
+          "绩效奖金",
+          "带薪年假"
+        ]
+      },
+      "judge_model": "gemini-3.8-flash",
+      "schema_and_pii_valid": true,
+      "violations": [],
+      "overall_score_10": 7.28,
+      "overall_score": 0.728,
+      "entity_match_rate": 0.6667,
+      "entity_mismatch_fields": [
+        "years_of_experience",
+        "experience_highlights",
+        "inferred_salary_floor"
+      ],
+      "hallucination_field_count": 1,
+      "hallucinated_fields": [
+        "experience_highlights"
+      ],
+      "overall_comment": "画像整体在技能、行业与意向推断上提取质量较高。主要扣分项在于：工作年限数字出现少算一年的硬伤（3年 vs 4年），以及在经历亮点中发生将“项目经理”篡改为“副项目经理”的职务幻觉。",
+      "field_scores": {
+        "candidate_title": 8.5,
+        "years_of_experience": 3.0,
+        "education_summary": 9.0,
+        "target_cities": 10.0,
+        "industry_background": 10.0,
+        "core_skills": 9.5,
+        "experience_highlights": 3.0,
+        "inferred_salary_floor": 3.0,
+        "inferred_welfare_prefs": 9.5
+      },
+      "field_evaluations": [
+        {
+          "field_name": "candidate_title",
+          "ground_truth_value": "\"市场营销 / 互联网广告销售 / 电商项目经理\"",
+          "extracted_value": "\"市场营销 / 互联网广告销售与商务拓展\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.5,
+          "reason": "职能方向基本准确，涵盖了市场营销与互联网广告销售，但遗漏了GT中的电商项目经理职能。"
+        },
+        {
+          "field_name": "years_of_experience",
+          "ground_truth_value": "\"4年以上互联网广告销售、市场营销与电商系统项目管理经验\"",
+          "extracted_value": "\"3年以上互联网数字营销、广告投放及电商项目策划经验\"",
+          "entity_number_match": false,
+          "has_hallucination": false,
+          "score": 3.0,
+          "reason": "年限数字错误，GT为4年以上，模型提取为3年以上，触犯核心数字不符铁律，上限3分。"
+        },
+        {
+          "field_name": "education_summary",
+          "ground_truth_value": "\"本科 · 市场营销（免费科技大学 / 简历模板资源网科技大学）\"",
+          "extracted_value": "\"本科 · 市场营销\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.0,
+          "reason": "最高学历本科与专业名称市场营销提取完全准确，仅省略了院校名称补充，核心实体无误。"
+        },
+        {
+          "field_name": "target_cities",
+          "ground_truth_value": "[\"北京\"]",
+          "extracted_value": "[\"北京\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "标准市级城市提取准确，脱敏合规，与GT完全一致。"
+        },
+        {
+          "field_name": "industry_background",
+          "ground_truth_value": "[\"互联网广告/数字营销\", \"电子商务\", \"企业软件与信息服务\"]",
+          "extracted_value": "[\"互联网/电子商务\", \"数字营销/广告传媒\", \"IT软件与服务\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "行业标签语义高度等价，完整覆盖电商、广告营销与企业IT服务三大行业背景。"
+        },
+        {
+          "field_name": "core_skills",
+          "ground_truth_value": "[\"线上广告资源销售与客户开拓\", \"信息流广告投放规划(广点通/智汇推/百度)\", \"客户数据跟踪与投放优化\", \"网上商城系统产品功能设计\", \"客户需求分析与方案撰写\", \"大型电商项目策划与项目管理\"]",
+          "extracted_value": "[\"数字广告资源销售\", \"广告投放方案定制\", \"KA大客户开拓与维护\", \"电商系统产品策划\", \"客户需求调研与分析\", \"跨部门项目管理\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "核心技能覆盖全面，专业能力提取高度契合简历与GT，无脱水或编造。"
+        },
+        {
+          "field_name": "experience_highlights",
+          "ground_truth_value": "[\"负责广点通、智汇推、百度、小米、360、沃门户等线上广告资源销售，合作服务珍爱网、世纪佳缘、56视频、京东等头部客户并制定投放计划\", \"参与公司网上商城系统产品功能设计及多个大型电子商务项目策划，担任大商集团网上商城一期建设项目经理\", \"曾任校园大使主席，带领团队协助五百丁公司完成高校“伏龙计划”，向AXA金融公司推送实习生资源\"]",
+          "extracted_value": "[\"负责广点通、智汇推、百度、小米、360等多平台线上资源销售开拓，成功为京东、珍爱网、世纪佳缘、56视频等头部客户定制投放计划与执行方案\", \"参与多个大型电子商务项目策划，担任大商集团网上商城一期建设副项目经理，深度参与业务系统设计、需求调研与方案编写\", \"具备校园大型项目组织管理经验，曾任校园大使主席统筹线上线下宣传活动，并成功协同推进五百丁及AXA金融人才输送项目\"]",
+          "entity_number_match": false,
+          "has_hallucination": true,
+          "score": 3.0,
+          "reason": "整体亮点覆盖较全，但出现无中生有的职务篡改幻觉，将“项目经理”降级篡改为“副项目经理”。（触发数字/硬实体不一致铁律，得分上限锁死为 3.0 分）"
+        },
+        {
+          "field_name": "inferred_salary_floor",
+          "ground_truth_value": "\"1.2w\"",
+          "extracted_value": "\"1w\"",
+          "entity_number_match": false,
+          "has_hallucination": false,
+          "score": 3.0,
+          "reason": "推断薪资底线为1w，与GT的1.2w偏差在±20%的合理推断浮动区间内。（触发数字/硬实体不一致铁律，得分上限锁死为 3.0 分）"
+        },
+        {
+          "field_name": "inferred_welfare_prefs",
+          "ground_truth_value": "[\"周末双休\", \"五险一金\", \"绩效奖金\"]",
+          "extracted_value": "[\"五险一金\", \"周末双休\", \"绩效奖金\", \"带薪年假\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "完整覆盖GT中的三项核心福利，额外合理衍生带薪年假，符合职场常理。"
+        }
+      ]
+    },
+    {
+      "id": "QUAL-03",
+      "file_name": "QUAL-03.pdf",
+      "extension": ".pdf",
+      "industry_category": "互联网/艺术与视觉设计",
+      "file_validation_passed": true,
+      "file_validation_code": "OK",
+      "extract_latency_s": 14.12,
+      "judge_latency_s": 13.89,
+      "ground_truth": {
+        "candidate_title": "UI设计师 / 交互设计师 / 网页设计师",
+        "years_of_experience": "应届毕业生 / 具备媒体采编与国际城市课题研究实习经验",
+        "education_summary": "本科 · 美学传媒（四川大学 / 上海某某大学 / 上海市某某艺术设计学院）",
+        "target_cities": [
+          "上海",
+          "成都"
+        ],
+        "industry_background": [
+          "UI与网页视觉设计",
+          "数字传媒与艺术设计",
+          "新闻采编"
+        ],
+        "core_skills": [
+          "UI设计与网页视觉设计",
+          "交互原型设计(Axure RP)",
+          "Adobe Photoshop / Illustrator",
+          "Adobe After Effects / InDesign / Flash",
+          "大学英语六级(CET-6)与法语二级",
+          "计算机三级与新闻采编撰稿"
+        ],
+        "experience_highlights": [
+          "荣获第十一届挑战杯创业大赛全国铜奖及省级特等奖、全国特等奖学金、海辉杯论文大赛二等奖",
+          "于《温州零距离》栏目组担任实习记者，参与电视新闻现场采访、工作室同期声采编及新闻稿撰写",
+          "担任The Asian Cities Program研究员，代表大学工程管理研究所参加The Real Estate Academy in China国际房地产研究培训课程"
+        ],
+        "inferred_salary_floor": "0.6w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金"
+        ]
+      },
+      "extracted_profile": {
+        "candidate_title": "UI设计师 / 交互设计师 / 网页设计师",
+        "years_of_experience": "应届生/初级资历（具备传媒与设计复合学习背景及多段实习经验）",
+        "education_summary": "本科 · 美学传媒",
+        "target_cities": [
+          "上海",
+          "成都"
+        ],
+        "industry_background": [
+          "互联网/移动互联网",
+          "视觉传达/艺术设计",
+          "传媒/新闻传播"
+        ],
+        "core_skills": [
+          "Photoshop",
+          "Illustrator",
+          "Axure RP",
+          "After Effects",
+          "InDesign",
+          "UI视觉设计",
+          "交互原型设计",
+          "排版与色彩构图"
+        ],
+        "experience_highlights": [
+          "竞赛与学术成就突出：曾荣获第十一届“挑战杯”创业大赛全国铜奖与省级特等奖、全国特等奖学金及海辉杯论文大赛二等奖",
+          "设计软件与工具技能扎实：熟练运用 PS、AI、Axure、AE、InDesign 等主流图形界面与交互设计工具",
+          "综合实践与跨界学习能力优异：拥有电视媒体新闻采编与国际城市研究课题研修经历，兼备英语六级与法语沟通基础"
+        ],
+        "inferred_salary_floor": "0.6w",
+        "inferred_welfare_prefs": [
+          "五险一金",
+          "周末双休",
+          "专业技能培训",
+          "年终奖"
+        ]
+      },
+      "judge_model": "gemini-3.8-flash",
+      "schema_and_pii_valid": true,
+      "violations": [],
+      "overall_score_10": 9.72,
+      "overall_score": 0.972,
+      "entity_match_rate": 1.0,
+      "entity_mismatch_fields": [],
+      "hallucination_field_count": 0,
+      "hallucinated_fields": [],
+      "overall_comment": "整体提取质量优异，各字段硬实体与数字（学历等级、城市、竞赛奖项、薪资下限）100%匹配，零幻觉编造，表达专业且高度贴合基准事实。",
+      "field_scores": {
+        "candidate_title": 10.0,
+        "years_of_experience": 10.0,
+        "education_summary": 9.5,
+        "target_cities": 10.0,
+        "industry_background": 10.0,
+        "core_skills": 9.0,
+        "experience_highlights": 9.5,
+        "inferred_salary_floor": 10.0,
+        "inferred_welfare_prefs": 9.5
+      },
+      "field_evaluations": [
+        {
+          "field_name": "candidate_title",
+          "ground_truth_value": "\"UI设计师 / 交互设计师 / 网页设计师\"",
+          "extracted_value": "\"UI设计师 / 交互设计师 / 网页设计师\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "目标岗位头衔与基准完全一致，准确对应候选人意向且无任何多余虚构。"
+        },
+        {
+          "field_name": "years_of_experience",
+          "ground_truth_value": "\"应届毕业生 / 具备媒体采编与国际城市课题研究实习经验\"",
+          "extracted_value": "\"应届生/初级资历（具备传媒与设计复合学习背景及多段实习经验）\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "准确将候选人界定为应届生/初级资历，对实习复合背景的概括与基准高度等价。"
+        },
+        {
+          "field_name": "education_summary",
+          "ground_truth_value": "\"本科 · 美学传媒（四川大学 / 上海某某大学 / 上海市某某艺术设计学院）\"",
+          "extracted_value": "\"本科 · 美学传媒\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "最高学历等级“本科”与专业名称“美学传媒”完全准确，仅未附加具体毕业院校。"
+        },
+        {
+          "field_name": "target_cities",
+          "ground_truth_value": "[\"上海\", \"成都\"]",
+          "extracted_value": "[\"上海\", \"成都\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "目标城市集合完全一致，均为市级标准名称且无隐私地址泄露。"
+        },
+        {
+          "field_name": "industry_background",
+          "ground_truth_value": "[\"UI与网页视觉设计\", \"数字传媒与艺术设计\", \"新闻采编\"]",
+          "extracted_value": "[\"互联网/移动互联网\", \"视觉传达/艺术设计\", \"传媒/新闻传播\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "细分行业方向与基准语义完全吻合，分类规范专业，无偏离或未从业编造。"
+        },
+        {
+          "field_name": "core_skills",
+          "ground_truth_value": "[\"UI设计与网页视觉设计\", \"交互原型设计(Axure RP)\", \"Adobe Photoshop / Illustrator\", \"Adobe After Effects / InDesign / Flash\", \"大学英语六级(CET-6)与法语二级\", \"计算机三级与新闻采编撰稿\"]",
+          "extracted_value": "[\"Photoshop\", \"Illustrator\", \"Axure RP\", \"After Effects\", \"InDesign\", \"UI视觉设计\", \"交互原型设计\", \"排版与色彩构图\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.0,
+          "reason": "设计与原型工具技能提取全面精准，仅略缺语言与新闻采编类综合技能。"
+        },
+        {
+          "field_name": "experience_highlights",
+          "ground_truth_value": "[\"荣获第十一届挑战杯创业大赛全国铜奖及省级特等奖、全国特等奖学金、海辉杯论文大赛二等奖\", \"于《温州零距离》栏目组担任实习记者，参与电视新闻现场采访、工作室同期声采编及新闻稿撰写\", \"担任The Asian Cities Program研究员，代表大学工程管理研究所参加The Real Estate Academy in China国际房地产研究培训课程\"]",
+          "extracted_value": "[\"竞赛与学术成就突出：曾荣获第十一届“挑战杯”创业大赛全国铜奖与省级特等奖、全国特等奖学金及海辉杯论文大赛二等奖\", \"设计软件与工具技能扎实：熟练运用 PS、AI、Axure、AE、InDesign 等主流图形界面与交互设计工具\", \"综合实践与跨界学习能力优异：拥有电视媒体新闻采编与国际城市研究课题研修经历，兼备英语六级与法语沟通基础\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "竞赛获奖名称与等级完全精确，两段实习经历的核心要点完整覆盖，逻辑清晰。"
+        },
+        {
+          "field_name": "inferred_salary_floor",
+          "ground_truth_value": "\"0.6w\"",
+          "extracted_value": "\"0.6w\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "薪资底线数字与基准值及简历期望薪资完全一致（6K-7K 下限 0.6w）。"
+        },
+        {
+          "field_name": "inferred_welfare_prefs",
+          "ground_truth_value": "[\"周末双休\", \"五险一金\"]",
+          "extracted_value": "[\"五险一金\", \"周末双休\", \"专业技能培训\", \"年终奖\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "完整覆盖基准福利标签，额外补充的技能培训和年终奖符合应届生合理诉求。"
+        }
+      ]
+    },
+    {
+      "id": "QUAL-04",
+      "file_name": "QUAL-04.pdf",
+      "extension": ".pdf",
+      "industry_category": "互联网/后端研发",
+      "file_validation_passed": true,
+      "file_validation_code": "OK",
+      "extract_latency_s": 10.85,
+      "judge_latency_s": 22.61,
+      "ground_truth": {
+        "candidate_title": "Java后端开发工程师 / Web后台研发工程师",
+        "years_of_experience": "1年Java/Web后端开发经验（2023届本科毕业，含Java后台开发实习经历）",
+        "education_summary": "本科 · 软件工程（2023届 XX大学）",
+        "target_cities": [
+          "广州"
+        ],
+        "industry_background": [
+          "互联网/后端开发",
+          "分布式微服务架构",
+          "技术社区与开源软件"
+        ],
+        "core_skills": [
+          "Java / Kotlin 服务端开发",
+          "Spring / SpringBoot / SpringCloud 微服务",
+          "MySQL 慢SQL调优与B+树索引优化",
+          "Redis 缓存与分布式锁",
+          "ElasticSearch 与 RabbitMQ 消息队列",
+          "Jenkins + Docker 自动化部署与持续集成",
+          "Arthas 线上故障排查与JVM调优"
+        ],
+        "experience_highlights": [
+          "负责Web后台研发与性能优化，针对慢SQL和复杂查询进行排查调优，将接口p95延时从4000ms降低至50ms",
+          "从0到1主力开发微信小程序后端，接入微信登录、微信支付与阿里云OSS直传，设计单主体存储的消息群发系统",
+          "独立开发开源微服务项目“校园博客”(GitHub Star 380+)与“SpEL Validator”参数校验扩展包(GitHub Star 70+)，技术文章全网阅读量超80W",
+          "获蓝桥杯算法赛省赛一等奖3次及国赛三等奖2次、中国大学生计算机设计大赛中南地区二等奖，拥有软件著作权2项"
+        ],
+        "inferred_salary_floor": "1.2w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金",
+          "年终奖"
+        ]
+      },
+      "extracted_profile": {
+        "candidate_title": "Java后端开发工程师 / Web后台研发",
+        "years_of_experience": "1年Java后端开发与微服务实战经验",
+        "education_summary": "本科 · 软件工程",
+        "target_cities": [
+          "广州"
+        ],
+        "industry_background": [
+          "互联网/软件",
+          "计算机软件",
+          "IT服务/企业服务"
+        ],
+        "core_skills": [
+          "Java/Kotlin服务端开发",
+          "Spring Boot/Spring Cloud微服务架构",
+          "MySQL及SQL优化",
+          "Redis缓存与分布式锁",
+          "ElasticSearch/MQ消息队列",
+          "JVM调优与Arthas线上排查",
+          "Docker/Jenkins CI/CD自动化部署"
+        ],
+        "experience_highlights": [
+          "主导及核心参与微服务与小程序后台从0到1研发，落地微信登录与支付、消息推送及OSS直传架构",
+          "具备系统性能优化与故障排查经验，曾排查慢SQL与复杂查询，将系统p95延迟从4000ms优化至50ms",
+          "具备突出的技术影响力与算法功底，开源项目累计获得GitHub Star 450+，技术内容全网阅读超80万，获蓝桥杯全国三等奖及省赛一等奖3次"
+        ],
+        "inferred_salary_floor": "1w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金",
+          "年终奖",
+          "弹性打卡"
+        ]
+      },
+      "judge_model": "gemini-3.8-flash",
+      "schema_and_pii_valid": true,
+      "violations": [],
+      "overall_score_10": 9.33,
+      "overall_score": 0.933,
+      "entity_match_rate": 1.0,
+      "entity_mismatch_fields": [],
+      "hallucination_field_count": 0,
+      "hallucinated_fields": [],
+      "overall_comment": "待测模型整体提取质量极高。核心硬实体（学历、1年经验、广州）与关键业务量化指标（p95延时、开源Star、阅读量、竞赛奖项）100%精准无幻觉，技能提炼极其完整；仅在行业细分标签与个别次要竞赛奖项上略有简化。",
+      "field_scores": {
+        "candidate_title": 10.0,
+        "years_of_experience": 9.5,
+        "education_summary": 9.0,
+        "target_cities": 10.0,
+        "industry_background": 8.5,
+        "core_skills": 10.0,
+        "experience_highlights": 9.0,
+        "inferred_salary_floor": 8.5,
+        "inferred_welfare_prefs": 9.5
+      },
+      "field_evaluations": [
+        {
+          "field_name": "candidate_title",
+          "ground_truth_value": "\"Java后端开发工程师 / Web后台研发工程师\"",
+          "extracted_value": "\"Java后端开发工程师 / Web后台研发\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "核心职能与职级定位完全准确，与基准标注语义高度一致，无任何虚构偏差。"
+        },
+        {
+          "field_name": "years_of_experience",
+          "ground_truth_value": "\"1年Java/Web后端开发经验（2023届本科毕业，含Java后台开发实习经历）\"",
+          "extracted_value": "\"1年Java后端开发与微服务实战经验\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "核心年限“1年”与技术方向提取完全正确，仅略微简化了毕业届别与实习背景说明。"
+        },
+        {
+          "field_name": "education_summary",
+          "ground_truth_value": "\"本科 · 软件工程（2023届 XX大学）\"",
+          "extracted_value": "\"本科 · 软件工程\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.0,
+          "reason": "最高学历“本科”与“软件工程”专业硬实体100%匹配无误，未包含毕业年份与学校名略有省略。"
+        },
+        {
+          "field_name": "target_cities",
+          "ground_truth_value": "[\"广州\"]",
+          "extracted_value": "[\"广州\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "目标城市提取标准准确，无冗余街道门牌信息，与基准值完全一致。"
+        },
+        {
+          "field_name": "industry_background",
+          "ground_truth_value": "[\"互联网/后端开发\", \"分布式微服务架构\", \"技术社区与开源软件\"]",
+          "extracted_value": "[\"互联网/软件\", \"计算机软件\", \"IT服务/企业服务\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.5,
+          "reason": "提取归纳为标准行业通用分类，虽覆盖了IT软件大类，但缺少对微服务与技术社区等细分特征的体现。"
+        },
+        {
+          "field_name": "core_skills",
+          "ground_truth_value": "[\"Java / Kotlin 服务端开发\", \"Spring / SpringBoot / SpringCloud 微服务\", \"MySQL 慢SQL调优与B+树索引优化\", \"Redis 缓存与分布式锁\", \"ElasticSearch 与 RabbitMQ 消息队列\", \"Jenkins + Docker 自动化部署与持续集成\", \"Arthas 线上故障排查与JVM调优\"]",
+          "extracted_value": "[\"Java/Kotlin服务端开发\", \"Spring Boot/Spring Cloud微服务架构\", \"MySQL及SQL优化\", \"Redis缓存与分布式锁\", \"ElasticSearch/MQ消息队列\", \"JVM调优与Arthas线上排查\", \"Docker/Jenkins CI/CD自动化部署\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "完整覆盖了候选人Java技术栈全部7项关键硬技能，技术组件名称与对应场景提取极精准。"
+        },
+        {
+          "field_name": "experience_highlights",
+          "ground_truth_value": "[\"负责Web后台研发与性能优化，针对慢SQL和复杂查询进行排查调优，将接口p95延时从4000ms降低至50ms\", \"从0到1主力开发微信小程序后端，接入微信登录、微信支付与阿里云OSS直传，设计单主体存储的消息群发系统\", \"独立开发开源微服务项目“校园博客”(GitHub Star 380+)与“SpEL Validator”参数校验扩展包(GitHub Star 70+)，技术文章全网阅读量超80W\", \"获蓝桥杯算法赛省赛一等奖3次及国赛三等奖2次、中国大学生计算机设计大赛中南地区二等奖，拥有软件著作权2项\"]",
+          "extracted_value": "[\"主导及核心参与微服务与小程序后台从0到1研发，落地微信登录与支付、消息推送及OSS直传架构\", \"具备系统性能优化与故障排查经验，曾排查慢SQL与复杂查询，将系统p95延迟从4000ms优化至50ms\", \"具备突出的技术影响力与算法功底，开源项目累计获得GitHub Star 450+，技术内容全网阅读超80万，获蓝桥杯全国三等奖及省赛一等奖3次\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.0,
+          "reason": "关键量化指标（4000ms到50ms、Star总数450+、80万阅读、省一3次）完全精准吻合，仅漏提国赛获奖次数与计算机设计大赛。"
+        },
+        {
+          "field_name": "inferred_salary_floor",
+          "ground_truth_value": "\"1.2w\"",
+          "extracted_value": "\"1w\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.5,
+          "reason": "底线薪资推断为1w，与基准1.2w误差在16.7%（±20%以内），处于合理浮动区间。"
+        },
+        {
+          "field_name": "inferred_welfare_prefs",
+          "ground_truth_value": "[\"周末双休\", \"五险一金\", \"年终奖\"]",
+          "extracted_value": "[\"周末双休\", \"五险一金\", \"年终奖\", \"弹性打卡\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "基准三大核心福利全部命中，合理补充了符合研发工程师特点的“弹性打卡”，无冲突。"
+        }
+      ]
+    },
+    {
+      "id": "QUAL-05",
+      "file_name": "QUAL-05.docx",
+      "extension": ".docx",
+      "industry_category": "教育培训/国际贸易与行政管理",
+      "file_validation_passed": true,
+      "file_validation_code": "OK",
+      "extract_latency_s": 11.56,
+      "judge_latency_s": 29.52,
+      "ground_truth": {
+        "candidate_title": "英语教师 / 国际贸易与行政运营专员",
+        "years_of_experience": "约1年半英语口语教学及多年高校组织宣传与活动策划经验",
+        "education_summary": "硕士 · 国际经济与贸易（华中师范大学）｜学士 · 对外汉语（广州科技大学）",
+        "target_cities": [
+          "武汉",
+          "广州"
+        ],
+        "industry_background": [
+          "教育培训/外语教学",
+          "国际经济与贸易",
+          "行政管理与活动策划"
+        ],
+        "core_skills": [
+          "英语口语教学与课程辅导",
+          "活动策划与公共关系协调",
+          "企业运营与供应链管理基础",
+          "商务礼仪与谈判",
+          "Adobe认证设计与AutoCAD建筑制图",
+          "英语四级(CET-4)与普通话二级甲等"
+        ],
+        "experience_highlights": [
+          "于武汉思拓外语培训学校担任英语口语教师（2013.02-2014.06），并荣获2016年武汉思拓外语学校“优秀骨干教师”称号",
+          "荣获2016年湖北省创青春创业计划移动专项赛银奖、大学生课外技术创新活动优胜奖及2012年广州科技大学国家一等奖学金",
+          "历任华中师范大学经济管理学院学生会副部长、广州科技大学网络宣传部部长及组织部宣传干事，具备丰富的组织协调与活动策划经验"
+        ],
+        "inferred_salary_floor": "0.8w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金"
+        ]
+      },
+      "extracted_profile": {
+        "candidate_title": "涉外商务与运营主管 / 英语教研主管",
+        "years_of_experience": "硕士学历复合背景，1年以上教育培训与团队运营管理经验",
+        "education_summary": "硕士 · 华中师范大学 · 国际经济与贸易",
+        "target_cities": [
+          "武汉",
+          "广州"
+        ],
+        "industry_background": [
+          "教育/培训",
+          "进出口/国际贸易",
+          "企业管理咨询/运营"
+        ],
+        "core_skills": [
+          "英语口语教学",
+          "商务谈判与礼仪",
+          "活动策划与协调",
+          "跨部门沟通协作",
+          "团队管理与赋能",
+          "企业运营管理",
+          "文字宣传与设计"
+        ],
+        "experience_highlights": [
+          "拥有华中师范大学国际经济与贸易硕士学位，系统掌握企业运营管理、供应链管理及财务审计等复合专业知识。",
+          "曾任知名外语培训学校英语口语教师并荣获“优秀骨干教师”称号，具备扎实的教学教研与客户沟通服务能力。",
+          "斩获湖北省“创青春”创业计划移动专项赛银奖及国家一等奖学金，兼具优秀的创新策划与项目统筹执行力。"
+        ],
+        "inferred_salary_floor": "1w",
+        "inferred_welfare_prefs": [
+          "五险一金",
+          "周末双休",
+          "带薪年假"
+        ]
+      },
+      "judge_model": "gemini-3.8-flash",
+      "schema_and_pii_valid": true,
+      "violations": [],
+      "overall_score_10": 8.67,
+      "overall_score": 0.867,
+      "entity_match_rate": 1.0,
+      "entity_mismatch_fields": [],
+      "hallucination_field_count": 0,
+      "hallucinated_fields": [],
+      "overall_comment": "提取质量整体优异，零幻觉且实体数字精准，奖项与城市无缝匹配；主要瑕疵在于职级预测略微偏高（专员拔高为主管），且教育背景中漏掉了本科学段。",
+      "field_scores": {
+        "candidate_title": 7.5,
+        "years_of_experience": 9.0,
+        "education_summary": 7.5,
+        "target_cities": 10.0,
+        "industry_background": 9.5,
+        "core_skills": 8.5,
+        "experience_highlights": 8.5,
+        "inferred_salary_floor": 8.0,
+        "inferred_welfare_prefs": 9.5
+      },
+      "field_evaluations": [
+        {
+          "field_name": "candidate_title",
+          "ground_truth_value": "\"英语教师 / 国际贸易与行政运营专员\"",
+          "extracted_value": "\"涉外商务与运营主管 / 英语教研主管\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 7.5,
+          "reason": "职能方向覆盖准确，但候选人实际仅有1年半一线教学及学生干部经历，提取结果拔高至“主管”职级，存在轻微职级虚高。"
+        },
+        {
+          "field_name": "years_of_experience",
+          "ground_truth_value": "\"约1年半英语口语教学及多年高校组织宣传与活动策划经验\"",
+          "extracted_value": "\"硕士学历复合背景，1年以上教育培训与团队运营管理经验\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.0,
+          "reason": "年限数字与履历事实高度吻合，准确提炼了教育培训与运营管理经验，核心语义完整。"
+        },
+        {
+          "field_name": "education_summary",
+          "ground_truth_value": "\"硕士 · 国际经济与贸易（华中师范大学）｜学士 · 对外汉语（广州科技大学）\"",
+          "extracted_value": "\"硕士 · 华中师范大学 · 国际经济与贸易\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 7.5,
+          "reason": "最高学历、院校及专业硬实体完全准确，但遗漏了本科阶段（对外汉语）教育背景信息。"
+        },
+        {
+          "field_name": "target_cities",
+          "ground_truth_value": "[\"武汉\", \"广州\"]",
+          "extracted_value": "[\"武汉\", \"广州\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "目标城市与基准完全一致，均为标准市级名称，且严格遵守隐私脱敏规范。"
+        },
+        {
+          "field_name": "industry_background",
+          "ground_truth_value": "[\"教育培训/外语教学\", \"国际经济与贸易\", \"行政管理与活动策划\"]",
+          "extracted_value": "[\"教育/培训\", \"进出口/国际贸易\", \"企业管理咨询/运营\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "行业标签语义高度等价，完整覆盖教育培训、国际贸易与企业运营三大从业及专业背景。"
+        },
+        {
+          "field_name": "core_skills",
+          "ground_truth_value": "[\"英语口语教学与课程辅导\", \"活动策划与公共关系协调\", \"企业运营与供应链管理基础\", \"商务礼仪与谈判\", \"Adobe认证设计与AutoCAD建筑制图\", \"英语四级(CET-4)与普通话二级甲等\"]",
+          "extracted_value": "[\"英语口语教学\", \"商务谈判与礼仪\", \"活动策划与协调\", \"跨部门沟通协作\", \"团队管理与赋能\", \"企业运营管理\", \"文字宣传与设计\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.5,
+          "reason": "专业技能覆盖全面准确，但遗漏了普通话二甲、CET-4及专业设计证书等硬性资质项。"
+        },
+        {
+          "field_name": "experience_highlights",
+          "ground_truth_value": "[\"于武汉思拓外语培训学校担任英语口语教师（2013.02-2014.06），并荣获2016年武汉思拓外语学校“优秀骨干教师”称号\", \"荣获2016年湖北省创青春创业计划移动专项赛银奖、大学生课外技术创新活动优胜奖及2012年广州科技大学国家一等奖学金\", \"历任华中师范大学经济管理学院学生会副部长、广州科技大学网络宣传部部长及组织部宣传干事，具备丰富的组织协调与活动策划经验\"]",
+          "extracted_value": "[\"拥有华中师范大学国际经济与贸易硕士学位，系统掌握企业运营管理、供应链管理及财务审计等复合专业知识。\", \"曾任知名外语培训学校英语口语教师并荣获“优秀骨干教师”称号，具备扎实的教学教研与客户沟通服务能力。\", \"斩获湖北省“创青春”创业计划移动专项赛银奖及国家一等奖学金，兼具优秀的创新策划与项目统筹执行力。\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.5,
+          "reason": "关键奖项名称与教师任职经历完全真实吻合，无任何数字错误或幻觉；略微弱化了高校学生干部任职细节。"
+        },
+        {
+          "field_name": "inferred_salary_floor",
+          "ground_truth_value": "\"0.8w\"",
+          "extracted_value": "\"1w\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.0,
+          "reason": "预测薪资略高于基准值，但处于硕士复合背景及一线/新一线城市同类岗位的合理浮动区间内。"
+        },
+        {
+          "field_name": "inferred_welfare_prefs",
+          "ground_truth_value": "[\"周末双休\", \"五险一金\"]",
+          "extracted_value": "[\"五险一金\", \"周末双休\", \"带薪年假\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "基准核心福利标签全部命中，额外补充的带薪年假符合职场通用诉求，推断合理。"
+        }
+      ]
+    },
+    {
+      "id": "QUAL-06",
+      "file_name": "QUAL-06.docx",
+      "extension": ".docx",
+      "industry_category": "互联网广告/市场运营",
+      "file_validation_passed": true,
+      "file_validation_code": "OK",
+      "extract_latency_s": 12.24,
+      "judge_latency_s": 39.84,
+      "ground_truth": {
+        "candidate_title": "市场运营专员 / 互联网广告销售与产品项目运营",
+        "years_of_experience": "4年以上互联网市场运营、线上广告销售与电商项目管理经验",
+        "education_summary": "本科 · 市场营销（宁波科技大学）",
+        "target_cities": [
+          "广州"
+        ],
+        "industry_background": [
+          "互联网市场运营",
+          "数字广告投放与销售",
+          "电子商务与产品策划"
+        ],
+        "core_skills": [
+          "线上广告资源销售(广点通/智慧推/小米/360)",
+          "广告投放计划制定与客户数据跟踪",
+          "产品规划、需求分析与交互设计",
+          "APP与WEB项目管控",
+          "活动策划、摄影与文案写作",
+          "Photoshop / Illustrator 视觉工具",
+          "大学英语六级(CET-6)与普通话一级甲等"
+        ],
+        "experience_highlights": [
+          "在长丰科技有限公司负责广点通、智慧推、小米、360、沃门户等线上资源销售，为珍爱网、世纪佳缘、56视频、京东等客户定制投放计划",
+          "在广州蓝光信息有限公司担任软件工程师及大商集团网上商城一期建设项目经理，主导客户调研、需求分析与大型电商项目策划",
+          "曾任大庆稻田大学辩论队队长管理50人团队，作为负责人对接《奔跑吧兄弟》高校站录制、长安福特全球校园行及《时代周末》校园行活动"
+        ],
+        "inferred_salary_floor": "1w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金"
+        ]
+      },
+      "extracted_profile": {
+        "candidate_title": "市场运营专员 / 数字营销专员",
+        "years_of_experience": "2-3年数字营销投放、客户运营与电商项目策划经验",
+        "education_summary": "本科 · 市场营销",
+        "target_cities": [
+          "广州"
+        ],
+        "industry_background": [
+          "互联网/广告营销",
+          "电子商务",
+          "移动互联网"
+        ],
+        "core_skills": [
+          "广告投放策略与数据跟踪",
+          "主流渠道资源整合（广点通/智慧推/小米）",
+          "电商项目策划与落地",
+          "客户调研与方案撰写",
+          "活动策划与统筹",
+          "Photoshop与设计协作"
+        ],
+        "experience_highlights": [
+          "为京东、珍爱网、世纪佳缘、56视频等多家知名互联网企业提供数据跟踪分析与定制化广告投放计划",
+          "负责广点通、智慧推等线上端资源销售与方案撰写，并担任大商集团网上商城一期建设项目经理",
+          "具备团队协调与大型活动对接经验，曾统筹推进多项商业校园行与知名卫视节目现场录制支持"
+        ],
+        "inferred_salary_floor": "0.8w",
+        "inferred_welfare_prefs": [
+          "五险一金",
+          "周末双休",
+          "绩效奖金",
+          "带薪年假"
+        ]
+      },
+      "judge_model": "gemini-3.8-flash",
+      "schema_and_pii_valid": true,
+      "violations": [],
+      "overall_score_10": 7.78,
+      "overall_score": 0.778,
+      "entity_match_rate": 0.7778,
+      "entity_mismatch_fields": [
+        "years_of_experience",
+        "inferred_salary_floor"
+      ],
+      "hallucination_field_count": 0,
+      "hallucinated_fields": [],
+      "overall_comment": "画像整体提取质量良好，城市、教育及关键经历中的核心项目与客户名称提取精准规范，无事实幻觉。主要扣分项在于工作年限计算低估（4年算成2-3年）触发铁律限分，且薪资推断略偏保守。",
+      "field_scores": {
+        "candidate_title": 9.5,
+        "years_of_experience": 3.0,
+        "education_summary": 9.0,
+        "target_cities": 10.0,
+        "industry_background": 9.5,
+        "core_skills": 8.0,
+        "experience_highlights": 8.5,
+        "inferred_salary_floor": 3.0,
+        "inferred_welfare_prefs": 9.5
+      },
+      "field_evaluations": [
+        {
+          "field_name": "candidate_title",
+          "ground_truth_value": "\"市场运营专员 / 互联网广告销售与产品项目运营\"",
+          "extracted_value": "\"市场运营专员 / 数字营销专员\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "准确抓取了求职意向‘市场运营专员’，并根据核心经历合理归纳出数字营销专员，方向与GT高度吻合。"
+        },
+        {
+          "field_name": "years_of_experience",
+          "ground_truth_value": "\"4年以上互联网市场运营、线上广告销售与电商项目管理经验\"",
+          "extracted_value": "\"2-3年数字营销投放、客户运营与电商项目策划经验\"",
+          "entity_number_match": false,
+          "has_hallucination": false,
+          "score": 3.0,
+          "reason": "关键经验年限数字计算失真，GT为4年以上，模型低估为2-3年，触发铁律最高限3.0分。"
+        },
+        {
+          "field_name": "education_summary",
+          "ground_truth_value": "\"本科 · 市场营销（宁波科技大学）\"",
+          "extracted_value": "\"本科 · 市场营销\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.0,
+          "reason": "最高学历本科与专业市场营销完全匹配，仅略去了院校名称，无事实冲突与幻觉。"
+        },
+        {
+          "field_name": "target_cities",
+          "ground_truth_value": "[\"广州\"]",
+          "extracted_value": "[\"广州\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "目标城市提取完全准确，标准城市格式规范且符合脱敏与事实一致性要求。"
+        },
+        {
+          "field_name": "industry_background",
+          "ground_truth_value": "[\"互联网市场运营\", \"数字广告投放与销售\", \"电子商务与产品策划\"]",
+          "extracted_value": "[\"互联网/广告营销\", \"电子商务\", \"移动互联网\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "过往细分行业标签语义覆盖完整，与GT的广告营销、电子商务和互联网运营高度契合。"
+        },
+        {
+          "field_name": "core_skills",
+          "ground_truth_value": "[\"线上广告资源销售(广点通/智慧推/小米/360)\", \"广告投放计划制定与客户数据跟踪\", \"产品规划、需求分析与交互设计\", \"APP与WEB项目管控\", \"活动策划、摄影与文案写作\", \"Photoshop / Illustrator 视觉工具\", \"大学英语六级(CET-6)与普通话一级甲等\"]",
+          "extracted_value": "[\"广告投放策略与数据跟踪\", \"主流渠道资源整合（广点通/智慧推/小米）\", \"电商项目策划与落地\", \"客户调研与方案撰写\", \"活动策划与统筹\", \"Photoshop与设计协作\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.0,
+          "reason": "覆盖了广告投放、主流渠道、电商策划与设计工具，但遗漏了语言证书与APP/WEB项目管控技能。"
+        },
+        {
+          "field_name": "experience_highlights",
+          "ground_truth_value": "[\"在长丰科技有限公司负责广点通、智慧推、小米、360、沃门户等线上资源销售，为珍爱网、世纪佳缘、56视频、京东等客户定制投放计划\", \"在广州蓝光信息有限公司担任软件工程师及大商集团网上商城一期建设项目经理，主导客户调研、需求分析与大型电商项目策划\", \"曾任大庆稻田大学辩论队队长管理50人团队，作为负责人对接《奔跑吧兄弟》高校站录制、长安福特全球校园行及《时代周末》校园行活动\"]",
+          "extracted_value": "[\"为京东、珍爱网、世纪佳缘、56视频等多家知名互联网企业提供数据跟踪分析与定制化广告投放计划\", \"负责广点通、智慧推等线上端资源销售与方案撰写，并担任大商集团网上商城一期建设项目经理\", \"具备团队协调与大型活动对接经验，曾统筹推进多项商业校园行与知名卫视节目现场录制支持\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.5,
+          "reason": "核心项目、大客户及电商经理经历提取完整准确，但概括辩论队经历时遗漏了50人团队规模量化数字。"
+        },
+        {
+          "field_name": "inferred_salary_floor",
+          "ground_truth_value": "\"1w\"",
+          "extracted_value": "\"0.8w\"",
+          "entity_number_match": false,
+          "has_hallucination": false,
+          "score": 3.0,
+          "reason": "GT基准为1w，模型推断为0.8w，误差在20%以内，虽略显保守但处于合理薪资推断容差区间。（触发数字/硬实体不一致铁律，得分上限锁死为 3.0 分）"
+        },
+        {
+          "field_name": "inferred_welfare_prefs",
+          "ground_truth_value": "[\"周末双休\", \"五险一金\"]",
+          "extracted_value": "[\"五险一金\", \"周末双休\", \"绩效奖金\", \"带薪年假\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "完全覆盖GT全部福利偏好项，额外补充的绩效奖金和年假符合市场运营岗常见诉求，无事实冲突。"
+        }
+      ]
+    },
+    {
+      "id": "QUAL-07",
+      "file_name": "QUAL-07.jpg",
+      "extension": ".jpg",
+      "industry_category": "设计服务/软件与系统开发",
+      "file_validation_passed": true,
+      "file_validation_code": "OK",
+      "extract_latency_s": 17.21,
+      "judge_latency_s": 20.47,
+      "ground_truth": {
+        "candidate_title": "设计师 / 产品项目管理与系统开发专员",
+        "years_of_experience": "5年以上设计公司任职、公文数据统筹及软件系统模块开发经验",
+        "education_summary": "教育硕士 · 学科教学（语文）（武汉师范大学）｜文学学士 · 汉语言文学（湖北大学）",
+        "target_cities": [
+          "武汉"
+        ],
+        "industry_background": [
+          "设计服务与文档统筹",
+          "软件系统与电商开发",
+          "教育与行政公文管理"
+        ],
+        "core_skills": [
+          "产品管理与项目管理",
+          "Java 与 Linux 应用开发",
+          "Oracle 数据库与OA权限模块开发",
+          "移动应用与电商购物车模块设计",
+          "公文起草、档案整理与数据统计",
+          "活动策划与组织协调"
+        ],
+        "experience_highlights": [
+          "于湖北武汉国际设计公司历任设计助理与设计师（2010.08-2016.03），负责公文起草、设计文档归档及相关统计数据管理",
+          "参与网上购物系统研发，参与购物模块设计并独立完成购物车模块开发、系统测试与技术文档编写",
+          "基于Oracle数据库独立开发小型OA系统的管理员管理模块和权限管理模块，完成设计、编码与单元测试"
+        ],
+        "inferred_salary_floor": "0.8w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金"
+        ]
+      },
+      "extracted_profile": {
+        "candidate_title": "设计专员 / 设计助理",
+        "years_of_experience": "近6年设计公司文案支持与设计助理工作经验",
+        "education_summary": "硕士 · 学科教学（语文）",
+        "target_cities": [
+          "武汉"
+        ],
+        "industry_background": [
+          "广告/公关/会展/设计",
+          "文化传媒",
+          "互联网/计算机软件"
+        ],
+        "core_skills": [
+          "公文撰写与归档",
+          "文档扫描与资料流转",
+          "数据统计与整理",
+          "项目管理",
+          "产品管理",
+          "系统模块设计与测试"
+        ],
+        "experience_highlights": [
+          "具备5年以上设计公司任职资历，完整经历从设计助理到设计师的进阶，熟悉设计资料收发、扫描流转及档案归档全流程。",
+          "具备扎实的文字功底与行政文书处理能力，独立负责起草、整理及归档日常公文、重要资料与业务统计数据。",
+          "具备软硬件与系统项目实践经验，曾参与网上购物系统及小型OA系统的模块设计、独立开发、单元测试与配套文档编制。"
+        ],
+        "inferred_salary_floor": "0.7w",
+        "inferred_welfare_prefs": [
+          "五险一金",
+          "周末双休",
+          "带薪年假",
+          "定期体检"
+        ]
+      },
+      "judge_model": "gemini-3.8-flash",
+      "schema_and_pii_valid": true,
+      "violations": [],
+      "overall_score_10": 8.89,
+      "overall_score": 0.889,
+      "entity_match_rate": 1.0,
+      "entity_mismatch_fields": [],
+      "hallucination_field_count": 0,
+      "hallucinated_fields": [],
+      "overall_comment": "整体画像提取质量优良，关键工作年限、目标城市及两大核心项目经历还原准确，无事实编造与数字幻觉。主要扣分点在于教育背景遗漏了本科学历与学校名称，且技能标签遗漏了Java/Linux等具体开发工具实体。",
+      "field_scores": {
+        "candidate_title": 8.0,
+        "years_of_experience": 9.0,
+        "education_summary": 7.5,
+        "target_cities": 10.0,
+        "industry_background": 9.5,
+        "core_skills": 8.0,
+        "experience_highlights": 9.5,
+        "inferred_salary_floor": 9.0,
+        "inferred_welfare_prefs": 9.5
+      },
+      "field_evaluations": [
+        {
+          "field_name": "candidate_title",
+          "ground_truth_value": "\"设计师 / 产品项目管理与系统开发专员\"",
+          "extracted_value": "\"设计专员 / 设计助理\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.0,
+          "reason": "准确提炼出履历中的核心设计岗位方向，但未结合项目经历中突出的开发与产品管理背景进行复合职能概括。"
+        },
+        {
+          "field_name": "years_of_experience",
+          "ground_truth_value": "\"5年以上设计公司任职、公文数据统筹及软件系统模块开发经验\"",
+          "extracted_value": "\"近6年设计公司文案支持与设计助理工作经验\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.0,
+          "reason": "年限数字计算准确（2010.08-2016.03共5年7个月），但经验领域概括略偏向文案支持，缺少开发项目经验覆盖。"
+        },
+        {
+          "field_name": "education_summary",
+          "ground_truth_value": "\"教育硕士 · 学科教学（语文）（武汉师范大学）｜文学学士 · 汉语言文学（湖北大学）\"",
+          "extracted_value": "\"硕士 · 学科教学（语文）\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 7.5,
+          "reason": "最高学历等级（硕士）与专业名称完全匹配，无幻觉，但遗漏了本科段学历背景及毕业院校名称。"
+        },
+        {
+          "field_name": "target_cities",
+          "ground_truth_value": "[\"武汉\"]",
+          "extracted_value": "[\"武汉\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "目标城市提取完全一致，严格符合标准市级格式且无地址隐私泄露。"
+        },
+        {
+          "field_name": "industry_background",
+          "ground_truth_value": "[\"设计服务与文档统筹\", \"软件系统与电商开发\", \"教育与行政公文管理\"]",
+          "extracted_value": "[\"广告/公关/会展/设计\", \"文化传媒\", \"互联网/计算机软件\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "行业标签分类虽表述不同，但精准覆盖了设计、传媒与软件互联网三大业务板块，语义高度契合。"
+        },
+        {
+          "field_name": "core_skills",
+          "ground_truth_value": "[\"产品管理与项目管理\", \"Java 与 Linux 应用开发\", \"Oracle 数据库与OA权限模块开发\", \"移动应用与电商购物车模块设计\", \"公文起草、档案整理与数据统计\", \"活动策划与组织协调\"]",
+          "extracted_value": "[\"公文撰写与归档\", \"文档扫描与资料流转\", \"数据统计与整理\", \"项目管理\", \"产品管理\", \"系统模块设计与测试\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.0,
+          "reason": "公文行政及管理类技能覆盖完整，但遗漏了简历原文明确列出的 Java、Linux、Oracle 等关键技术硬技能实体。"
+        },
+        {
+          "field_name": "experience_highlights",
+          "ground_truth_value": "[\"于湖北武汉国际设计公司历任设计助理与设计师（2010.08-2016.03），负责公文起草、设计文档归档及相关统计数据管理\", \"参与网上购物系统研发，参与购物模块设计并独立完成购物车模块开发、系统测试与技术文档编写\", \"基于Oracle数据库独立开发小型OA系统的管理员管理模块和权限管理模块，完成设计、编码与单元测试\"]",
+          "extracted_value": "[\"具备5年以上设计公司任职资历，完整经历从设计助理到设计师的进阶，熟悉设计资料收发、扫描流转及档案归档全流程。\", \"具备扎实的文字功底与行政文书处理能力，独立负责起草、整理及归档日常公文、重要资料与业务统计数据。\", \"具备软硬件与系统项目实践经验，曾参与网上购物系统及小型OA系统的模块设计、独立开发、单元测试与配套文档编制。\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "完整覆盖了设计公司进阶及两个核心软件项目的模块开发，事实对应清晰，无张冠李戴与数字失真。"
+        },
+        {
+          "field_name": "inferred_salary_floor",
+          "ground_truth_value": "\"0.8w\"",
+          "extracted_value": "\"0.7w\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.0,
+          "reason": "推断底薪0.7w与GT的0.8w误差在±20%合理容差区间内，符合初中级文职复合背景在二线城市的行情定位。"
+        },
+        {
+          "field_name": "inferred_welfare_prefs",
+          "ground_truth_value": "[\"周末双休\", \"五险一金\"]",
+          "extracted_value": "[\"五险一金\", \"周末双休\", \"带薪年假\", \"定期体检\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "完整命中GT中的五险一金与双休诉求，适度补充常规福利，推断合理且无事实冲突。"
+        }
+      ]
+    },
+    {
+      "id": "QUAL-08",
+      "file_name": "QUAL-08.jpg",
+      "extension": ".jpg",
+      "industry_category": "互联网/项目管理与视觉设计",
+      "file_validation_passed": true,
+      "file_validation_code": "OK",
+      "extract_latency_s": 13.45,
+      "judge_latency_s": 24.13,
+      "ground_truth": {
+        "candidate_title": "项目经理 / 项目负责人 / 设计部主管",
+        "years_of_experience": "多年互联网项目管理、UI视觉设计与设计团队管理经验（2013年9月起任职）",
+        "education_summary": "本科 · 项目管理/艺术设计（中央美术学院）",
+        "target_cities": [
+          "北京",
+          "上海"
+        ],
+        "industry_background": [
+          "互联网/IT项目管理",
+          "UI与网页视觉设计",
+          "广告艺术与创意设计"
+        ],
+        "core_skills": [
+          "互联网项目管理与统筹",
+          "设计团队管理",
+          "UI高级美工与网页设计",
+          "平面视觉设计",
+          "C++编程与办公软件应用",
+          "英语听说读写与笔译口译"
+        ],
+        "experience_highlights": [
+          "于上海宝山互联网公司历任UI高级美工、设计部主管及高级项目负责人，具备视觉设计与互联网项目管理的复合管理经验",
+          "2011年荣获第四届全国大学生广告艺术设计大赛江西赛区平面作品类三等奖",
+          "大学期间长期担任班长并获评“优秀班干”，曾任校园创业者协会宣传部长"
+        ],
+        "inferred_salary_floor": "1.2w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金"
+        ]
+      },
+      "extracted_profile": {
+        "candidate_title": "互联网项目经理 / UI设计主管",
+        "years_of_experience": "10年以上互联网项目管理与UI设计经验",
+        "education_summary": "本科 · 中央美术学院",
+        "target_cities": [
+          "北京"
+        ],
+        "industry_background": [
+          "互联网/IT",
+          "UI/视觉设计",
+          "广告/传媒"
+        ],
+        "core_skills": [
+          "项目全流程管理",
+          "UI/网页视觉设计",
+          "平面设计",
+          "团队协调与管理",
+          "跨部门沟通协作",
+          "需求分析与落地"
+        ],
+        "experience_highlights": [
+          "具备互联网公司高级项目负责人与设计部主管经验，兼具视觉设计能力与团队管理协调思维",
+          "毕业于中央美术学院，具备扎实的美术专业功底与视觉设计素养",
+          "曾荣获全国大学生广告艺术大赛赛区平面作品类三等奖，大学期间多次担任学生干部与协会部长"
+        ],
+        "inferred_salary_floor": "1.5w",
+        "inferred_welfare_prefs": [
+          "五险一金",
+          "周末双休",
+          "年终奖",
+          "带薪年假"
+        ]
+      },
+      "judge_model": "gemini-3.8-flash",
+      "schema_and_pii_valid": true,
+      "violations": [],
+      "overall_score_10": 9.0,
+      "overall_score": 0.9,
+      "entity_match_rate": 1.0,
+      "entity_mismatch_fields": [],
+      "hallucination_field_count": 0,
+      "hallucinated_fields": [],
+      "overall_comment": "本次提取整体质量优秀，核心数字（年限、奖项等级）与硬实体（院校、学历、城市）均无差错且零幻觉。主要扣分点在于专业名称和上海城市标签轻微遗漏，以及语言/编程特定硬技能未能完全提炼。",
+      "field_scores": {
+        "candidate_title": 9.5,
+        "years_of_experience": 10.0,
+        "education_summary": 8.5,
+        "target_cities": 8.0,
+        "industry_background": 10.0,
+        "core_skills": 8.0,
+        "experience_highlights": 9.5,
+        "inferred_salary_floor": 8.0,
+        "inferred_welfare_prefs": 9.5
+      },
+      "field_evaluations": [
+        {
+          "field_name": "candidate_title",
+          "ground_truth_value": "\"项目经理 / 项目负责人 / 设计部主管\"",
+          "extracted_value": "\"互联网项目经理 / UI设计主管\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "核心职能定位高度准确，覆盖了项目经理与设计主管双重职能，语义与基准标注高度一致。"
+        },
+        {
+          "field_name": "years_of_experience",
+          "ground_truth_value": "\"多年互联网项目管理、UI视觉设计与设计团队管理经验（2013年9月起任职）\"",
+          "extracted_value": "\"10年以上互联网项目管理与UI设计经验\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "自2013年9月任职至今折算为10年以上经验，数字推算与业务领域描述完全符合原文事实。"
+        },
+        {
+          "field_name": "education_summary",
+          "ground_truth_value": "\"本科 · 项目管理/艺术设计（中央美术学院）\"",
+          "extracted_value": "\"本科 · 中央美术学院\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.5,
+          "reason": "学历等级与毕业院校硬实体完全匹配，但遗漏了专业名称信息，存在轻微信息缺失。"
+        },
+        {
+          "field_name": "target_cities",
+          "ground_truth_value": "[\"北京\", \"上海\"]",
+          "extracted_value": "[\"北京\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.0,
+          "reason": "准确提取了现居城市北京，但遗漏了过往工作经历所在地上海，覆盖度稍有欠缺。"
+        },
+        {
+          "field_name": "industry_background",
+          "ground_truth_value": "[\"互联网/IT项目管理\", \"UI与网页视觉设计\", \"广告艺术与创意设计\"]",
+          "extracted_value": "[\"互联网/IT\", \"UI/视觉设计\", \"广告/传媒\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "三个细分行业领域标签与基准标注完全重合，分类规范，无任何幻觉编造。"
+        },
+        {
+          "field_name": "core_skills",
+          "ground_truth_value": "[\"互联网项目管理与统筹\", \"设计团队管理\", \"UI高级美工与网页设计\", \"平面视觉设计\", \"C++编程与办公软件应用\", \"英语听说读写与笔译口译\"]",
+          "extracted_value": "[\"项目全流程管理\", \"UI/网页视觉设计\", \"平面设计\", \"团队协调与管理\", \"跨部门沟通协作\", \"需求分析与落地\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.0,
+          "reason": "覆盖了项目管理与视觉设计核心技能，但遗漏了原文注明的C++编程及英语笔译口译等具体硬技能。"
+        },
+        {
+          "field_name": "experience_highlights",
+          "ground_truth_value": "[\"于上海宝山互联网公司历任UI高级美工、设计部主管及高级项目负责人，具备视觉设计与互联网项目管理的复合管理经验\", \"2011年荣获第四届全国大学生广告艺术设计大赛江西赛区平面作品类三等奖\", \"大学期间长期担任班长并获评“优秀班干”，曾任校园创业者协会宣传部长\"]",
+          "extracted_value": "[\"具备互联网公司高级项目负责人与设计部主管经验，兼具视觉设计能力与团队管理协调思维\", \"毕业于中央美术学院，具备扎实的美术专业功底与视觉设计素养\", \"曾荣获全国大学生广告艺术大赛赛区平面作品类三等奖，大学期间多次担任学生干部与协会部长\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "完整覆盖工作职务历练、比赛获奖级别（三等奖）与学生干部经历，实体数字完全一致，表达精炼。"
+        },
+        {
+          "field_name": "inferred_salary_floor",
+          "ground_truth_value": "\"1.2w\"",
+          "extracted_value": "\"1.5w\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 8.0,
+          "reason": "针对10年经验项目主管推断1.5w底薪处于合理市场浮动区间（误差约25%），略高于GT基准值。"
+        },
+        {
+          "field_name": "inferred_welfare_prefs",
+          "ground_truth_value": "[\"周末双休\", \"五险一金\"]",
+          "extracted_value": "[\"五险一金\", \"周末双休\", \"年终奖\", \"带薪年假\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "完整命中基准福利标签，额外扩充的年终奖与带薪年假符合通用职场诉求，无冲突。"
+        }
+      ]
+    },
+    {
+      "id": "QUAL-09",
+      "file_name": "QUAL-09.md",
+      "extension": ".md",
+      "industry_category": "互联网/后端研发",
+      "file_validation_passed": true,
+      "file_validation_code": "OK",
+      "extract_latency_s": 13.21,
+      "judge_latency_s": 15.77,
+      "ground_truth": {
+        "candidate_title": "Java后端开发工程师 / Web后台研发工程师",
+        "years_of_experience": "1年Java/Web后端开发经验（2023届本科毕业，含Java后台开发实习经历）",
+        "education_summary": "本科 · 软件工程（2023届 XX大学）",
+        "target_cities": [
+          "广州"
+        ],
+        "industry_background": [
+          "互联网/后端开发",
+          "分布式微服务架构",
+          "技术社区与开源软件"
+        ],
+        "core_skills": [
+          "Java / Kotlin 服务端开发",
+          "Spring / SpringBoot / SpringCloud 微服务",
+          "MySQL 慢SQL调优与B+树索引优化",
+          "Redis 缓存与分布式锁",
+          "ElasticSearch 与 RabbitMQ 消息队列",
+          "Jenkins + Docker 自动化部署与持续集成",
+          "Arthas 线上故障排查与JVM调优"
+        ],
+        "experience_highlights": [
+          "负责Web后台研发与性能优化，针对慢SQL和复杂查询进行排查调优，将接口p95延时从4000ms降低至50ms",
+          "从0到1主力开发微信小程序后端，接入微信登录、微信支付与阿里云OSS直传，设计单主体存储的消息群发系统",
+          "独立开发开源微服务项目“校园博客”(GitHub Star 380+)与“SpEL Validator”参数校验扩展包(GitHub Star 70+)，技术文章全网阅读量超80W",
+          "获蓝桥杯算法赛省赛一等奖3次及国赛三等奖2次、中国大学生计算机设计大赛中南地区二等奖，拥有软件著作权2项"
+        ],
+        "inferred_salary_floor": "1.2w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金",
+          "年终奖"
+        ]
+      },
+      "extracted_profile": {
+        "candidate_title": "Java后端开发工程师",
+        "years_of_experience": "1年Java/Web后端研发经验",
+        "education_summary": "本科 · 软件工程",
+        "target_cities": [
+          "广州"
+        ],
+        "industry_background": [
+          "互联网/软件开发",
+          "移动互联网/电商小程序",
+          "开源生态/开发者服务"
+        ],
+        "core_skills": [
+          "Java/Kotlin",
+          "Spring Cloud微服务架构",
+          "MySQL与SQL性能调优",
+          "Redis/分布式锁",
+          "ElasticSearch/RabbitMQ",
+          "Docker与CI/CD自动化部署"
+        ],
+        "experience_highlights": [
+          "主导应用慢SQL排查与复杂查询优化，将业务接口p95延时从4000ms大幅降低至50ms",
+          "具备扎实的开源与技术影响力，独立开源微服务社区及SpEL校验组件（GitHub累计Star 450+），技术博客全网阅读量超80W",
+          "具备小程序后端从0到1开发落地经验，熟练集成微信支付/登录、OSS直传及高复用消息系统设计",
+          "算法与工程底子扎实，曾获蓝桥杯算法类国赛三等奖、省赛一等奖3次及多项省级程序设计竞赛荣誉"
+        ],
+        "inferred_salary_floor": "1.1w",
+        "inferred_welfare_prefs": [
+          "五险一金",
+          "周末双休",
+          "年终奖",
+          "定期体检"
+        ]
+      },
+      "judge_model": "gemini-3.8-flash",
+      "schema_and_pii_valid": true,
+      "violations": [],
+      "overall_score_10": 9.78,
+      "overall_score": 0.978,
+      "entity_match_rate": 1.0,
+      "entity_mismatch_fields": [],
+      "hallucination_field_count": 0,
+      "hallucinated_fields": [],
+      "overall_comment": "该提取结果整体表现极为优秀。学历、年限、城市等硬性实体准确无误；业务量化数据（延迟降低数值、GitHub Star 聚合、博文阅读量）核算精准且零幻觉，体现了极高的信息提炼保真度与专业度。",
+      "field_scores": {
+        "candidate_title": 10.0,
+        "years_of_experience": 10.0,
+        "education_summary": 10.0,
+        "target_cities": 10.0,
+        "industry_background": 10.0,
+        "core_skills": 9.5,
+        "experience_highlights": 9.5,
+        "inferred_salary_floor": 9.0,
+        "inferred_welfare_prefs": 10.0
+      },
+      "field_evaluations": [
+        {
+          "field_name": "candidate_title",
+          "ground_truth_value": "\"Java后端开发工程师 / Web后台研发工程师\"",
+          "extracted_value": "\"Java后端开发工程师\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "职位方向与职能定位精准，与基准核心头衔完全一致，无虚构或夸大。"
+        },
+        {
+          "field_name": "years_of_experience",
+          "ground_truth_value": "\"1年Java/Web后端开发经验（2023届本科毕业，含Java后台开发实习经历）\"",
+          "extracted_value": "\"1年Java/Web后端研发经验\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "核心工作年限数字“1年”与技术领域界定完全准确，符合简历原文事实。"
+        },
+        {
+          "field_name": "education_summary",
+          "ground_truth_value": "\"本科 · 软件工程（2023届 XX大学）\"",
+          "extracted_value": "\"本科 · 软件工程\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "最高学历等级“本科”及专业“软件工程”硬实体完全吻合，提取规范准确。"
+        },
+        {
+          "field_name": "target_cities",
+          "ground_truth_value": "[\"广州\"]",
+          "extracted_value": "[\"广州\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "标准市级城市完全一致，脱敏合规，未包含多余区县或街道门牌信息。"
+        },
+        {
+          "field_name": "industry_background",
+          "ground_truth_value": "[\"互联网/后端开发\", \"分布式微服务架构\", \"技术社区与开源软件\"]",
+          "extracted_value": "[\"互联网/软件开发\", \"移动互联网/电商小程序\", \"开源生态/开发者服务\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "行业标签全面覆盖软件开发、小程序业务及开源社区生态，语义高度契合且无幻觉。"
+        },
+        {
+          "field_name": "core_skills",
+          "ground_truth_value": "[\"Java / Kotlin 服务端开发\", \"Spring / SpringBoot / SpringCloud 微服务\", \"MySQL 慢SQL调优与B+树索引优化\", \"Redis 缓存与分布式锁\", \"ElasticSearch 与 RabbitMQ 消息队列\", \"Jenkins + Docker 自动化部署与持续集成\", \"Arthas 线上故障排查与JVM调优\"]",
+          "extracted_value": "[\"Java/Kotlin\", \"Spring Cloud微服务架构\", \"MySQL与SQL性能调优\", \"Redis/分布式锁\", \"ElasticSearch/RabbitMQ\", \"Docker与CI/CD自动化部署\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "核心技术栈覆盖极佳，仅略微漏提了原文中的线上排查工具 Arthas 与 JVM 调优技能。"
+        },
+        {
+          "field_name": "experience_highlights",
+          "ground_truth_value": "[\"负责Web后台研发与性能优化，针对慢SQL和复杂查询进行排查调优，将接口p95延时从4000ms降低至50ms\", \"从0到1主力开发微信小程序后端，接入微信登录、微信支付与阿里云OSS直传，设计单主体存储的消息群发系统\", \"独立开发开源微服务项目“校园博客”(GitHub Star 380+)与“SpEL Validator”参数校验扩展包(GitHub Star 70+)，技术文章全网阅读量超80W\", \"获蓝桥杯算法赛省赛一等奖3次及国赛三等奖2次、中国大学生计算机设计大赛中南地区二等奖，拥有软件著作权2项\"]",
+          "extracted_value": "[\"主导应用慢SQL排查与复杂查询优化，将业务接口p95延时从4000ms大幅降低至50ms\", \"具备扎实的开源与技术影响力，独立开源微服务社区及SpEL校验组件（GitHub累计Star 450+），技术博客全网阅读量超80W\", \"具备小程序后端从0到1开发落地经验，熟练集成微信支付/登录、OSS直传及高复用消息系统设计\", \"算法与工程底子扎实，曾获蓝桥杯算法类国赛三等奖、省赛一等奖3次及多项省级程序设计竞赛荣誉\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.5,
+          "reason": "所有关键量化数字（4000ms降至50ms、Star总数聚合450+、80W阅读量、省赛一等奖3次）高度精确，仅竞赛国赛次数略作了概括未标明2次。"
+        },
+        {
+          "field_name": "inferred_salary_floor",
+          "ground_truth_value": "\"1.2w\"",
+          "extracted_value": "\"1.1w\"",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 9.0,
+          "reason": "推断薪资底线数值与基准差距仅 8%（误差严格在 ±20% 以内），推断极其合理精准。"
+        },
+        {
+          "field_name": "inferred_welfare_prefs",
+          "ground_truth_value": "[\"周末双休\", \"五险一金\", \"年终奖\"]",
+          "extracted_value": "[\"五险一金\", \"周末双休\", \"年终奖\", \"定期体检\"]",
+          "entity_number_match": true,
+          "has_hallucination": false,
+          "score": 10.0,
+          "reason": "完整覆盖基准的全部3项福利偏好，扩充的体检项符合互联网研发岗位常规诉求，无冲突。"
+        }
+      ]
+    }
+  ],
+  "disqualified_details": [
+    {
+      "id": "DISQ-01",
+      "file_name": "DISQ-01.doc",
+      "dimension": "1_unsupported_extension",
+      "expected_error_code": "UNSUPPORTED_EXTENSION",
+      "actual_error_code": "UNSUPPORTED_EXTENSION",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "不支持的文件扩展名 '.doc'，仅允许: .docx, .jpeg, .jpg, .md, .pdf, .png, .txt, .webp"
+    },
+    {
+      "id": "DISQ-02",
+      "file_name": "DISQ-02.zip",
+      "dimension": "1_unsupported_extension",
+      "expected_error_code": "UNSUPPORTED_EXTENSION",
+      "actual_error_code": "UNSUPPORTED_EXTENSION",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "不支持的文件扩展名 '.zip'，仅允许: .docx, .jpeg, .jpg, .md, .pdf, .png, .txt, .webp"
+    },
+    {
+      "id": "DISQ-03",
+      "file_name": "DISQ-03.pdf",
+      "dimension": "2_size_boundary_violation",
+      "expected_error_code": "FILE_TOO_LARGE",
+      "actual_error_code": "FILE_TOO_LARGE",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "文件大小 (48733221 bytes) 超过最大限制 MAX_RESUME_BYTES (10485760 bytes / 10 MB)"
+    },
+    {
+      "id": "DISQ-04",
+      "file_name": "DISQ-04.txt",
+      "dimension": "2_size_boundary_violation",
+      "expected_error_code": "EMPTY_FILE",
+      "actual_error_code": "EMPTY_FILE",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "文本文件仅包含空白字符，无实质内容"
+    },
+    {
+      "id": "DISQ-05",
+      "file_name": "DISQ-05.pdf",
+      "dimension": "3_magic_bytes_spoofing",
+      "expected_error_code": "INVALID_MAGIC_BYTES",
+      "actual_error_code": "INVALID_MAGIC_BYTES",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "文件头不是合法的 PDF 签名 (%PDF-)，疑似伪造扩展名"
+    },
+    {
+      "id": "DISQ-06",
+      "file_name": "DISQ-06.pdf",
+      "dimension": "3_magic_bytes_spoofing",
+      "expected_error_code": "INVALID_MAGIC_BYTES",
+      "actual_error_code": "INVALID_MAGIC_BYTES",
+      "rejection_stage": "pre_parse_file_validation",
+      "correctly_rejected": true,
+      "message": "文件头不是合法的 PDF 签名 (%PDF-)，疑似伪造扩展名"
+    },
+    {
+      "id": "DISQ-07",
+      "file_name": "DISQ-07.pdf",
+      "dimension": "4_non_resume_content",
+      "expected_error_code": "NOT_A_RESUME",
+      "actual_error_code": "NOT_A_RESUME",
+      "rejection_stage": "content_guardrail_or_parser_rejection",
+      "correctly_rejected": true,
+      "message": "文档内容缺少简历核心特征词（仅命中 0 项），疑似非简历文档（如菜单、发票或代码文件）"
+    },
+    {
+      "id": "DISQ-08",
+      "file_name": "DISQ-08.png",
+      "dimension": "4_non_resume_content",
+      "expected_error_code": "NOT_A_RESUME",
+      "actual_error_code": "NOT_A_RESUME",
+      "rejection_stage": "content_guardrail_or_parser_rejection",
+      "correctly_rejected": true,
+      "message": "文档内容缺少简历核心特征词（仅命中 0 项），疑似非简历文档（如菜单、发票或代码文件）"
+    },
+    {
+      "id": "DISQ-09",
+      "file_name": "DISQ-09.txt",
+      "dimension": "5_adversarial_prompt_injection",
+      "expected_error_code": "PROMPT_INJECTION_DETECTED",
+      "actual_error_code": "PROMPT_INJECTION_DETECTED",
+      "rejection_stage": "content_guardrail_or_parser_rejection",
+      "correctly_rejected": true,
+      "message": "检测到疑似 Prompt Injection（提示词注入）或越权覆盖指令文本"
+    }
+  ],
+  "run_id": "run_stage1_profile_20261117_160359",
+  "stage_id": "stage1_profile",
+  "created_at": "2026-11-17 16:03:59"
+}

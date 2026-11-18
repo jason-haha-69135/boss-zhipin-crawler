@@ -47,6 +47,10 @@ from pydantic import BaseModel
 DEFAULT_GCP_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
 DEFAULT_GCLOUD_ACCOUNT = os.environ.get("GCLOUD_ACCOUNT", "")
 
+# 全局默认模型配置常量（支持环境变量覆盖）
+DEFAULT_STAGE1_EXTRACT_MODEL: str = os.environ.get("STAGE1_EXTRACT_MODEL", "gemini-3.8-flash")
+DEFAULT_LLM_JUDGE_MODEL: str = os.environ.get("LLM_JUDGE_MODEL", "gemini-4-argon")
+
 # 支持的四大核心模型定义与候选回退链
 MODEL_CANDIDATES_MAP: Dict[str, List[str]] = {
     "gemini-3.8-flash": [

@@ -36,6 +36,7 @@ from schema_and_validator import (
 RUNS_DIR = BENCHMARK_DIR / "runs"
 DATASET_DIR = BENCHMARK_DIR / "dataset"
 LATEST_STAGE1_REPORT_PATH = DATASET_DIR / "latest_stage1_eval_report.json"
+LATEST_STAGE2_REPORT_PATH = DATASET_DIR / "latest_stage2_eval_report.json"
 
 SAFE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_.-]{1,120}$")
 
@@ -74,19 +75,24 @@ STAGE_REGISTRY: List[Dict[str, Any]] = [
         "name": "Stage 2 · 策略 Query 生成",
         "stage_name": "Stage 2: 多策略求职 Query 生成",
         "en_name": "Profile-to-Query Generation",
-        "module": "core.resume_parser.generate_queries_from_profile_with_gemini",
+        "module": "core.query_generator.generate_queries_from_profile_with_gemini",
         "endpoint": "POST /api/resume/generate-queries",
-        "status": "planned",
-        "judge_mode": "5策略梯度区分度 + 微调指令遵循核对",
-        "primary_metric": "5-Angle Strategy Quality & Override Faithfulness (0~10)",
+        "status": "active",
+        "judge_mode": "10大策略梯度 + 【行业+岗位+底薪】三要素与无城市/无福利核对",
+        "primary_metric": "10-Strategy Query Quality & 3-Element Compliance (0~10)",
         "atomic_dimensions": [
-            "angle_high_salary",
-            "angle_core_match",
-            "angle_cross_domain",
-            "angle_steady_fallback",
-            "override_faithfulness",
+            "精准对口",
+            "晋升冲刺",
+            "核心行业优选",
+            "跨界拓展",
+            "高薪突破",
+            "细分垂直深耕",
+            "头部名企/大厂",
+            "复合技能溢价",
+            "高成长潜力岗",
+            "稳健保底优选",
         ],
-        "description": "基于 Stage 1 画像与用户微调参数（意向城市/月薪底线/附加方向）生成 5 条差异化自然语言求职 Query，核对策略梯度区分度与指令遵循准确率。",
+        "description": "基于 Stage 1 画像由独立模块 core/query_generator.py (默认 gemini-3.8-flash, temperature=0.4) 为每个样本生成 10 条求职 Query，严格核验【目标行业 + 单一标准岗位名 + 月薪底线】三要素、无城市名/无福利词纯净度及薪资梯度。",
     },
     {
         "stage_id": "stage3_intent",
@@ -219,7 +225,7 @@ def normalize_stage1_report_to_protocol(
 
     ts_str = created_at or raw_report.get("created_at") or datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     eval_mode = raw_report.get("evaluation_mode", "llm_as_a_judge_atomic_9_fields")
-    judge_model = raw_report.get("judge_model", "gemini-3.8-flash")
+    judge_model = raw_report.get("judge_model", "gemini-4-argon")
     eff_extract_model = raw_report.get("extract_model") or extract_model
 
     qual_details = raw_report.get("qualified_details", [])
@@ -346,7 +352,7 @@ def normalize_stage1_report_to_protocol(
     entity_match_rate = round(float(raw_report.get("qualified_mean_entity_match_rate", 1.0)), 4)
     disq_details = raw_report.get("disqualified_details") or []
     if not disq_details:
-        baseline_file = RUNS_DIR / "run_stage1_profile_baseline_25samples.json"
+        baseline_file = RUNS_DIR / "run_stage1_profile_baseline_9samples.json"
         if baseline_file.is_file():
             try:
                 b_raw = json.loads(baseline_file.read_text(encoding="utf-8"))
@@ -354,11 +360,11 @@ def normalize_stage1_report_to_protocol(
             except Exception:
                 disq_details = []
 
-    disq_total = int(raw_report.get("disqualified_total") or len(disq_details) or 20)
+    disq_total = int(raw_report.get("disqualified_total") or len(disq_details) or 9)
     disq_rejected = int(
         raw_report.get("disqualified_correctly_rejected")
         or sum(1 for d in disq_details if d.get("correctly_rejected"))
-        or 20
+        or 9
     )
     disq_acc = round(disq_rejected / max(1, disq_total), 4)
     per_field_dict = {
@@ -472,10 +478,10 @@ def ensure_initial_runs_seeded() -> None:
             use_llm_judge=False,
             skip_disqualified=False,
         )
-        baseline_id = "run_stage1_profile_baseline_25samples"
+        baseline_id = "run_stage1_profile_baseline_9samples"
         baseline_report["run_id"] = baseline_id
         baseline_report["extract_model"] = "ground_truth_baseline"
-        baseline_report["created_at"] = "2026-11-12 10:00:00"
+        baseline_report["created_at"] = "2026-11-16 16:30:00"
         base_file = resolve_safe_path(str(RUNS_DIR / f"{baseline_id}.json"), str(RUNS_DIR))
         base_file.write_text(json.dumps(baseline_report, ensure_ascii=False, indent=2), encoding="utf-8")
     except Exception:
@@ -500,12 +506,17 @@ def list_eval_runs(stage_id: str = "stage1_profile") -> List[Dict[str, Any]]:
             zero_halluc = int(raw.get("qualified_zero_hallucination_samples", qual_total))
             eval_mode = raw.get("evaluation_mode", "llm_as_a_judge_atomic_9_fields")
             ext_model = raw.get("extract_model", "gemini-3.8-flash")
-            jdg_model = raw.get("judge_model", "gemini-3.8-flash")
+            jdg_model = raw.get("judge_model", "gemini-4-argon")
             created_at = raw.get("created_at") or datetime.datetime.fromtimestamp(
                 fpath.stat().st_mtime
             ).strftime("%Y-%m-%d %H:%M:%S")
 
-            mode_badge = "LLM Judge 原子核对" if "llm_as_a_judge" in eval_mode else "全量基线自检 (25样本)"
+            if r_stage == "stage2_queries":
+                mode_badge = "Stage 2 · 10策略 Query 生成"
+            elif "llm_as_a_judge" in eval_mode:
+                mode_badge = "LLM Judge 原子核对"
+            else:
+                mode_badge = "全量基线自检 (9样本)"
             label = (
                 f"[{created_at}] {mode_badge} · 模型: {ext_model} "
                 f"(n={qual_total}, 均分: {mean_10:.2f}/10)"
@@ -523,8 +534,16 @@ def list_eval_runs(stage_id: str = "stage1_profile") -> List[Dict[str, Any]]:
                     "qualified_total": qual_total,
                     "mean_score_10": mean_10,
                     "qualified_mean_score_10": mean_10,
-                    "entity_match_rate": ent_rate,
-                    "qualified_mean_entity_match_rate": ent_rate,
+                    "entity_match_rate": float(
+                        raw.get("three_elements_pass_rate", ent_rate)
+                        if r_stage == "stage2_queries"
+                        else ent_rate
+                    ),
+                    "qualified_mean_entity_match_rate": float(
+                        raw.get("three_elements_pass_rate", ent_rate)
+                        if r_stage == "stage2_queries"
+                        else ent_rate
+                    ),
                     "zero_hallucination_rate": round(zero_halluc / max(1, qual_total), 4),
                 }
             )
@@ -552,13 +571,15 @@ def list_eval_runs(stage_id: str = "stage1_profile") -> List[Dict[str, Any]]:
     return llm_runs + other_runs
 
 
-def load_eval_run_by_id(run_id: str) -> Dict[str, Any]:
-    """根据 `run_id` 安全加载并标准化指定的评测报告"""
+def load_eval_run_by_id(run_id: str, stage_id: str = "stage1_profile") -> Dict[str, Any]:
+    """根据 `run_id` 安全加载并标准化指定的评测报告（兼容 Stage 1 与 Stage 2）"""
     ensure_initial_runs_seeded()
     if not run_id or run_id == "latest":
-        runs = list_eval_runs("stage1_profile")
+        runs = list_eval_runs(stage_id)
         if runs:
             run_id = runs[0]["run_id"]
+        elif stage_id == "stage2_queries" and LATEST_STAGE2_REPORT_PATH.is_file():
+            return json.loads(LATEST_STAGE2_REPORT_PATH.read_text(encoding="utf-8"))
         elif LATEST_STAGE1_REPORT_PATH.is_file():
             raw = json.loads(LATEST_STAGE1_REPORT_PATH.read_text(encoding="utf-8"))
             return normalize_stage1_report_to_protocol(raw, run_id="latest")
@@ -573,6 +594,9 @@ def load_eval_run_by_id(run_id: str) -> Dict[str, Any]:
         raise FileNotFoundError(f"未找到对应的评测记录: {run_id}")
 
     raw = json.loads(candidate_path.read_text(encoding="utf-8"))
+    if raw.get("stage_id") == "stage2_queries" or run_id.startswith("run_stage2_"):
+        return raw
+
     return normalize_stage1_report_to_protocol(
         raw,
         run_id=run_id,
@@ -584,7 +608,7 @@ def load_eval_run_by_id(run_id: str) -> Dict[str, Any]:
 def run_single_sample_live_eval(
     sample_id: str,
     extract_model: str = "gemini-3.8-flash",
-    judge_model: str = "gemini-3.8-flash",
+    judge_model: str = "gemini-4-argon",
     api_key: Optional[str] = None,
     proxy_url: Optional[str] = None,
     update_run_id: Optional[str] = None,
@@ -688,8 +712,8 @@ def run_single_sample_live_eval(
             "evaluation_mode": "llm_as_a_judge_atomic_9_fields",
             "extract_model": extract_model,
             "judge_model": judge_model,
-            "disqualified_total": 20,
-            "disqualified_correctly_rejected": 20,
+            "disqualified_total": 9,
+            "disqualified_correctly_rejected": 9,
             "disqualified_rejection_accuracy": 1.0,
             "qualified_details": [],
             "disqualified_details": [],
@@ -775,4 +799,102 @@ def run_single_sample_live_eval(
         "sample": normalized_sample,
         "updated_run": normalized_run,
         "runs": list_eval_runs("stage1_profile"),
+    }
+
+
+def run_single_sample_stage2_live_eval(
+    sample_id: str,
+    model_name: str = "gemini-3.8-flash",
+    temperature: float = 0.4,
+    query_count: int = 10,
+    run_id_to_update: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    【Stage 2 Single-Use 实时单样本生成与评测】
+    针对指定 `sample_id`（如 `QUAL-01` ~ `QUAL-09`），调用 `evaluate_stage2_queries`
+    实时重跑该样本的 10 条求职 Query 生成与三要素质量核验，并合并更新至当前 Stage 2 Run。
+    """
+    from evaluate_stage2_queries import run_stage2_dataset_evaluation
+
+    if not SAFE_ID_PATTERN.match(sample_id):
+        raise ValueError(f"非法的 sample_id: {sample_id}")
+
+    single_report = run_stage2_dataset_evaluation(
+        base_dir=BENCHMARK_DIR,
+        model_name=model_name,
+        temperature=temperature,
+        query_count=query_count,
+        sample_ids_filter={sample_id},
+    )
+    new_sample_entry = (single_report.get("sample_evaluations") or [None])[0]
+    if not new_sample_entry:
+        raise ValueError(f"未找到样本 ID: {sample_id}")
+
+    # 合并更新至目标 Stage 2 Run（并删除上方临时生成的单样本独立归档）
+    temp_run_file = resolve_safe_path(str(RUNS_DIR / f"{single_report['run_id']}.json"), str(RUNS_DIR))
+    if temp_run_file.is_file():
+        try:
+            temp_run_file.unlink()
+        except Exception:
+            pass
+
+    existing_stage2_runs = list_eval_runs("stage2_queries")
+    target_run_id = run_id_to_update if (run_id_to_update and SAFE_ID_PATTERN.match(run_id_to_update)) else (
+        existing_stage2_runs[0]["run_id"] if existing_stage2_runs else single_report["run_id"]
+    )
+    target_file = resolve_safe_path(str(RUNS_DIR / f"{target_run_id}.json"), str(RUNS_DIR))
+
+    if target_file.is_file():
+        base_report = json.loads(target_file.read_text(encoding="utf-8"))
+        samples_list = [
+            s for s in (base_report.get("sample_evaluations") or []) if s.get("sample_id") != sample_id
+        ]
+        samples_list.append(new_sample_entry)
+        samples_list.sort(key=lambda x: x.get("sample_id", ""))
+
+        all_q = [q for s in samples_list for q in (s.get("evaluated_queries") or [])]
+        total_q = len(all_q)
+        mean_sc = round(sum(q["score"] for q in all_q) / max(1, total_q), 2)
+        three_rate = round(sum(1 for q in all_q if q.get("three_elements_ok")) / max(1, total_q), 4)
+        pure_rate = round(
+            sum(1 for q in all_q if q.get("no_city_ok") and q.get("no_welfare_ok")) / max(1, total_q), 4
+        )
+        single_rate = round(sum(1 for q in all_q if q.get("single_role_ok")) / max(1, total_q), 4)
+        pii_rate = round(sum(1 for q in all_q if q.get("pii_safe_ok")) / max(1, total_q), 4)
+
+        base_report["created_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        base_report["extract_model"] = model_name
+        base_report["temperature_used"] = temperature
+        base_report["qualified_total"] = len(samples_list)
+        base_report["total_queries_generated"] = total_q
+        base_report["qualified_mean_score_10"] = mean_sc
+        base_report["three_elements_pass_rate"] = three_rate
+        base_report["no_city_or_welfare_pass_rate"] = pure_rate
+        base_report["single_role_pass_rate"] = single_rate
+        base_report["pii_safety_pass_rate"] = pii_rate
+        base_report["sample_evaluations"] = samples_list
+        base_report["qualified_details"] = samples_list
+        if isinstance(base_report.get("aggregated_metrics"), dict):
+            base_report["aggregated_metrics"].update(
+                {
+                    "qualified_total": len(samples_list),
+                    "total_queries_generated": total_q,
+                    "qualified_mean_score_10": mean_sc,
+                    "three_elements_pass_rate": three_rate,
+                    "no_city_or_welfare_pass_rate": pure_rate,
+                    "single_role_pass_rate": single_rate,
+                    "pii_safety_pass_rate": pii_rate,
+                }
+            )
+        target_file.write_text(json.dumps(base_report, ensure_ascii=False, indent=2), encoding="utf-8")
+        LATEST_STAGE2_REPORT_PATH.write_text(json.dumps(base_report, ensure_ascii=False, indent=2), encoding="utf-8")
+    else:
+        base_report = single_report
+        target_file.write_text(json.dumps(base_report, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return {
+        "run_id": target_run_id,
+        "sample": new_sample_entry,
+        "updated_run": base_report,
+        "runs": list_eval_runs("stage2_queries"),
     }

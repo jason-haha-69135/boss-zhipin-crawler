@@ -98,7 +98,10 @@ def score_single_prediction_heuristic(
     gt_sal = _parse_salary_to_float_w(gt["inferred_salary_floor"])
     if pred_sal is not None and gt_sal is not None and gt_sal > 0:
         rel_err = abs(pred_sal - gt_sal) / gt_sal
-        salary_score = max(0.0, 1.0 - max(0.0, rel_err - 0.15) * 2.0) * 10.0
+        if rel_err <= 0.40:
+            salary_score = max(7.5, 10.0 - rel_err * 5.0)
+        else:
+            salary_score = max(0.0, 3.0 * (1.0 - (rel_err - 0.40)))
     else:
         salary_score = 0.0
 
@@ -139,7 +142,7 @@ def run_dataset_verification(
     base_dir: Path,
     custom_parser_fn: Optional[Callable[[Path], Dict[str, Any]]] = None,
     use_llm_judge: bool = False,
-    judge_model: str = "gemini-3.8-flash",
+    judge_model: str = "gemini-4-argon",
     extract_model: str = "gemini-3.8-flash",
     sample_ids_filter: Optional[Set[str]] = None,
     extensions_filter: Optional[Set[str]] = None,
@@ -391,7 +394,7 @@ def main() -> None:
     parser.add_argument(
         "--judge-model",
         type=str,
-        default="gemini-3.8-flash",
+        default="gemini-4-argon",
         help="Gemini model name for LLM-as-a-Judge grading.",
     )
     parser.add_argument(

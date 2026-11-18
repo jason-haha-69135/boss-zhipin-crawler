@@ -1,1312 +1,418 @@
 {
-  "dataset_name": "Qualified Resume Parsing Evaluation Dataset",
-  "total_samples": 25,
-  "schema_name": "CandidateProfileSchema",
-  "allowed_extensions": {
-    ".pdf": "application/pdf",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".webp": "image/webp",
-    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ".txt": "text/plain",
-    ".md": "text/markdown"
-  },
+  "dataset_name": "boss_zhipin_stage1_qualified_resume_benchmark",
+  "version": "2.0.0",
+  "updated_at": "2026-11-17 14:35:29",
+  "total_samples": 9,
+  "supported_extensions": [
+    ".pdf",
+    ".docx",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp",
+    ".txt",
+    ".md"
+  ],
   "samples": [
     {
-      "id": "QUAL-001",
-      "file_name": "QUAL-001_retail_regional_supervisor.pdf",
-      "relative_path": "dataset/qualified/QUAL-001_retail_regional_supervisor.pdf",
+      "id": "QUAL-01",
+      "file_name": "QUAL-01.pdf",
+      "relative_path": "dataset/qualified/QUAL-01.pdf",
       "extension": ".pdf",
-      "mime_type": "application/pdf",
-      "file_size_bytes": 3818,
-      "industry_category": "零售与连锁运营",
-      "edge_case_tags": [
-        "standard_layout",
-        "contains_pii_in_raw_text",
-        "quantified_kpis"
-      ],
+      "industry_category": "互联网/新媒体运营",
       "raw_pii_tokens": [
-        "13823456789",
-        "linwanqing_sz@example.com",
-        "440304199405123821"
+        "刘明",
+        "138-0000-0000",
+        "13800000000",
+        "123456789@qq.com"
       ],
-      "raw_resume_text": "个人简历 - 林婉清（资深零售区域运营 / 店面督导）\n手机：13823456789 | 邮箱：linwanqing_sz@example.com | 身份证号：440304199405123821\n现居地：广东深圳 | 求职意向：资深零售区域运营 / 店面督导 | 意向城市：深圳、广州 | 期望薪资：15k-20k/月\n\n【个人总结】\n6年时尚连锁零售门店督导与区域团队管理经验，熟悉华南购物中心及街铺业态，擅长多店巡店督导、商品陈列管理、店长赋能培训及门店损益核算。\n\n【工作经历】\n2022.04 - 至今  某知名时尚女装连锁品牌  华南区高级营运督导\n- 统筹华南区18家直营门店日常营运，2025年实现区域年度GMV达8600万元，同比增长24%（紧急联系人电话：13823456789）。\n- 主导门店SOP标准化与连带率专项改进，将区域平均连带率从1.65提升至2.18，VIP会员季度复购率提升15%。\n- 搭建店长分级训战体系，累计培养储备店长15名，核心员工年度流失率降低18%。\n\n2020.07 - 2022.03  某快时尚鞋帽零售集团  广深片区陈列与营运督导\n- 负责10家购物中心门店的视觉陈列焕新与库存周转监控，季末滞销款清仓消化率达92%。\n\n【教育背景】\n2016.09 - 2020.06  深圳大学  市场营销专业  全日制本科\n\n【核心技能与期望】\n技能：多店巡店督导、SOP标准化落地、商品陈列管理、店长赋能培训、门店损益与连带率提升、会员私域复购运营。\n福利期望：五险一金、周末双休、绩效年终奖。",
+      "raw_resume_text": "姓名：刘明 | 应聘岗位：新媒体运营\n个人信息：籍贯：山东烟台 | 出生年月：1992年11月 | 政治面貌：中共党员 | 现居住地：上海杨浦\n联系方式：138-0000-0000 | 123456789@qq.com\n教育背景：2013.09~2016.07 中国社会大学 市场营销 本科学位\n主修课程：基本会计、统计学、市场营销、国际市场营销、市场调查与预测、商业心理学等\n工作经历：\n1. 2015.07~2015.08 “OPPO校园俱乐部”项目 新媒体运营\n- 在官方微博平台中，打造“OPPO校园俱乐部”的概念，为OPPO公司在全国范围内各大高校集结粉丝，让学生由参与者变成创造者，变成OPPO的校园代言人；\n- 根据OPPO客户诉求，基于产品特点，负责品牌传播策略，包括创意构想、文案撰写等；\n- 挖掘分析网友使用习惯、情感及体验感受，结合产品特点撰写传播策划方案。\n2. 2014.07~2014.08 北京乔布有限公司 运营实习生\n- 主要负责撰写软文，协助运营执行推广活动；\n- 负责公司自媒体（如微博、微信公众）的信息发布及维护；\n- 业绩：所负责的微博热点活动参与数量单条超过1,000人，获得1,000次转发，回复500条。\n获得荣誉：2015.10 2015年全国大学生数学建模竞赛三等奖；2014.11 校学业一等奖学金；2012.10 校一等优秀学生奖学金\n技能证书：大学英语六级、普通话二级甲等；全国计算机等级考试（二级C），熟练掌握word、excel、PPT等日常办公软件\n自我评价：多年校园推广及活动策划工作经历，熟悉校园渠道和校园用户；能根据公司要求制定活动方案，并有高度执行力确保活动的良好执行。",
       "ground_truth": {
-        "candidate_title": "资深零售区域运营 / 店面督导",
-        "years_of_experience": "6年时尚连锁零售门店督导与区域团队管理经验",
-        "education_summary": "本科 · 市场营销",
+        "candidate_title": "新媒体运营专员",
+        "years_of_experience": "应届毕业生 / 具备新媒体运营与校园推广实习经验",
+        "education_summary": "本科 · 市场营销（中国社会大学）",
         "target_cities": [
-          "深圳",
-          "广州"
-        ],
-        "industry_background": [
-          "服装/鞋帽零售",
-          "时尚连锁品牌",
-          "百货/购物中心"
-        ],
-        "core_skills": [
-          "多店巡店督导",
-          "SOP标准化落地",
-          "商品陈列管理",
-          "店长赋能培训",
-          "门店损益与连带率提升",
-          "会员私域复购运营"
-        ],
-        "experience_highlights": [
-          "统筹华南区18家直营门店日常营运，2025年实现区域年度GMV达8600万元，同比增长24%",
-          "主导门店SOP标准化与连带率专项改进，将区域平均连带率从1.65提升至2.18",
-          "搭建店长分级训战体系，累计培养储备店长15名，核心员工年度流失率降低18%"
-        ],
-        "inferred_salary_floor": "1.5w",
-        "inferred_welfare_prefs": [
-          "五险一金",
-          "周末双休",
-          "绩效年终奖"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-002",
-      "file_name": "QUAL-002_catering_store_manager.docx",
-      "relative_path": "dataset/qualified/QUAL-002_catering_store_manager.docx",
-      "extension": ".docx",
-      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "file_size_bytes": 1874,
-      "industry_category": "餐饮与生活服务",
-      "edge_case_tags": [
-        "contains_pii_in_raw_text",
-        "store_operations"
-      ],
-      "raw_pii_tokens": [
-        "13916889900",
-        "chenjianguo_sh@example.com",
-        "310104199210184412"
-      ],
-      "raw_resume_text": "陈建国 - 连锁餐饮营运店长\n联系电话：13916889900 | 电子邮箱：chenjianguo_sh@example.com | 身份证：310104199210184412\n目前所在地：上海 | 意向城市：上海、杭州 | 目标薪资：月薪1.4w以上（期望五险一金、包吃住或房补、门店分红激励）\n\n【资历概述】\n8年连锁餐饮与精品茶饮门店全盘营运管理经验，精通门店P&L损益管控、食品安全QSC稽核、高峰期排班与人效优化及食材损耗率控制。\n\n【工作经历】\n2021.05 - 至今  某头部新式茶饮与轻食连锁品牌  A级旗舰店营运店长\n- 管理上海陆家嘴A级旗舰店（团队32人，月均营收180万+），连续4个季度蝉联华东区单店坪效第一。\n- 推行数字化订货与动态备料机制，将门店食材综合损耗率由4.2%压降至1.8%，年节约成本超35万元。\n- 优化灵活用工与高峰期动线排班，门店人效提升22%，大众点评保持4.9分星级口碑。\n\n2018.06 - 2021.04  某知名连锁火锅品牌  值班经理 / 副店长\n- 负责前厅服务标准落地与后厨食安巡检，主导3家新店筹备开业，首月翻台率均突破4.5轮/天。\n\n【教育经历】\n2015.09 - 2018.06  上海商学院（高职学院）  连锁经营管理  大专",
-      "ground_truth": {
-        "candidate_title": "连锁餐饮营运店长",
-        "years_of_experience": "8年连锁餐饮与精品茶饮门店全盘营运管理经验",
-        "education_summary": "大专 · 连锁经营管理",
-        "target_cities": [
-          "上海",
-          "杭州"
-        ],
-        "industry_background": [
-          "连锁餐饮",
-          "新式茶饮/咖啡",
-          "商业综合体餐饮"
-        ],
-        "core_skills": [
-          "门店P&L损益管控",
-          "食品安全QSC稽核",
-          "高峰期排班与人效优化",
-          "食材损耗率控制",
-          "美团大众点评口碑运营"
-        ],
-        "experience_highlights": [
-          "管理上海陆家嘴A级旗舰店（月均营收180万+），连续4个季度蝉联华东区单店坪效第一",
-          "推行数字化订货与动态备料机制，将门店食材综合损耗率由4.2%压降至1.8%",
-          "优化灵活用工与高峰期动线排班，门店人效提升22%，大众点评保持4.9分星级口碑"
-        ],
-        "inferred_salary_floor": "1.4w",
-        "inferred_welfare_prefs": [
-          "五险一金",
-          "包吃住或房补",
-          "门店分红激励"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-003",
-      "file_name": "QUAL-003_backend_golang_architect.md",
-      "relative_path": "dataset/qualified/QUAL-003_backend_golang_architect.md",
-      "extension": ".md",
-      "mime_type": "text/markdown",
-      "file_size_bytes": 1352,
-      "industry_category": "互联网与软件工程",
-      "edge_case_tags": [
-        "bilingual_mixed",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "18601029988",
-        "yuxuan.zhang.dev@example.com",
-        "11010819930214553X"
-      ],
-      "raw_resume_text": "# 张宇轩 (Yuxuan Zhang) - 资深后端研发工程师 (Go / 云原生架构)\n- Phone: 18601029988 | Email: yuxuan.zhang.dev@example.com | ID: 11010819930214553X\n- Location: 北京 (可考虑北京、上海机会) | Expected Base: 35k-45k/月\n\n## Summary\n7年高并发分布式后端系统与云原生微服务架构研发经验，精通 Golang高并发编程、Kubernetes与云原生微服务、分布式缓存Redis与Kafka消息队列、MySQL分库分表与性能调优。\n\n## Work Experience\n### 2021.07 - Present | 某大型头部电商集团 | 资深后端研发工程师 (Tech Lead)\n- 主导核心交易网关从单体向Golang微服务重构，支撑双十一峰值45万QPS，P99延迟由85ms降至12ms。\n- 设计基于K8s与Istio的多活容灾架构，核心服务全年可用性SLA达99.995%。\n- 优化分布式账务分库分表方案与异步对账引擎，日均处理订单流水超8000万笔零差错。\n\n### 2019.07 - 2021.06 | 某云计算PaaS厂商 | 高级研发工程师\n- 负责容器云平台调度器组件研发及Service Mesh服务治理，全链路压测与高可用容灾演练负责人。\n\n## Education\n- 2016.09 - 2019.06  北京邮电大学  计算机科学与技术  硕士\n- 2012.09 - 2016.06  北京邮电大学  软件工程  本科\n\n## Welfare Preferences\n- 周末双休、六险一金、弹性打卡、年终奖",
-      "ground_truth": {
-        "candidate_title": "资深后端研发工程师 (Go / 云原生架构)",
-        "years_of_experience": "7年高并发分布式后端系统与云原生微服务架构研发经验",
-        "education_summary": "硕士 · 计算机科学与技术",
-        "target_cities": [
-          "北京",
           "上海"
         ],
         "industry_background": [
-          "互联网平台",
-          "云计算/SaaS",
-          "高并发交易系统"
+          "互联网/新媒体",
+          "市场营销/品牌传播",
+          "校园渠道推广"
         ],
         "core_skills": [
-          "Golang高并发编程",
-          "Kubernetes与云原生微服务",
-          "分布式缓存Redis与Kafka消息队列",
-          "MySQL分库分表与性能调优",
-          "Service Mesh服务治理",
-          "全链路压测与高可用容灾"
+          "微博与微信公众号运营",
+          "品牌传播策略制定",
+          "软文与创意文案撰写",
+          "校园推广与活动策划",
+          "用户习惯洞察分析",
+          "大学英语六级(CET-6)"
         ],
         "experience_highlights": [
-          "主导核心交易网关从单体向Golang微服务重构，支撑双十一峰值45万QPS，P99延迟由85ms降至12ms",
-          "设计基于K8s与Istio的多活容灾架构，核心服务全年可用性SLA达99.995%",
-          "优化分布式账务分库分表方案与异步对账引擎，日均处理订单流水超8000万笔零差错"
+          "在北京乔布有限公司担任运营实习生期间，所负责的微博热点活动单条参与人数超过1000人，获得1000次转发与500条回复",
+          "参与“OPPO校园俱乐部”官方微博新媒体运营项目，负责全国高校粉丝集结、品牌传播策略构想及传播策划方案撰写",
+          "荣获2015年全国大学生数学建模竞赛三等奖、校学业一等奖学金及校一等优秀学生奖学金"
         ],
-        "inferred_salary_floor": "3.5w",
+        "inferred_salary_floor": "0.8w",
         "inferred_welfare_prefs": [
           "周末双休",
-          "六险一金",
-          "弹性打卡",
-          "年终奖"
+          "五险一金"
         ]
       }
     },
     {
-      "id": "QUAL-004",
-      "file_name": "QUAL-004_finance_credit_risk_manager.txt",
-      "relative_path": "dataset/qualified/QUAL-004_finance_credit_risk_manager.txt",
-      "extension": ".txt",
-      "mime_type": "text/plain",
-      "file_size_bytes": 1292,
-      "industry_category": "金融与银行风控",
-      "edge_case_tags": [
-        "informal_date_format",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13701928374",
-        "wangxuemei_risk@example.com",
-        "320102199508231126"
-      ],
-      "raw_resume_text": "姓名：王雪梅 | 岗位方向：商业银行零售信贷风控经理\n联系方式：13701928374 | 邮箱：wangxuemei_risk@example.com | 身份证号：320102199508231126\n现居上海，意向工作地：上海、南京 | 期望月薪底线：2.5w\n\n【个人资历】\n5年商业银行与持牌消金零售信贷风险策略及评分卡建模经验。熟练掌握信贷全流程风控策略、A/B/C评分卡建模、Python与SQL数据分析、反欺诈规则引擎调优及贷后催收分群与不良率管控。\n\n【工作履历】\n2023年3月至今 —— 某全国性股份制商业银行信用卡中心（零售信贷风控经理）\n1. 重构普惠小微线上信贷准入与额度策略，在通过率保持稳定的前提下将首逾率FPD30降低32%。\n2. 主导迭代贷中行为评分卡(B卡)，模型KS值由0.38提升至0.47，年化减少潜在坏账损失约2800万元。\n\n21年7月 - 23年2月 —— 某头部持牌消费金融公司（风险策略分析师）\n1. 搭建图计算反欺诈团伙识别规则库，累计拦截黑灰产骗贷申请超1.2万笔。\n\n【教育背景】\n上海财经大学 · 金融工程 · 硕士（2019-2021）\n南京审计大学 · 金融学 · 本科（2015-2019）\n\n【期望福利】\n周末双休、六险二金、带薪年假、年终奖",
-      "ground_truth": {
-        "candidate_title": "商业银行零售信贷风控经理",
-        "years_of_experience": "5年商业银行与持牌消金零售信贷风险策略及评分卡建模经验",
-        "education_summary": "硕士 · 金融工程",
-        "target_cities": [
-          "上海",
-          "南京"
-        ],
-        "industry_background": [
-          "股份制商业银行",
-          "持牌消费金融",
-          "金融科技风控"
-        ],
-        "core_skills": [
-          "信贷全流程风控策略",
-          "A/B/C评分卡建模",
-          "Python与SQL数据分析",
-          "反欺诈规则引擎调优",
-          "贷后催收分群与不良率管控"
-        ],
-        "experience_highlights": [
-          "重构普惠小微线上信贷准入与额度策略，在通过率保持稳定的前提下将首逾率FPD30降低32%",
-          "主导迭代贷中行为评分卡(B卡)，模型KS值由0.38提升至0.47，年化减少潜在坏账损失约2800万元",
-          "搭建图计算反欺诈团伙识别规则库，累计拦截黑灰产骗贷申请超1.2万笔"
-        ],
-        "inferred_salary_floor": "2.5w",
-        "inferred_welfare_prefs": [
-          "周末双休",
-          "六险二金",
-          "带薪年假",
-          "年终奖"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-005",
-      "file_name": "QUAL-005_ev_supply_chain_procurement.png",
-      "relative_path": "dataset/qualified/QUAL-005_ev_supply_chain_procurement.png",
-      "extension": ".png",
-      "mime_type": "image/png",
-      "file_size_bytes": 4380,
-      "industry_category": "智能制造与新能源汽车供应链",
-      "edge_case_tags": [
-        "image_format_png",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13588776655",
-        "zhaomingzhe_auto@example.com",
-        "340104199004152239"
-      ],
-      "raw_resume_text": "赵明哲 - 新能源汽车供应链采购专家\n手机：13588776655 | 邮箱：zhaomingzhe_auto@example.com | 身份证：340104199004152239\n意向城市：合肥、上海、常州 | 期望薪资：2.2w-2.8w/月\n\n【核心资历】\n9年汽车零部件寻源采购、供应商定点开发与供应链降本管理经验。\n行业背景：新能源汽车整车厂、汽车三电核心零部件、智能制造供应链。\n\n【工作经历】\n2020.08 - 至今  某新势力新能源汽车主机厂  高级采购专家\n- 主导三电系统结构件与热管理模块年度商务谈判，管理年采购额12亿元，实现年度综合降本7.8%。\n- 开发并导入14家Tier-1优质国产替代供应商，核心零部件准时交付率OTD由89%提升至99.2%。\n- 建立大宗原材料价格联动与二级供应商产能预警机制，实现新车型SOP爬坡期零断供。\n\n2017.07 - 2020.07  某大型汽车零部件集团  采购工程师\n- 负责汽车零部件战略寻源、IATF16949供应商准入审核、Should-Cost成本拆解与SAP-MM采购系统实操。\n\n【教育背景】\n2013.09 - 2017.06  合肥工业大学  车辆工程  本科\n期望福利：五险一金、周末双休、年终奖、餐补交通补。",
-      "ground_truth": {
-        "candidate_title": "新能源汽车供应链采购专家",
-        "years_of_experience": "9年汽车零部件寻源采购、供应商定点开发与供应链降本管理经验",
-        "education_summary": "本科 · 车辆工程",
-        "target_cities": [
-          "合肥",
-          "上海",
-          "常州"
-        ],
-        "industry_background": [
-          "新能源汽车整车厂",
-          "汽车三电核心零部件",
-          "智能制造供应链"
-        ],
-        "core_skills": [
-          "汽车零部件战略寻源",
-          "IATF16949供应商准入审核",
-          "Should-Cost成本拆解与商务谈判",
-          "芯片与电芯保供交付管理",
-          "SAP-MM采购系统实操"
-        ],
-        "experience_highlights": [
-          "主导三电系统结构件与热管理模块年度商务谈判，管理年采购额12亿元，实现年度综合降本7.8%",
-          "开发并导入14家Tier-1优质国产替代供应商，核心零部件准时交付率OTD由89%提升至99.2%",
-          "建立大宗原材料价格联动与二级供应商产能预警机制，实现新车型SOP爬坡期零断供"
-        ],
-        "inferred_salary_floor": "2.2w",
-        "inferred_welfare_prefs": [
-          "五险一金",
-          "周末双休",
-          "年终奖",
-          "餐补交通补"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-006",
-      "file_name": "QUAL-006_ai_llm_algorithm_engineer.jpg",
-      "relative_path": "dataset/qualified/QUAL-006_ai_llm_algorithm_engineer.jpg",
-      "extension": ".jpg",
-      "mime_type": "image/jpeg",
-      "file_size_bytes": 1272,
-      "industry_category": "人工智能与大模型",
-      "edge_case_tags": [
-        "image_format_jpg",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "15901234567",
-        "liusiqi_ai@example.com",
-        "110105199809106642"
-      ],
-      "raw_resume_text": "刘思琪 - 大模型应用算法工程师 (LLM / Agent)\n电话：15901234567 | 邮箱：liusiqi_ai@example.com | 身份证：110105199809106642\n意向城市：北京、深圳 | 期望月薪：3w起\n\n【个人简介】\n3年自然语言处理与大语言模型微调、RAG及智能体落地经验。专注于LLM指令微调(SFT/DPO)、企业级RAG检索增强生成、Multi-Agent智能体编排、vLLM/TensorRT-LLM推理加速及评测集构建与Hallucination治理。\n\n【工作经历】\n2023.07 - 至今  某AI大模型独角兽企业  大模型应用算法工程师\n- 主导企业级混合检索RAG引擎研发，结合BGE重排与Query改写将复杂问答端到端准确率从68%提升至89%。\n- 基于LoRA/DPO微调7B垂直领域行业模型，在合同审查评测集上超越通用闭源基座模型11个百分点。\n- 采用vLLM与FP8量化优化线上推理服务，单卡吞吐量提升2.6倍，推理成本下降55%。\n\n【教育背景】\n2020.09 - 2023.06  中国科学院大学  人工智能  硕士\n福利偏好：周末双休、六险一金、弹性工作制、算力与学术会议支持。",
-      "ground_truth": {
-        "candidate_title": "大模型应用算法工程师 (LLM / Agent)",
-        "years_of_experience": "3年自然语言处理与大语言模型微调、RAG及智能体落地经验",
-        "education_summary": "硕士 · 人工智能",
-        "target_cities": [
-          "北京",
-          "深圳"
-        ],
-        "industry_background": [
-          "人工智能大模型",
-          "企业级知识库SaaS",
-          "自然语言处理"
-        ],
-        "core_skills": [
-          "LLM指令微调(SFT/DPO)",
-          "企业级RAG检索增强生成",
-          "Multi-Agent智能体编排",
-          "vLLM/TensorRT-LLM推理加速",
-          "评测集构建与Hallucination治理"
-        ],
-        "experience_highlights": [
-          "主导企业级混合检索RAG引擎研发，结合BGE重排与Query改写将复杂问答端到端准确率从68%提升至89%",
-          "基于LoRA/DPO微调7B垂直领域行业模型，在合同审查评测集上超越通用闭源基座模型11个百分点",
-          "采用vLLM与FP8量化优化线上推理服务，单卡吞吐量提升2.6倍，推理成本下降55%"
-        ],
-        "inferred_salary_floor": "3w",
-        "inferred_welfare_prefs": [
-          "周末双休",
-          "六险一金",
-          "弹性工作制",
-          "算力与学术会议支持"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-007",
-      "file_name": "QUAL-007_pharma_academic_rep.jpeg",
-      "relative_path": "dataset/qualified/QUAL-007_pharma_academic_rep.jpeg",
-      "extension": ".jpeg",
-      "mime_type": "image/jpeg",
-      "file_size_bytes": 1351,
-      "industry_category": "医药与医疗器械",
-      "edge_case_tags": [
-        "image_format_jpeg",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13632109876",
-        "zhouhaoran_med@example.com",
-        "440106199603227715"
-      ],
-      "raw_resume_text": "周浩然 - 医药学术推广代表 / 区域产品专员\n手机：13632109876 | 邮箱：zhouhaoran_med@example.com | 身份证号：440106199603227715\n现居广州 | 目标城市：广州、佛山 | 期望底薪：1.3w+\n\n【工作经验】\n4年处方药临床学术推广与核心三甲医院开发维护经验（外资/合资制药企业、心血管与慢病处方药、医药学术营销）。\n2022.07 - 至今  某跨国合资制药企业  高级医药学术推广代表\n- 负责广州及佛山8家核心三甲医院心血管管线学术推广，连续2年达成率超118%，获全国Top Sales奖。\n- 成功推动2款国家医保谈判创新药进入3家三甲医院正式用药目录，首年贡献纯销增量420万元。\n- 全年独立策划并执行科室会及城市学术沙龙60余场，覆盖心内科核心主任及骨干医师300余人。\n\n【教育背景】\n2018.09 - 2022.06  广东药科大学  药学  本科\n核心技能：临床科室学术会议组织、KOL专家关系维护、医院药事会准入跟进、带量采购(VBP)政策落地、区域患教与处方潜力挖掘。\n期望福利：五险一金、周末双休、差旅交通补贴、季度达成奖金。",
-      "ground_truth": {
-        "candidate_title": "医药学术推广代表 / 区域产品专员",
-        "years_of_experience": "4年处方药临床学术推广与核心三甲医院开发维护经验",
-        "education_summary": "本科 · 药学",
-        "target_cities": [
-          "广州",
-          "佛山"
-        ],
-        "industry_background": [
-          "外资/合资制药企业",
-          "心血管与慢病处方药",
-          "医药学术营销"
-        ],
-        "core_skills": [
-          "临床科室学术会议组织",
-          "KOL专家关系维护",
-          "医院药事会准入跟进",
-          "带量采购(VBP)政策落地",
-          "区域患教与处方潜力挖掘"
-        ],
-        "experience_highlights": [
-          "负责广州及佛山8家核心三甲医院心血管管线学术推广，连续2年达成率超118%，获全国Top Sales奖",
-          "成功推动2款国家医保谈判创新药进入3家三甲医院正式用药目录，首年贡献纯销增量420万元",
-          "全年独立策划并执行科室会及城市学术沙龙60余场，覆盖心内科核心主任及骨干医师300余人"
-        ],
-        "inferred_salary_floor": "1.3w",
-        "inferred_welfare_prefs": [
-          "五险一金",
-          "周末双休",
-          "差旅交通补贴",
-          "季度达成奖金"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-008",
-      "file_name": "QUAL-008_hrbp_organization_dev.webp",
-      "relative_path": "dataset/qualified/QUAL-008_hrbp_organization_dev.webp",
-      "extension": ".webp",
-      "mime_type": "image/webp",
-      "file_size_bytes": 30,
-      "industry_category": "人力资源与组织发展",
-      "edge_case_tags": [
-        "image_format_webp",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "18080901122",
-        "huangyating_hr@example.com",
-        "510107199411053368"
-      ],
-      "raw_resume_text": "黄雅婷 - 资深 HRBP / 招聘与组织发展主管\n电话：18080901122 | 邮箱：huangyating_hr@example.com | 身份证：510107199411053368\n求职城市：成都、重庆 | 薪资要求：1.5w以上\n\n【背景概述】\n6年互联网与本地生活业务团队HRBP及全周期人才管理经验。\n技能专长：中高端核心岗位招聘、OKR与KPI绩效管理体系、组织诊断与人才盘点(9宫格)、员工关系与劳动合规风控、干部晋升机制设计。\n\n【工作经历】\n2020.09 - 至今  某生活服务平台西南总部  资深HRBP\n- 独立BP支持西南大区350人产研与运营团队，年度核心技术与管理岗招聘按期到岗率达96%。\n- 主导业务部门OKR与季度绩效考核改革，推动低绩效人员结构性汰换与人效同比提升19%。\n- 妥善处理20余起复杂员工关系协商解除案例，实现劳动仲裁败诉率0%与合规零风险。\n\n【教育背景】\n2016.09 - 2020.06  西南财经大学  人力资源管理  本科\n期望福利：周末双休、五险一金、带薪年假、年终奖。",
-      "ground_truth": {
-        "candidate_title": "资深 HRBP / 招聘与组织发展主管",
-        "years_of_experience": "6年互联网与本地生活业务团队HRBP及全周期人才管理经验",
-        "education_summary": "本科 · 人力资源管理",
-        "target_cities": [
-          "成都",
-          "重庆"
-        ],
-        "industry_background": [
-          "本地生活服务",
-          "互联网科技",
-          "O2O商业运营"
-        ],
-        "core_skills": [
-          "中高端核心岗位招聘",
-          "OKR与KPI绩效管理体系",
-          "组织诊断与人才盘点(9宫格)",
-          "员工关系与劳动合规风控",
-          "干部晋升机制设计"
-        ],
-        "experience_highlights": [
-          "独立BP支持西南大区350人产研与运营团队，年度核心技术与管理岗招聘按期到岗率达96%",
-          "主导业务部门OKR与季度绩效考核改革，推动低绩效人员结构性汰换与人效同比提升19%",
-          "妥善处理20余起复杂员工关系协商解除案例，实现劳动仲裁败诉率0%与合规零风险"
-        ],
-        "inferred_salary_floor": "1.5w",
-        "inferred_welfare_prefs": [
-          "周末双休",
-          "五险一金",
-          "带薪年假",
-          "年终奖"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-009",
-      "file_name": "QUAL-009_lean_manufacturing_director_no_edu.pdf",
-      "relative_path": "dataset/qualified/QUAL-009_lean_manufacturing_director_no_edu.pdf",
+      "id": "QUAL-02",
+      "file_name": "QUAL-02.pdf",
+      "relative_path": "dataset/qualified/QUAL-02.pdf",
       "extension": ".pdf",
-      "mime_type": "application/pdf",
-      "file_size_bytes": 3117,
-      "industry_category": "精密制造与工厂管理",
-      "edge_case_tags": [
-        "missing_education",
-        "contains_pii_in_raw_text"
-      ],
+      "industry_category": "互联网广告/电子商务",
       "raw_pii_tokens": [
-        "13962104455",
-        "wuzhiqiang_mfg@example.com",
-        "320583198807194417"
+        "13500135000",
+        "jianlimoban-ziyuan.com",
+        "北京市东城区阳光大厦",
+        "东城区阳光大厦"
       ],
-      "raw_resume_text": "吴志强 - 精益生产车间主任 / 制造工程主管\n手机：13962104455 | 邮箱：wuzhiqiang_mfg@example.com | 身份证：320583198807194417\n求职地区：苏州、无锡、昆山 | 期望待遇：1.6w/月以上\n\n【个人资历】\n11年消费电子与精密注塑冲压车间精益生产及现场6S管理经验（注：本人从基层产线技术员一步步晋升至车间主任，实战经验扎实）。\n\n【工作经历】\n2018.03 - 至今  某大型消费电子精密制造企业（昆山）  精益生产车间主任\n- 统筹管理420人精密组装与注塑车间，推动产线U型线平衡改造，人均小时产出(UPPH)提升28%。\n- 主导核心机种直通良率(FPY)六西格玛攻关项目，将制程不良率从1.8%压降至0.35%。\n- 连续5年实现所辖车间重大安全事故0起，车间物料周转天数由14天缩短至7.5天。\n\n2015.02 - 2018.02  苏州某精密五金冲压厂  生产主管 / IE工程师\n- 负责精益生产(Lean)与IE工时改善、车间6S与安全生产标准化、MES生产执行系统导入及班组长管理。\n\n【福利期望】\n五险一金、包工作餐、年终双薪或奖金",
+      "raw_resume_text": "基本信息：民族：汉 | 电话：13500135000 | 邮箱：jianlimoban-ziyuan.com | 住址：北京市东城区阳光大厦 | 出生年月：1996.05 | 身高：177cm | 政治面貌：中共党员 | 毕业院校：免费科技大学 | 学历：本科\n教育背景：2005.07-2009.06 简历模板资源网科技大学 市场营销（本科）\n主修课程：管理学、微观经济学、宏观经济学、管理信息系统、统计学、会计学、财务管理、市场营销、经济法、消费者行为学、国际市场营销\n实习/工作经历：\n1. 2012-04至今 简历模板资源网信息科技有限公司 市场营销（实习生）\n- 负责公司线上端资源的销售工作（以开拓客户为主），公司主要资源以广点通、智汇推、百度、小米、360、沃门户等；\n- 实时了解行业的变化，跟踪客户的详细数据，为客户制定更完善的投放计划（合作过珍爱网、世纪佳缘、56视频、京东等客户）。\n2. 2010.03-2012.03 简历模板资源网信息科技有限公司 软件工程师\n- 负责公司业务系统的设计及改进，参与公司网上商城系统产品功能设计及实施工作；\n- 负责客户调研、客户需求分析、方案写作等工作，参与公司多个大型电子商务项目的策划工作，担任大商集团网上商城一期建设项目经理。\n校园经历：2009.03-2011.06 校园大使主席\n- 带领团队辅助五百丁公司完成在各高校的“伏龙计划”，向全球顶尖的AXA金融公司推送实习生资源；开展线上线下宣传活动、咨询讲解与后期项目维护。",
       "ground_truth": {
-        "candidate_title": "精益生产车间主任 / 制造工程主管",
-        "years_of_experience": "11年消费电子与精密注塑冲压车间精益生产及现场6S管理经验",
-        "education_summary": "未注明学历",
+        "candidate_title": "市场营销 / 互联网广告销售 / 电商项目经理",
+        "years_of_experience": "4年以上互联网广告销售、市场营销与电商系统项目管理经验",
+        "education_summary": "本科 · 市场营销（免费科技大学 / 简历模板资源网科技大学）",
         "target_cities": [
-          "苏州",
-          "无锡",
-          "昆山"
+          "北京"
         ],
         "industry_background": [
-          "消费电子代工(EMS)",
-          "精密模具与注塑冲压",
-          "自动化产线管理"
+          "互联网广告/数字营销",
+          "电子商务",
+          "企业软件与信息服务"
         ],
         "core_skills": [
-          "精益生产(Lean)与IE工时改善",
-          "车间6S与安全生产标准化",
-          "SMT/组装产线良率提升",
-          "一线班组长梯队管理",
-          "MES生产执行系统导入"
+          "线上广告资源销售与客户开拓",
+          "信息流广告投放规划(广点通/智汇推/百度)",
+          "客户数据跟踪与投放优化",
+          "网上商城系统产品功能设计",
+          "客户需求分析与方案撰写",
+          "大型电商项目策划与项目管理"
         ],
         "experience_highlights": [
-          "统筹管理420人精密组装与注塑车间，推动产线U型线平衡改造，人均小时产出(UPPH)提升28%",
-          "主导核心机种直通良率(FPY)六西格玛攻关项目，将制程不良率从1.8%压降至0.35%",
-          "连续5年实现所辖车间重大安全事故0起，车间物料周转天数由14天缩短至7.5天"
+          "负责广点通、智汇推、百度、小米、360、沃门户等线上广告资源销售，合作服务珍爱网、世纪佳缘、56视频、京东等头部客户并制定投放计划",
+          "参与公司网上商城系统产品功能设计及多个大型电子商务项目策划，担任大商集团网上商城一期建设项目经理",
+          "曾任校园大使主席，带领团队协助五百丁公司完成高校“伏龙计划”，向AXA金融公司推送实习生资源"
         ],
-        "inferred_salary_floor": "1.6w",
+        "inferred_salary_floor": "1.2w",
         "inferred_welfare_prefs": [
+          "周末双休",
           "五险一金",
-          "包工作餐",
-          "年终双薪或奖金"
+          "绩效奖金"
         ]
       }
     },
     {
-      "id": "QUAL-010",
-      "file_name": "QUAL-010_fresh_grad_fmcg_trainee.docx",
-      "relative_path": "dataset/qualified/QUAL-010_fresh_grad_fmcg_trainee.docx",
-      "extension": ".docx",
-      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "file_size_bytes": 1826,
-      "industry_category": "应届生与快消市场",
-      "edge_case_tags": [
-        "fresh_graduate",
-        "contains_pii_in_raw_text"
-      ],
+      "id": "QUAL-03",
+      "file_name": "QUAL-03.pdf",
+      "relative_path": "dataset/qualified/QUAL-03.pdf",
+      "extension": ".pdf",
+      "industry_category": "互联网/艺术与视觉设计",
       "raw_pii_tokens": [
-        "15827113344",
-        "zhengxiaotong2026@example.com",
-        "420106200405182261"
+        "1888888888",
+        "huangrong@163.com"
       ],
-      "raw_resume_text": "郑晓彤 - 2026届应届本科毕业生（求职：市场营销管培生 / 品牌策划专员）\n电话：15827113344 | 邮箱：zhengxiaotong2026@example.com | 身份证：420106200405182261\n现居武汉 | 意向城市：武汉、长沙 | 期望起薪：6k-8k（0.6w以上）\n\n【教育背景】\n2022.09 - 2026.06  华中师范大学  广告学  本科（GPA 3.7/4.0，校一等奖学金）\n\n【实习与校园经历】\n2025.07 - 2025.12  某知名快消饮料集团华中市场部  品牌市场实习生\n- 在头部饮料品牌实习期间协助统筹华中高校开学季快闪活动，落地12所高校，累计触达学生超5万人次。\n- 独立对接60+位小红书KOC进行新品茶饮种草投放，单篇爆文自然流曝光突破45万，ROI达1:3.4。\n\n2024.09 - 2025.06  校学生会外联部负责人\n- 担任校学生会外联部负责人期间累计拉取企业校园赞助经费12万元，组织千人级校园音乐节。\n\n【核心技能与福利偏好】\n技能：小红书与抖音达人种草投放、校园快闪活动策划执行、竞品市场调研与问卷分析、短视频脚本撰写与剪辑、社群裂变拉新运营。\n福利期望：周末双休、五险一金、导师带教培养。",
+      "raw_resume_text": "联系方式：TEL: 1888888888 | E-mail: huangrong@163.com\n求职意向：设计师 / UI设计师 交互设计师 网页设计师\n基本资料：学历：本科 | 专业：美学传媒 | 籍贯：成都 | 院校：四川大学 | 出生日期：1990.08.16 | 毕业院校：上海某某大学 | 期望薪资：6K-7K\n个人简介：有良好的创新思维和沟通能力，对色彩、构图等元素触觉敏锐，创造力强；有创新精神，保证工作质量，具有较强的艺术触觉及审美水平。\n教育经历：2008~2015 上海市某某附属高中 / 上海市某某艺术设计学院\n专业技能：Adobe Photoshop (PS), Adobe Illustrator (Ai), Adobe Flash (Fl), Adobe After Effects (AE), Adobe Indesign (ID), Axure RP (AX)\n实习经历：\n1. 2014.06 《温州零距离》栏目组 记者：参与电视新闻采编，包括新闻现场学习记者采访、工作室采编同期声、写新闻稿并由记者修改指导。\n2. 2014.08 The Asian Cities Program 研究员：代表某某大学工程管理研究所参加由 The Real Estate Academy in China 组织的国际房地产研究培训课程。\n所获证书：2009.12 英语四级、英语六级、法语二级；2010.12 计算机三级、驾驶证、会计从业资格证\n所获嘉奖：第十一届挑战杯创业大赛全国铜奖、省级特等奖；全国特等奖学金；海辉杯论文大赛二等奖",
       "ground_truth": {
-        "candidate_title": "市场营销管培生 / 品牌策划专员",
-        "years_of_experience": "应届毕业生（具备2段快消品牌与新媒体营销实习经验）",
-        "education_summary": "本科 · 广告学",
+        "candidate_title": "UI设计师 / 交互设计师 / 网页设计师",
+        "years_of_experience": "应届毕业生 / 具备媒体采编与国际城市课题研究实习经验",
+        "education_summary": "本科 · 美学传媒（四川大学 / 上海某某大学 / 上海市某某艺术设计学院）",
         "target_cities": [
-          "武汉",
-          "长沙"
+          "上海",
+          "成都"
         ],
         "industry_background": [
-          "快消品(FMCG)市场部",
-          "校园新媒体营销"
+          "UI与网页视觉设计",
+          "数字传媒与艺术设计",
+          "新闻采编"
         ],
         "core_skills": [
-          "小红书与抖音达人种草投放",
-          "校园快闪活动策划执行",
-          "竞品市场调研与问卷分析",
-          "短视频脚本撰写与剪辑",
-          "社群裂变拉新运营"
+          "UI设计与网页视觉设计",
+          "交互原型设计(Axure RP)",
+          "Adobe Photoshop / Illustrator",
+          "Adobe After Effects / InDesign / Flash",
+          "大学英语六级(CET-6)与法语二级",
+          "计算机三级与新闻采编撰稿"
         ],
         "experience_highlights": [
-          "在头部饮料品牌实习期间协助统筹华中高校开学季快闪活动，落地12所高校，累计触达学生超5万人次",
-          "独立对接60+位小红书KOC进行新品茶饮种草投放，单篇爆文自然流曝光突破45万，ROI达1:3.4",
-          "担任校学生会外联部负责人期间累计拉取企业校园赞助经费12万元，组织千人级校园音乐节"
+          "荣获第十一届挑战杯创业大赛全国铜奖及省级特等奖、全国特等奖学金、海辉杯论文大赛二等奖",
+          "于《温州零距离》栏目组担任实习记者，参与电视新闻现场采访、工作室同期声采编及新闻稿撰写",
+          "担任The Asian Cities Program研究员，代表大学工程管理研究所参加The Real Estate Academy in China国际房地产研究培训课程"
         ],
         "inferred_salary_floor": "0.6w",
         "inferred_welfare_prefs": [
           "周末双休",
-          "五险一金",
-          "导师带教培养"
+          "五险一金"
         ]
       }
     },
     {
-      "id": "QUAL-011",
-      "file_name": "QUAL-011_crossborder_ecommerce_lead.md",
-      "relative_path": "dataset/qualified/QUAL-011_crossborder_ecommerce_lead.md",
-      "extension": ".md",
-      "mime_type": "text/markdown",
-      "file_size_bytes": 1312,
-      "industry_category": "跨境电商与出海零售",
-      "edge_case_tags": [
-        "overlapping_timelines",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13418887766",
-        "sunbowen_global@example.com",
-        "350203199701293310"
-      ],
-      "raw_resume_text": "# 孙博文 - 跨境电商高级运营店长 (Amazon / TikTok Shop)\n手机：13418887766 | 邮箱：sunbowen_global@example.com | 身份证：350203199701293310\n意向城市：深圳、厦门 | 期望底薪：1.5w + 提成\n\n## 个人优势\n4年欧美及东南亚跨境电商精品店铺全链路操盘经验（英语专业八级/TEM-8）。精通 Amazon精品Listing打造与SEO、CPC广告投放与ACOS优化、TikTok Shop美区达人建联带货、FBA库存周转与跨境物流协同。\n\n## 工作经历（含项目兼职时间线重叠）\n### 2022.06 - 至今 | 深圳某头部出海3C小家电品牌 | 跨境电商高级运营店长\n- 从0到1操盘北美站智能小家电精品店铺，18个月内实现月销突破85万美元，打造3款Best Seller单品。\n- 精细化运营CPC广告矩阵，将主力产品综合ACOS从28%压降至16.5%，店铺净利率达19%。\n- 开拓TikTok Shop美区短视频与达人直播带货渠道，建联海外达人400+，单月新增GMV超30万美元。\n\n### 2023.01 - 2024.03 | 厦门某跨境卖家孵化工作室（周末远程顾问兼职）\n- 负责东南亚站点选品顾问与海外爆品选品指导。\n\n## 教育背景\n- 2018.09 - 2022.06  集美大学  国际经济与贸易  本科\n- 福利期望：五险一金、大小周或双休、高比例毛利提成",
-      "ground_truth": {
-        "candidate_title": "跨境电商高级运营店长 (Amazon / TikTok Shop)",
-        "years_of_experience": "4年欧美及东南亚跨境电商精品店铺全链路操盘经验",
-        "education_summary": "本科 · 国际经济与贸易",
-        "target_cities": [
-          "深圳",
-          "厦门"
-        ],
-        "industry_background": [
-          "跨境电商B2C",
-          "3C数码与智能小家电出海",
-          "海外社媒带货"
-        ],
-        "core_skills": [
-          "Amazon精品Listing打造与SEO",
-          "CPC广告投放与ACOS优化",
-          "TikTok Shop美区达人建联带货",
-          "FBA库存周转与跨境物流协同",
-          "海外爆品选品与评论合规维护"
-        ],
-        "experience_highlights": [
-          "从0到1操盘北美站智能小家电精品店铺，18个月内实现月销突破85万美元，打造3款Best Seller单品",
-          "精细化运营CPC广告矩阵，将主力产品综合ACOS从28%压降至16.5%，店铺净利率达19%",
-          "开拓TikTok Shop美区短视频与达人直播带货渠道，建联海外达人400+，单月新增GMV超30万美元"
-        ],
-        "inferred_salary_floor": "1.5w",
-        "inferred_welfare_prefs": [
-          "五险一金",
-          "大小周或双休",
-          "高比例毛利提成"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-012",
-      "file_name": "QUAL-012_property_engineering_supervisor.txt",
-      "relative_path": "dataset/qualified/QUAL-012_property_engineering_supervisor.txt",
-      "extension": ".txt",
-      "mime_type": "text/plain",
-      "file_size_bytes": 1034,
-      "industry_category": "物业工程与机电维保",
-      "edge_case_tags": [
-        "blue_collar_technical",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13355328899",
-        "mazhenhua_eng@example.com",
-        "370202198612035518"
-      ],
-      "raw_resume_text": "马振华 - 物业工程部主管 / 高压电工技师\n电话：13355328899 | 邮箱：mazhenhua_eng@example.com | 身份证：370202198612035518\n意向城市：青岛、济南 | 期望月薪：1w以上\n\n【资历与持证】\n12年甲级写字楼与大型商业综合体机电设备运维及工程管理经验。持有高压电工特种作业操作证、建（构）筑物消防员证。\n\n【工作经历】\n2018.04 - 至今  某大型商业地产物业集团（青岛中心项目）  工程部主管\n- 负责18万平米甲级写字楼及购物中心机电运维，连续6年实现高低压配电与特种电梯安全运行零事故。\n- 主导商场中央空调变频水泵与BA楼宇自控节能改造，全年节省公共能耗电费82万元（节电率16%）。\n- 累计完成200余户商铺二次装修机电审图与隐蔽工程验收，整改违章用电隐患100%。\n\n【教育背景】\n2011.09 - 2014.06  山东职业学院  机电一体化技术  大专\n福利期望：五险一金、高温与持证津贴、包工作餐。",
-      "ground_truth": {
-        "candidate_title": "物业工程部主管 / 高压电工技师",
-        "years_of_experience": "12年甲级写字楼与大型商业综合体机电设备运维及工程管理经验",
-        "education_summary": "大专 · 机电一体化技术",
-        "target_cities": [
-          "青岛",
-          "济南"
-        ],
-        "industry_background": [
-          "商业地产物业管理",
-          "楼宇机电设备维保",
-          "商场设施工程"
-        ],
-        "core_skills": [
-          "高低压配电房运行维保",
-          "中央空调暖通(HVAC)系统节能改造",
-          "消防联动系统年检与维保",
-          "二次装修图纸审核与现场监管",
-          "工程技工团队24小时应急值班管理"
-        ],
-        "experience_highlights": [
-          "负责18万平米甲级写字楼及购物中心机电运维，连续6年实现高低压配电与特种电梯安全运行零事故",
-          "主导商场中央空调变频水泵与BA楼宇自控节能改造，全年节省公共能耗电费82万元（节电率16%）",
-          "累计完成200余户商铺二次装修机电审图与隐蔽工程验收，整改违章用电隐患100%"
-        ],
-        "inferred_salary_floor": "1w",
-        "inferred_welfare_prefs": [
-          "五险一金",
-          "高温与持证津贴",
-          "包工作餐"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-013",
-      "file_name": "QUAL-013_securities_biotech_analyst.pdf",
-      "relative_path": "dataset/qualified/QUAL-013_securities_biotech_analyst.pdf",
+      "id": "QUAL-04",
+      "file_name": "QUAL-04.pdf",
+      "relative_path": "dataset/qualified/QUAL-04.pdf",
       "extension": ".pdf",
-      "mime_type": "application/pdf",
-      "file_size_bytes": 2965,
-      "industry_category": "证券投研与资本市场",
-      "edge_case_tags": [
-        "high_salary_tier",
-        "contains_pii_in_raw_text"
-      ],
+      "industry_category": "互联网/后端研发",
       "raw_pii_tokens": [
-        "13917008811",
-        "xujianing_sec@example.com",
-        "310115199506208843"
+        "阿杆"
       ],
-      "raw_resume_text": "许佳宁 - 券商医药行业高级研究员\n电话：13917008811 | 邮箱：xujianing_sec@example.com | 身份证：310115199506208843\n意向地：上海、北京 | 期望月薪底线：3.5w\n\n【个人简介】\n5年卖方研究所与公募基金生物医药二级市场深度投研经验，通过CPA会计/财管科目及证券分析师执业资格。\n\n【工作经历】\n2021.07 - 至今  某头部券商研究所  医药行业高级研究员\n- 作为核心主笔所在团队连续2年荣获新财富医药生物行业最佳分析师前三名。\n- 独立撰写并发布22篇创新药与出海医疗器械公司深度报告，多只首推标的年度超额收益超45%。\n- 全年面向公募基金及保险资管完成路演超320场，机构客户派点打分位列研究所前10%。\n\n【教育背景】\n2018.09 - 2021.06  上海交通大学  生物医学工程  硕士\n核心技能：创新药临床管线估值(rNPV)、上市公司深度研报撰写、三张财务报表建模与盈利预测、公募/保险机构路演服务、医药产业链专家访谈调研。\n福利偏好：周末双休、六险二金、派点绩效奖金。",
+      "raw_resume_text": "<table>\n\t<tr style=\"height: 50px;\">\n\t\t<td style=\"font-size: 1.8em;\"><strong>阿杆👨‍💻</strong></td>\n\t\t<td style=\"font-size: 1.5em;\"><strong>求职意向：后端开发</strong></td>\n\t\t<td rowspan=\"5\">\n\t\t\t<img src=\"./image/sticki_avatar.jpg\" height=\"140\" alt=\"\">\n\t\t</td>\n\t</tr>\n\t<tr>\n\t\t<td>工作经验：一年</td>\n\t\t<td>电话：sticki</td>\n\t</tr>\n\t<tr>\n\t\t<td>出生年月：2000年10月</td>\n\t\t<td>邮箱：sticki</td>\n\t</tr>\n\t<tr>\n\t\t<td>现住址：广东广州</td>\n\t\t<td>教育背景：2023届 XX大学 本科 软件工程</td>\n\t</tr>\n\t<tr>\n\t\t<td><a href=\"https://juejin.cn/user/4182956056773160/posts\">博客主页</a></td>\n\t\t<td><a href=\"https://github.com/stick-i\">GitHub主页</a></td>\n\t</tr>\n</table>\n<hr/>\n\n### ==😎专业技能==\n\n- 熟悉 **Java** 、**Kotlin** 服务端开发，熟悉 **JVM** 基础知识，如内存模型、垃圾回收等，熟悉 **多线程** 用法\n- 熟悉 **Spring、SpringBoot、Mybatis-Plus** 等常用框架，熟悉 **SpringCloud** 常用组件\n- 熟悉 **MySQL** 数据库，熟悉 **SQL优化** 和 **索引结构** ，熟悉底层 B+树 的结构\n- 熟悉 **Redis** 缓存、分布式锁，熟悉 **ElasticSearch** 分词、搜索，熟练使用 **MQ** 处理异步场景\n- 具备 **分布式微服务** 项目的设计开发经验，有 **Jenkins自动化部署** 经验，有 **Arthas** 排查线上问题的经验\n- [稀土掘金](https://juejin.cn/user/4182956056773160/posts) 优秀创作者，[CSDN](https://blog.csdn.net/little_stick_i?type=blog) 万粉博主，个人公众号 程序员阿杆，**全网阅读量超 80W**\n- 本科期间有10余次省级及以上学科竞赛获奖经历\n\n<hr/>\n\n### ==🏢工作经历==\n\n<h4 style=\"display: flex;justify-content: space-between;\">\n<span>一、公司名称 - 部门</span><span>Web后台研发</span><span>2023.04 - 至今</span>\n</h4>\n\n- 公司应用的功能版本迭代、开发上线、公共组件库维护、软件技术文档编写；\n- 线上故障定位和解决、性能优化、模块代码重构。\n\n<h4 style=\"display: flex;justify-content: space-between;\">\n<span>二、公司名称 - 部门</span><span>Java后台开发实习</span><span>2022.08 - 2022.12</span>\n</h4>\n\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n\n<hr/>\n\n### ==💻工作项目==\n\n> ps：工作项目的内容都是我瞎写的，仅作为模板参考，并不是真实的项目经历。\n\n<h4 style=\"display: flex;justify-content: space-between;\">\n<span>一、微信小程序</span><span>主力开发</span><span>2024.02 - 2024.04</span>\n</h4>\n项目背景及描述：\n\n- 对公司现有的APP应用开发一款微信小程序，实现了主要的业务功能，提升用户体验和业务效率。\n\n我的工作内容：\n\n- 从 0 到 1 进行项目功能设计、开发、备案、运维、上线等所有工作；\n- 接入微信开放平台和微信商户平台，支持 **微信登录、微信支付**；\n- 接入阿里云OSS，实现服务端签名、客户端直传、服务端接收回调通知的应用方式；\n- 设计并实现 **消息系统**，支持消息群发和单独发送，群发状态下仅存储一条主体消息，节省存储空间。\n\n<h4 style=\"display: flex;justify-content: space-between;\">\n<span>二、根据实际情况填写</span><span>协作开发</span><span>2023.10 - 2024.01</span>\n</h4>\n项目描述：\n\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n\n我的工作内容：\n\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n\n<h4 style=\"display: flex;justify-content: space-between;\">\n<span>三、其他</span><span>2023.05 - 至今</span>\n</h4>\n\n- 优化“xxx”应用，对慢SQL和复杂查询进行排查和优化，**p95延时从4000ms降低到了50ms**；\n- 根据自己实际情况填写\n\n<hr/>\n\n### ==🚀个人项目==\n\n<h4 style=\"display: flex;justify-content: space-between;\">\n<span>一、校园博客</span><span>个人开源项目</span><span>2022.03 - 2022.07</span>\n</h4>\n\n> 基于Spring + Mybatis-Plus + MySQL + Redis + RabbitMQ + ES + Docker + Nacos + Fegin的微服务项目。是个类似于CSDN的博客社区，但博客的推送是基于院校的。**<u>GitHub Star 380+</u>，[开源地址](https://github.com/stick-i/scblogs)，[系统架构图](https://gitee.com/sticki/scblogs/raw/main/document/image/scblogs-framework.png)**。\n\n- 采用 **微服务架构设计开发** ，各服务间通过 **Fegin** 进行同步通信、通过 **RabbitMQ** 进行异步通信；\n- 服务拆分：用户服务、博客服务、网关服务、搜索服务、评论服务、动态服务、资源服务、消息服务；\n- 搭建网关服务，负责路由、鉴权、限流，设计并实现 **缓存** + **异步** 的方式记录请求日志；\n- 设计并实现 **AOP** + **自定义注解** + **Redis** 限制IP接口访问次数，并支持细粒度的访问控制；\n- 基于 **ES** 搭建搜索服务、使用 **Redis** 做系统缓存功能，提升整体访问速度；\n- 基于 **Jenkins** + **Docker** 进行 **自动化部署** 和持续集成，解决微服务项目部署繁琐的问题。\n\n\n<h4  style=\"display: flex;justify-content: space-between;\">\n<span>二、SpEL Validator</span><span>个人开源项目</span><span>2024.04 - 至今</span>\n</h4>\n\n> 基于 SpEL 的参数校验包，也是 javax.validation 的扩展增强包，用于简化参数校验。**<u>GitHub Star 70+</u>，[开源地址](https://github.com/stick-i/spel-validator)**。\n\n- 提供强大的参数校验功能，几乎支持任何场景下的参数校验。扩展自 javax.validation 包，只新增不修改，无缝集成到项目中；\n- 基于 SpEL（Spring Expression Language） 表达式，支持复杂的校验逻辑。支持调用 Spring Bean，可在表达式中使用注入的 Bean 对象；\n- 简单易用，使用方式几乎与 javax.validation 一致，学习成本低，上手快；\n- 无需额外的异常处理，校验失败时会上报到 javax.validation 的异常体系中；\n- 支持自定义校验注解，可根据业务需求自定义校验逻辑。\n\n<hr/>\n\n### ==🏆获奖经历==\n\n- 蓝桥杯 <u>算法类</u> 竞赛 - 省赛一等奖 3次、国赛三等奖 2次\n- 中国大学生计算机设计大赛 - 中南地区二等奖\n- 湖南省大学生计算机 <u>程序设计</u> 竞赛 - 二等奖 1次、三等奖 1次\n- 湖南省优秀毕业生、软件著作权 2项\n\n<style>\n    #write {\n        padding: 25px 25px 0px;\n    }\n    hr {\n        margin: 6px;\n    }\n    li {\n        margin: 4px;\n    }\n    p {\n        margin: 4px 13px;\n    }\n    li p{\n        margin: 5px 0;\n    }\n    h1 {\n        margin: 8px 15px;\n    }\n    h3 {\n        margin: 9px;\n    }\n    h4 {\n        margin: 7px;\n    }\n    figure {\n        margin: 7px 0px;\n    }\n    blockquote {\n        padding-left: 16px;\n    }\n    /* 链接下划线 */\n    a {\n        text-decoration:underline;\n    }\n    /* 图片阴影效果 */\n    img {\n        box-shadow: 0px 0px 10px rgba(0,0,0,.5);\n    }\n    /* 表格样式，去除边框显示 */\n    table, table td, table tr, table th, th {\n        font-weight: normal;\n        padding: 3px 13px;\n        border: 0px;\n        background-color: #ffffff;\n    }\n</style>",
       "ground_truth": {
-        "candidate_title": "券商医药行业高级研究员",
-        "years_of_experience": "5年卖方研究所与公募基金生物医药二级市场深度投研经验",
-        "education_summary": "硕士 · 生物医学工程",
+        "candidate_title": "Java后端开发工程师 / Web后台研发工程师",
+        "years_of_experience": "1年Java/Web后端开发经验（2023届本科毕业，含Java后台开发实习经历）",
+        "education_summary": "本科 · 软件工程（2023届 XX大学）",
         "target_cities": [
-          "上海",
-          "北京"
-        ],
-        "industry_background": [
-          "证券研究所(卖方投研)",
-          "二级市场医药基金",
-          "创新药与医疗器械研究"
-        ],
-        "core_skills": [
-          "创新药临床管线估值(rNPV)",
-          "上市公司深度研报撰写",
-          "三张财务报表建模与盈利预测",
-          "公募/保险机构路演服务",
-          "医药产业链专家访谈调研"
-        ],
-        "experience_highlights": [
-          "作为核心主笔所在团队连续2年荣获新财富医药生物行业最佳分析师前三名",
-          "独立撰写并发布22篇创新药与出海医疗器械公司深度报告，多只首推标的年度超额收益超45%",
-          "全年面向公募基金及保险资管完成路演超320场，机构客户派点打分位列研究所前10%"
-        ],
-        "inferred_salary_floor": "3.5w",
-        "inferred_welfare_prefs": [
-          "周末双休",
-          "六险二金",
-          "派点绩效奖金"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-014",
-      "file_name": "QUAL-014_visual_merchandiser_implicit_city.docx",
-      "relative_path": "dataset/qualified/QUAL-014_visual_merchandiser_implicit_city.docx",
-      "extension": ".docx",
-      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "file_size_bytes": 1876,
-      "industry_category": "潮玩零售与视觉陈列",
-      "edge_case_tags": [
-        "implicit_target_city",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "18516223344",
-        "hutianyou_vm@example.com",
-        "510104199708116632"
-      ],
-      "raw_resume_text": "胡天佑 - 潮玩与生活方式品牌视觉陈列师 (VM)\n联系手机：18516223344 | 邮箱：hutianyou_vm@example.com | 身份证：510104199708116632\n（现居上海市静安区，过往主要常驻上海及成都两地负责华东与西南门店，仅考虑这两座城市的岗位，月薪底线1.3w）\n\n【个人总结】\n4年潮流玩具与生活方式集合店空间视觉陈列及快闪店美学落地经验。\n\n【工作经历】\n2022.05 - 至今  某头部潮流玩具连锁品牌（上海总部）  高级视觉陈列师 (Senior VM)\n- 主导全国45家潮玩门店季度主题橱窗与IP首发专区陈列焕新，主力IP盲盒系列首周售罄率达94%。\n- 独立完成上海静安大悦城及成都春熙路6场S级IP主题快闪店视觉空间落地，单场打卡客流超12万人次。\n- 编制标准化视觉陈列手册并开展线上线下巡店评比，全国门店陈列合规达标率由76%提升至96%。\n\n【教育背景】\n2018.09 - 2022.06  四川美术学院  环境艺术设计  本科\n技能：门店橱窗与中岛VP/PP/IP陈列规划、新品发售主题快闪店视觉落地、陈列手册(VM Guideline)制定、动线优化与坪效视觉转化、SketchUp/CAD/C4D空间建模。\n福利期望：周末双休、五险一金、弹性工作与差旅补贴。",
-      "ground_truth": {
-        "candidate_title": "潮玩与生活方式品牌视觉陈列师 (VM)",
-        "years_of_experience": "4年潮流玩具与生活方式集合店空间视觉陈列及快闪店美学落地经验",
-        "education_summary": "本科 · 环境艺术设计",
-        "target_cities": [
-          "上海",
-          "成都"
-        ],
-        "industry_background": [
-          "潮流玩具连锁",
-          "生活方式杂货零售",
-          "商业美陈与快闪空间"
-        ],
-        "core_skills": [
-          "门店橱窗与中岛VP/PP/IP陈列规划",
-          "新品发售主题快闪店视觉落地",
-          "陈列手册(VM Guideline)制定",
-          "动线优化与坪效视觉转化",
-          "SketchUp/CAD/C4D空间建模"
-        ],
-        "experience_highlights": [
-          "主导全国45家潮玩门店季度主题橱窗与IP首发专区陈列焕新，主力IP盲盒系列首周售罄率达94%",
-          "独立完成上海静安大悦城及成都春熙路6场S级IP主题快闪店视觉空间落地，单场打卡客流超12万人次",
-          "编制标准化视觉陈列手册并开展线上线下巡店评比，全国门店陈列合规达标率由76%提升至96%"
-        ],
-        "inferred_salary_floor": "1.3w",
-        "inferred_welfare_prefs": [
-          "周末双休",
-          "五险一金",
-          "弹性工作与差旅补贴"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-015",
-      "file_name": "QUAL-015_clinical_research_coordinator.png",
-      "relative_path": "dataset/qualified/QUAL-015_clinical_research_coordinator.png",
-      "extension": ".png",
-      "mime_type": "image/png",
-      "file_size_bytes": 4367,
-      "industry_category": "临床试验与医疗CRO",
-      "edge_case_tags": [
-        "image_format_png",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13120334455",
-        "guomingyue_crc@example.com",
-        "120103199804129924"
-      ],
-      "raw_resume_text": "郭茗月 - 三甲医院临床研究协调员 (CRC)\n手机：13120334455 | 邮箱：guomingyue_crc@example.com | 身份证：120103199804129924\n意向城市：北京、天津 | 期望月薪：1w以上\n\n【资历概述】\n3年肿瘤与内分泌领域II/III期药物临床试验现场协调与GCP合规管理经验（持有国家级GCP证书）。\n\n【工作经历】\n2023.06 - 至今  某知名临床SMO企业  资深临床研究协调员(CRC)\n- 常驻北京协和及天津肿瘤医院负责6项肿瘤II/III期临床试验，受试者入组进度提前2个月完成且脱落率低于3%。\n- 高质量管理超180例受试者EDC源数据录入，数据录入及时率99.5%，质疑(Query)率低于行业均值40%。\n- 作为主协调CRC顺利通过申办方3次独立稽查及1次国家局注册核查，零严重发现项(Major Finding)。\n\n【教育背景】\n2019.09 - 2023.06  天津医科大学  护理学  本科\n技能：受试者筛选入组与随访管理、EDC系统数据录入与Query解答、SAE严重不良事件24小时协助上报、研究者文件夹(ISF)归档管理、迎接药监局(NMPA)及申办方稽查。\n福利偏好：周末双休、五险一金、带薪年假、项目入组奖金。",
-      "ground_truth": {
-        "candidate_title": "三甲医院临床研究协调员 (CRC)",
-        "years_of_experience": "3年肿瘤与内分泌领域II/III期药物临床试验现场协调与GCP合规管理经验",
-        "education_summary": "本科 · 护理学",
-        "target_cities": [
-          "北京",
-          "天津"
-        ],
-        "industry_background": [
-          "医药CRO/SMO",
-          "三甲医院药物临床试验(GCP)",
-          "肿瘤创新药临床研究"
-        ],
-        "core_skills": [
-          "受试者筛选入组与随访管理",
-          "EDC系统数据录入与Query解答",
-          "SAE严重不良事件24小时协助上报",
-          "研究者文件夹(ISF)归档管理",
-          "迎接药监局(NMPA)及申办方稽查"
-        ],
-        "experience_highlights": [
-          "常驻北京协和及天津肿瘤医院负责6项肿瘤II/III期临床试验，受试者入组进度提前2个月完成且脱落率低于3%",
-          "高质量管理超180例受试者EDC源数据录入，数据录入及时率99.5%，质疑(Query)率低于行业均值40%",
-          "作为主协调CRC顺利通过申办方3次独立稽查及1次国家局注册核查，零严重发现项(Major Finding)"
-        ],
-        "inferred_salary_floor": "1w",
-        "inferred_welfare_prefs": [
-          "周末双休",
-          "五险一金",
-          "带薪年假",
-          "项目入组奖金"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-016",
-      "file_name": "QUAL-016_cold_chain_logistics_manager_gap.jpg",
-      "relative_path": "dataset/qualified/QUAL-016_cold_chain_logistics_manager_gap.jpg",
-      "extension": ".jpg",
-      "mime_type": "image/jpeg",
-      "file_size_bytes": 1378,
-      "industry_category": "仓储物流与冷链供应链",
-      "edge_case_tags": [
-        "career_gap",
-        "image_format_jpg",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13726889911",
-        "hejunjie_wms@example.com",
-        "441900199207083351"
-      ],
-      "raw_resume_text": "何俊杰 - 物流仓储运营经理 (WMS / 冷链配送)\n电话：13726889911 | 邮箱：hejunjie_wms@example.com | 身份证：441900199207083351\n意向城市：广州、东莞 | 期望月薪：1.6w+\n\n【个人总结】\n7年生鲜冷链云仓中心运营、WMS系统规划与城配车队调度管理经验（2023.03-2024.02期间因陪伴家人康复休息1年，现已完全恢复全职状态）。\n\n【工作经历】\n2024.03 - 至今  某头部生鲜电商华南供应链中心  物流仓储运营经理\n- 全面管理广州3万平米多温区生鲜中心仓（日均出库12万单），订单准时出库率达99.6%，库存准确率99.95%。\n- 优化WMS波次合单算法与播种墙动线，仓内人均拣货效率由115件/小时提升至168件/小时。\n- 重构珠三角城配冷链共配线路，车辆满载率由74%提升至91%，单件干支线配送成本下降18%。\n\n2018.07 - 2023.02  某大型第三方冷链物流集团  东莞RDC仓主管\n- 负责多温区冷库精细运营、库存效期FIFO管理及大促峰值弹性劳务外包管理。\n\n【教育背景】\n2014.09 - 2018.06  广东工业大学  物流管理  本科\n期望福利：五险一金、年终绩效奖、包吃住或房补。",
-      "ground_truth": {
-        "candidate_title": "物流仓储运营经理 (WMS / 冷链配送)",
-        "years_of_experience": "7年生鲜冷链云仓中心运营、WMS系统规划与城配车队调度管理经验",
-        "education_summary": "本科 · 物流管理",
-        "target_cities": [
-          "广州",
-          "东莞"
-        ],
-        "industry_background": [
-          "生鲜冷链物流",
-          "新零售中心仓/前置仓",
-          "第三方合同物流(3PL)"
-        ],
-        "core_skills": [
-          "多温区冷库(冷冻/冷藏/恒温)精细运营",
-          "WMS波次拣选与库内动线优化",
-          "城配冷链车队TMS排线与温控监控",
-          "库存盘点准确率与效期FIFO管理",
-          "大促峰值弹性劳务外包管理"
-        ],
-        "experience_highlights": [
-          "全面管理广州3万平米多温区生鲜中心仓（日均出库12万单），订单准时出库率达99.6%，库存准确率99.95%",
-          "优化WMS波次合单算法与播种墙动线，仓内人均拣货效率由115件/小时提升至168件/小时",
-          "重构珠三角城配冷链共配线路，车辆满载率由74%提升至91%，单件干支线配送成本下降18%"
-        ],
-        "inferred_salary_floor": "1.6w",
-        "inferred_welfare_prefs": [
-          "五险一金",
-          "年终绩效奖",
-          "包吃住或房补"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-017",
-      "file_name": "QUAL-017_steam_course_consultant_no_edu.jpeg",
-      "relative_path": "dataset/qualified/QUAL-017_steam_course_consultant_no_edu.jpeg",
-      "extension": ".jpeg",
-      "mime_type": "image/jpeg",
-      "file_size_bytes": 1329,
-      "industry_category": "教育培训与顾问销售",
-      "edge_case_tags": [
-        "missing_education",
-        "image_format_jpeg",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13588001122",
-        "gaoshanshan_edu@example.com",
-        "330106199511247782"
-      ],
-      "raw_resume_text": "高珊珊 - 少儿编程与STEAM双语课程顾问主管\n手机：13588001122 | 邮箱：gaoshanshan_edu@example.com | 身份证：330106199511247782\n求职城市：杭州、宁波 | 期望薪资：底薪+提成综合1.5w以上\n\n【核心资历】\n5年素质教育校区课程顾问团队管理、试听体验转化与转介绍裂变经验（简历未填写教育经历）。\n\n【工作经历】\n2021.04 - 至今  某知名少儿编程与机器人教育品牌  杭州旗舰校区CC主管\n- 带领杭州旗舰校区8人CC顾问团队，校区年签单实收现金流突破1400万元，连续6个季度超额完成指标。\n- 打磨标准化试听课前中后五步逼单SOP，将校区试听课当场签单转化率由26%提升至43%。\n- 策划老带新科创夏令营裂变活动，转介绍签单占比达校区总营收38%，大幅降低获客成本。\n\n【核心技能与福利偏好】\n技能：到访试听课当场逼单转化、CC课程顾问团队日清日结管理、家长教育规划面谈与异议处理、老学员续费与口碑转介绍(Referral)、CRM线索分级跟进与激活。\n福利期望：五险一金、周中双休、高额阶梯提成。",
-      "ground_truth": {
-        "candidate_title": "少儿编程与STEAM双语课程顾问主管",
-        "years_of_experience": "5年素质教育校区课程顾问团队管理、试听体验转化与转介绍裂变经验",
-        "education_summary": "未注明学历",
-        "target_cities": [
-          "杭州",
-          "宁波"
-        ],
-        "industry_background": [
-          "少儿编程与机器人教育",
-          "双语素质教培机构",
-          "K12校区销售管理"
-        ],
-        "core_skills": [
-          "到访试听课当场逼单转化",
-          "CC课程顾问团队日清日结管理",
-          "家长教育规划面谈与异议处理",
-          "老学员续费与口碑转介绍(Referral)",
-          "CRM线索分级跟进与激活"
-        ],
-        "experience_highlights": [
-          "带领杭州旗舰校区8人CC顾问团队，校区年签单实收现金流突破1400万元，连续6个季度超额完成指标",
-          "打磨标准化试听课前中后五步逼单SOP，将校区试听课当场签单转化率由26%提升至43%",
-          "策划老带新科创夏令营裂变活动，转介绍签单占比达校区总营收38%，大幅降低获客成本"
-        ],
-        "inferred_salary_floor": "1.5w",
-        "inferred_welfare_prefs": [
-          "五险一金",
-          "周中双休",
-          "高额阶梯提成"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-018",
-      "file_name": "QUAL-018_indie_fullstack_ai_consultant.webp",
-      "relative_path": "dataset/qualified/QUAL-018_indie_fullstack_ai_consultant.webp",
-      "extension": ".webp",
-      "mime_type": "image/webp",
-      "file_size_bytes": 30,
-      "industry_category": "全栈开发与独立咨询",
-      "edge_case_tags": [
-        "freelance_experience",
-        "image_format_webp",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "18688990011",
-        "luoziheng_indie@example.com",
-        "440305199403178819"
-      ],
-      "raw_resume_text": "罗子恒 - 全栈研发负责人 / AI SaaS 产品技术顾问\n手机：18688990011 | 邮箱：luoziheng_indie@example.com | 身份证：440305199403178819\n意向城市：深圳、杭州 | 期望月薪：2.8w以上\n\n【个人总结】\n6年Web全栈研发与出海AI SaaS产品从0到1商业化交付经验。\n\n【工作与项目经历】\n2023.01 - 至今  独立AI SaaS工作室  创始人 & 全栈技术负责人\n- 独立设计并全栈开发2款出海AI图文生成SaaS产品，累计获取海外注册用户18万，ARR年化经常性收入达42万美元。\n- 为5家跨境电商与MCN企业交付定制化AI客服与多语种视频翻译工作流，帮助客户人工客服成本降低60%。\n- 构建高复用SaaS脚手架（集成鉴权、Stripe订阅、多租户RBAC与流式AI网关），将新产品MVP上线周期缩短至2周。\n\n2020.07 - 2022.12  深圳某互联网科技公司  高级全栈工程师\n- 负责 Next.js/React/TypeScript前端架构与 Node.js/Python FastAPI 后端服务开发。\n\n【教育背景】\n2016.09 - 2020.06  深圳大学  软件工程  本科\n期望福利：周末双休、弹性远程办公、五险一金、项目期权或分红。",
-      "ground_truth": {
-        "candidate_title": "全栈研发负责人 / AI SaaS 产品技术顾问",
-        "years_of_experience": "6年Web全栈研发与出海AI SaaS产品从0到1商业化交付经验",
-        "education_summary": "本科 · 软件工程",
-        "target_cities": [
-          "深圳",
-          "杭州"
-        ],
-        "industry_background": [
-          "出海AI应用SaaS",
-          "全栈软件工程",
-          "独立开发者/技术咨询"
-        ],
-        "core_skills": [
-          "Next.js/React/TypeScript前端架构",
-          "Node.js与Python FastAPI后端开发",
-          "Stripe跨境支付与订阅计费集成",
-          "OpenAI/Gemini多模态API工程化落地",
-          "Vercel/AWS Serverless云端部署"
-        ],
-        "experience_highlights": [
-          "独立设计并全栈开发2款出海AI图文生成SaaS产品，累计获取海外注册用户18万，ARR年化经常性收入达42万美元",
-          "为5家跨境电商与MCN企业交付定制化AI客服与多语种视频翻译工作流，帮助客户人工客服成本降低60%",
-          "构建高复用SaaS脚手架（集成鉴权、Stripe订阅、多租户RBAC与流式AI网关），将新产品MVP上线周期缩短至2周"
-        ],
-        "inferred_salary_floor": "2.8w",
-        "inferred_welfare_prefs": [
-          "周末双休",
-          "弹性远程办公",
-          "五险一金",
-          "项目期权或分红"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-019",
-      "file_name": "QUAL-019_manufacturing_finance_bp.pdf",
-      "relative_path": "dataset/qualified/QUAL-019_manufacturing_finance_bp.pdf",
-      "extension": ".pdf",
-      "mime_type": "application/pdf",
-      "file_size_bytes": 3334,
-      "industry_category": "财务管理与制造业成本BP",
-      "edge_case_tags": [
-        "numeric_dense",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13922334455",
-        "liangjingyi_cpa@example.com",
-        "440604199109285527"
-      ],
-      "raw_resume_text": "梁静怡 - 集团高级财务BP (制造业成本与全面预算)\n手机：13922334455 | 邮箱：liangjingyi_cpa@example.com | 身份证：440604199109285527\n现居佛山顺德 | 意向城市：佛山、广州 | 期望月薪：2w-2.5w\n\n【资历背景】\n8年大型智能家电制造集团成本核算、全面预算管理与供应链财务BP经验（持有中国注册会计师CPA证书及中级会计职称）。\n\n【工作经历】\n2020.03 - 至今  某世界500强智能家电集团（佛山总部）  事业部高级财务BP\n- 深度BP支持年产值35亿元厨电事业部，搭建BOM标准成本动态预警模型，推动制造费用率同比下降2.1个百分点。\n- 主导呆滞原材料与产成品专项清理闭环，1年内盘活积压库存资金4600万元，存货周转率提升23%。\n- 建立自动化产线技改CAPEX立项财务评估模型，累计审核并否决低效投资项目3800万元。\n\n2018.07 - 2020.02  广州某汽车零部件制造企业  成本会计主管\n- 负责 SAP-FICO财务模块月结、标准成本法与BOM料工费差异分析及全面预算编制。\n\n【教育背景】\n2014.09 - 2018.06  广东外语外贸大学  会计学  本科\n期望福利：周末双休、五险一金、年终奖、带薪年假。",
-      "ground_truth": {
-        "candidate_title": "集团高级财务BP (制造业成本与全面预算)",
-        "years_of_experience": "8年大型智能家电制造集团成本核算、全面预算管理与供应链财务BP经验",
-        "education_summary": "本科 · 会计学",
-        "target_cities": [
-          "佛山",
           "广州"
         ],
         "industry_background": [
-          "智能家电制造",
-          "集团化工业企业财务",
-          "供应链与工厂成本控制"
+          "互联网/后端开发",
+          "分布式微服务架构",
+          "技术社区与开源软件"
         ],
         "core_skills": [
-          "标准成本法与BOM料工费差异分析",
-          "全面预算编制与滚动预测(Rolling Forecast)",
-          "SAP-FICO财务模块深度应用",
-          "产线技改与自动化投资ROI测算",
-          "存货呆滞跌价准备与资金周转管控"
+          "Java / Kotlin 服务端开发",
+          "Spring / SpringBoot / SpringCloud 微服务",
+          "MySQL 慢SQL调优与B+树索引优化",
+          "Redis 缓存与分布式锁",
+          "ElasticSearch 与 RabbitMQ 消息队列",
+          "Jenkins + Docker 自动化部署与持续集成",
+          "Arthas 线上故障排查与JVM调优"
         ],
         "experience_highlights": [
-          "深度BP支持年产值35亿元厨电事业部，搭建BOM标准成本动态预警模型，推动制造费用率同比下降2.1个百分点",
-          "主导呆滞原材料与产成品专项清理闭环，1年内盘活积压库存资金4600万元，存货周转率提升23%",
-          "建立自动化产线技改CAPEX立项财务评估模型，累计审核并否决低效投资项目3800万元"
+          "负责Web后台研发与性能优化，针对慢SQL和复杂查询进行排查调优，将接口p95延时从4000ms降低至50ms",
+          "从0到1主力开发微信小程序后端，接入微信登录、微信支付与阿里云OSS直传，设计单主体存储的消息群发系统",
+          "独立开发开源微服务项目“校园博客”(GitHub Star 380+)与“SpEL Validator”参数校验扩展包(GitHub Star 70+)，技术文章全网阅读量超80W",
+          "获蓝桥杯算法赛省赛一等奖3次及国赛三等奖2次、中国大学生计算机设计大赛中南地区二等奖，拥有软件著作权2项"
         ],
-        "inferred_salary_floor": "2w",
+        "inferred_salary_floor": "1.2w",
         "inferred_welfare_prefs": [
           "周末双休",
           "五险一金",
-          "年终奖",
-          "带薪年假"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-020",
-      "file_name": "QUAL-020_b2b_supply_chain_saas_pm.docx",
-      "relative_path": "dataset/qualified/QUAL-020_b2b_supply_chain_saas_pm.docx",
-      "extension": ".docx",
-      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "file_size_bytes": 1882,
-      "industry_category": "企业服务与B端产品经理",
-      "edge_case_tags": [
-        "career_transition",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13817665544",
-        "songjiahao_pm@example.com",
-        "310110199312154436"
-      ],
-      "raw_resume_text": "宋嘉豪 - B端供应链SaaS资深产品经理\n手机：13817665544 | 邮箱：songjiahao_pm@example.com | 身份证：310110199312154436\n意向城市：上海、苏州 | 期望月薪：2.5w以上\n\n【个人总结】\n6年ERP/SRM/WMS供应链数字化产品规划与大型制造零售客户交付经验（兼具早期制造物流现场IE改善经验与SaaS产品架构能力）。\n\n【工作经历】\n2021.04 - 至今  某头部供应链数字化SaaS厂商（上海）  资深B端产品经理\n- 主导新一代云原生SRM采购协同SaaS产品从0到1架构设计，签约付费中大型制造客户85家，模块年营收突破3200万元。\n- 重构零售全渠道OMS智能分单与一盘货库存中心，帮助标杆客户缺货拆单率降低34%，履约时效提升25%。\n- 建立大客户定制需求产品化评审机制，将通用功能代码复用率由52%提升至83%，新客交付周期缩短40%。\n\n【教育背景】\n2015.09 - 2019.06  东华大学  工业工程  本科\n核心技能：SRM寻源招投标与供应商协同产品设计、OMS/WMS多仓一盘货路由调度策略、复杂B端权限与工作流引擎抽象、大客户定制化需求收敛与SaaS标准化、ERP/SAP接口集成方案规划。\n期望福利：周末双休、六险一金、年终奖、弹性打卡。",
-      "ground_truth": {
-        "candidate_title": "B端供应链SaaS资深产品经理",
-        "years_of_experience": "6年ERP/SRM/WMS供应链数字化产品规划与大型制造零售客户交付经验",
-        "education_summary": "本科 · 工业工程",
-        "target_cities": [
-          "上海",
-          "苏州"
-        ],
-        "industry_background": [
-          "企业服务SaaS",
-          "供应链协同系统(SRM/WMS)",
-          "制造业与零售数字化"
-        ],
-        "core_skills": [
-          "SRM寻源招投标与供应商协同产品设计",
-          "OMS/WMS多仓一盘货路由调度策略",
-          "复杂B端权限与工作流引擎抽象",
-          "大客户定制化需求收敛与SaaS标准化",
-          "ERP/SAP接口集成方案规划"
-        ],
-        "experience_highlights": [
-          "主导新一代云原生SRM采购协同SaaS产品从0到1架构设计，签约付费中大型制造客户85家，模块年营收突破3200万元",
-          "重构零售全渠道OMS智能分单与一盘货库存中心，帮助标杆客户缺货拆单率降低34%，履约时效提升25%",
-          "建立大客户定制需求产品化评审机制，将通用功能代码复用率由52%提升至83%，新客交付周期缩短40%"
-        ],
-        "inferred_salary_floor": "2.5w",
-        "inferred_welfare_prefs": [
-          "周末双休",
-          "六险一金",
-          "年终奖",
-          "弹性打卡"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-021",
-      "file_name": "QUAL-021_admin_workplace_culture_manager.md",
-      "relative_path": "dataset/qualified/QUAL-021_admin_workplace_culture_manager.md",
-      "extension": ".md",
-      "mime_type": "text/markdown",
-      "file_size_bytes": 1296,
-      "industry_category": "行政总务与企业文化",
-      "edge_case_tags": [
-        "single_target_city",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13601112233",
-        "dengmeiling_adm@example.com",
-        "110101199205193328"
-      ],
-      "raw_resume_text": "# 邓美玲 - 行政总务与企业文化经理\n- 手机：13601112233 | 邮箱：dengmeiling_adm@example.com | 身份证：110101199205193328\n- 现居北京海淀，仅看北京市内机会 | 期望月薪：1.8w+\n\n## 个人概述\n7年互联网科技企业总部职场选址装修、行政采购及企业文化活动统筹经验。\n\n## 工作经历\n### 2020.05 - 至今 | 北京某上市互联网科技公司 | 行政总务与企业文化经理\n- 独立统筹北京总部1.2万平米新职场装修与1100名员工无感搬迁项目，提前10天竣工并通过环保验收，总造价节约14%。\n- 整合差旅机酒、办公耗材与绿植保洁框架招标，实现年度行政综合运营预算同比降低19%（年省210万元）。\n- 全年策划执行公司科技节、家庭日及千人年会等16场企业文化活动，员工行政服务满意度调研达96.8分。\n\n## 教育背景\n- 2015.09 - 2019.06  首都经济贸易大学  行政管理  本科\n- 技能：千人级职场选址搬迁与装修项目管理、行政非生产性采购(Indirect Procurement)降本、企业年会与周年庆大型活动策划、园区物业、餐饮班车与安保供应商管理、固定资产盘点与行政预算管控。\n- 期望福利：周末双休、六险一金、带薪年假、年终奖。",
-      "ground_truth": {
-        "candidate_title": "行政总务与企业文化经理",
-        "years_of_experience": "7年互联网科技企业总部职场选址装修、行政采购及企业文化活动统筹经验",
-        "education_summary": "本科 · 行政管理",
-        "target_cities": [
-          "北京"
-        ],
-        "industry_background": [
-          "互联网科技企业",
-          "总部职场空间运营",
-          "企业文化与员工关怀"
-        ],
-        "core_skills": [
-          "千人级职场选址搬迁与装修项目管理",
-          "行政非生产性采购(Indirect Procurement)降本",
-          "企业年会与周年庆大型活动策划",
-          "园区物业、餐饮班车与安保供应商管理",
-          "固定资产盘点与行政预算管控"
-        ],
-        "experience_highlights": [
-          "独立统筹北京总部1.2万平米新职场装修与1100名员工无感搬迁项目，提前10天竣工并通过环保验收，总造价节约14%",
-          "整合差旅机酒、办公耗材与绿植保洁框架招标，实现年度行政综合运营预算同比降低19%（年省210万元）",
-          "全年策划执行公司科技节、家庭日及千人年会等16场企业文化活动，员工行政服务满意度调研达96.8分"
-        ],
-        "inferred_salary_floor": "1.8w",
-        "inferred_welfare_prefs": [
-          "周末双休",
-          "六险一金",
-          "带薪年假",
           "年终奖"
         ]
       }
     },
     {
-      "id": "QUAL-022",
-      "file_name": "QUAL-022_cnc_machining_master_no_edu.txt",
-      "relative_path": "dataset/qualified/QUAL-022_cnc_machining_master_no_edu.txt",
-      "extension": ".txt",
-      "mime_type": "text/plain",
-      "file_size_bytes": 1225,
-      "industry_category": "精密机械加工与模具",
-      "edge_case_tags": [
-        "missing_education",
-        "blue_collar_technical",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13798886655",
-        "xiedongsheng_cnc@example.com",
-        "441900198910126614"
-      ],
-      "raw_resume_text": "谢东升 - 数控加工中心 (CNC) 高级编程技师\n电话：13798886655 | 邮箱：xiedongsheng_cnc@example.com | 身份证：441900198910126614\n求职地点：东莞、深圳、惠州 | 期望月薪：1.3w-1.6w\n\n【技术专长】\n9年五轴/三轴CNC加工中心UG编程、复杂异形精密零件工艺夹具设计与调机经验（未填写学历信息）。\n熟练掌握：UG/Mastercam三轴至五轴联动编程、发那科(FANUC)/海德汉/三菱系统调机、精密治具与真空吸盘工装夹具设计、薄壁腔体零件防变形刀路优化、三次元(CMM)形位公差检测分析。\n\n【工作经历】\n2019.03 - 至今  东莞某精密科技五金模具有限公司  CNC编程组长 / 高级技师\n- 主导医疗腔镜与无人机钛合金复杂曲面五轴联动CNC编程，关键尺寸公差稳定控制在±0.005mm以内，一次交检合格率99.3%。\n- 设计多工位气动快速换装夹具并优化高速铣削刀路，将核心模具散件单件加工周期缩短32%。\n- 建立车间标准刀具寿命库与防撞机宏程序校验规范，连续4年实现五轴机台零撞机事故，刀具耗材成本下降20%。\n\n【福利期望】\n五险一金、包吃包住、加班费或计件提成",
-      "ground_truth": {
-        "candidate_title": "数控加工中心 (CNC) 高级编程技师",
-        "years_of_experience": "9年五轴/三轴CNC加工中心UG编程、复杂异形精密零件工艺夹具设计与调机经验",
-        "education_summary": "未注明学历",
-        "target_cities": [
-          "东莞",
-          "深圳",
-          "惠州"
-        ],
-        "industry_background": [
-          "五金精密模具加工",
-          "航空与医疗精密零件制造",
-          "CNC自动化机加工"
-        ],
-        "core_skills": [
-          "UG/Mastercam三轴至五轴联动编程",
-          "发那科(FANUC)/海德汉/三菱系统调机",
-          "精密治具与真空吸盘工装夹具设计",
-          "薄壁腔体零件防变形刀路优化",
-          "三次元(CMM)形位公差检测分析"
-        ],
-        "experience_highlights": [
-          "主导医疗腔镜与无人机钛合金复杂曲面五轴联动CNC编程，关键尺寸公差稳定控制在±0.005mm以内，一次交检合格率99.3%",
-          "设计多工位气动快速换装夹具并优化高速铣削刀路，将核心模具散件单件加工周期缩短32%",
-          "建立车间标准刀具寿命库与防撞机宏程序校验规范，连续4年实现五轴机台零撞机事故，刀具耗材成本下降20%"
-        ],
-        "inferred_salary_floor": "1.3w",
-        "inferred_welfare_prefs": [
-          "五险一金",
-          "包吃包住",
-          "加班费或计件提成"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-023",
-      "file_name": "QUAL-023_short_video_new_media_director.pdf",
-      "relative_path": "dataset/qualified/QUAL-023_short_video_new_media_director.pdf",
-      "extension": ".pdf",
-      "mime_type": "application/pdf",
-      "file_size_bytes": 3499,
-      "industry_category": "新媒体内容与美妆电商",
-      "edge_case_tags": [
-        "pii_embedded_in_achievements_raw",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "15068112299",
-        "hanyuwei_media@example.com",
-        "330102199607153349"
-      ],
-      "raw_resume_text": "韩雨薇 - 短视频内容主编 / 品牌新媒体运营负责人\n手机：15068112299 | 邮箱：hanyuwei_media@example.com | 身份证：330102199607153349\n意向城市：杭州、上海 | 期望月薪：2w以上\n\n【个人总结】\n5年美妆个护新消费品牌抖音/小红书短视频内容矩阵孵化与直播引流经验。\n\n【工作经历（注意：原文业绩行故意夹杂私人联系方式以测试解析器PII脱敏能力）】\n2021.08 - 至今  杭州某新锐功效护肤品牌  新媒体内容负责人\n- 从0孵化国货功效护肤品牌3个抖音矩阵号，9个月内累计涨粉165万，产出千万级播放爆款视频11条（作品集索取请联系微信/手机15068112299或邮箱hanyuwei_media@example.com）。\n- 重构千川信息流高转化痛点测评脚本模板，单月短视频直接引流自播间成交GMV突破1200万元，自然流占比达35%。\n- 统筹双十一小红书+抖音全域内容种草战役，品牌词搜索指数环比暴涨380%，全周期ROI稳定在1:3.8。\n\n【教育背景】\n2017.09 - 2021.06  浙江传媒学院  广播电视编导  本科\n技能：抖音千川投流素材脚本创作、品牌IP人设号矩阵从0到1孵化、小红书爆文选题与蒲公英达人投放、短视频引流品牌自播间转化优化、编导摄影剪辑团队管理。\n期望福利：周末双休、五险一金、爆款视频与GMV提成奖。",
-      "ground_truth": {
-        "candidate_title": "短视频内容主编 / 品牌新媒体运营负责人",
-        "years_of_experience": "5年美妆个护新消费品牌抖音/小红书短视频内容矩阵孵化与直播引流经验",
-        "education_summary": "本科 · 广播电视编导",
-        "target_cities": [
-          "杭州",
-          "上海"
-        ],
-        "industry_background": [
-          "美妆护肤新消费品牌",
-          "MCN短视频内容机构",
-          "抖音兴趣电商"
-        ],
-        "core_skills": [
-          "抖音千川投流素材脚本创作",
-          "品牌IP人设号矩阵从0到1孵化",
-          "小红书爆文选题与蒲公英达人投放",
-          "短视频引流品牌自播间转化优化",
-          "编导摄影剪辑团队管理"
-        ],
-        "experience_highlights": [
-          "从0孵化国货功效护肤品牌3个抖音矩阵号，9个月内累计涨粉165万，产出千万级播放爆款视频11条",
-          "重构千川信息流高转化痛点测评脚本模板，单月短视频直接引流自播间成交GMV突破1200万元，自然流占比达35%",
-          "统筹双十一小红书+抖音全域内容种草战役，品牌词搜索指数环比暴涨380%，全周期ROI稳定在1:3.8"
-        ],
-        "inferred_salary_floor": "2w",
-        "inferred_welfare_prefs": [
-          "周末双休",
-          "五险一金",
-          "爆款视频与GMV提成奖"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-024",
-      "file_name": "QUAL-024_embedded_hardware_engineer.docx",
-      "relative_path": "dataset/qualified/QUAL-024_embedded_hardware_engineer.docx",
+      "id": "QUAL-05",
+      "file_name": "QUAL-05.docx",
+      "relative_path": "dataset/qualified/QUAL-05.docx",
       "extension": ".docx",
-      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "file_size_bytes": 1885,
-      "industry_category": "嵌入式研发与工业自动化",
-      "edge_case_tags": [
-        "technical_abbreviations",
-        "contains_pii_in_raw_text"
-      ],
+      "industry_category": "教育培训/国际贸易与行政管理",
       "raw_pii_tokens": [
-        "18729004466",
-        "tangwenbo_mcu@example.com",
-        "610113199502087713"
+        "林宇萧",
+        "hela215@163.com",
+        "1589632000"
       ],
-      "raw_resume_text": "唐文博 - 嵌入式硬件研发工程师 (RTOS / 工业控制)\n电话：18729004466 | 邮箱：tangwenbo_mcu@example.com | 身份证：610113199502087713\n意向城市：西安、成都 | 期望月薪：1.8w-2.4w\n\n【个人总结】\n5年工业自动化控制器、STM32/ARM嵌入式软硬件开发与EMC电磁兼容整改经验。\n\n【工作经历】\n2021.07 - 至今  西安某工业自动化与储能技术有限公司  高级嵌入式硬件工程师\n- 主导多轴伺服运动控制板卡硬件原理图与6层PCB设计，一次性通过工业级EMC四级严酷度测试并实现量产5万套。\n- 完成核心控制板MCU与电源芯片100%国产化替代方案验证，单板BOM物料成本降低26%，年节约采购成本400余万元。\n- 优化FreeRTOS底层CANopen与EtherCAT通信驱动中断调度，将总线同步抖动控制在10微秒以内。\n\n【教育背景】\n2017.09 - 2021.06  西安电子科技大学  电子信息工程  本科\n核心技能：STM32/GD32与FreeRTOS实时操作系统开发、Altium Designer多层高速PCB原理图与Layout、CAN/RS485/Modbus/EtherCAT工业总线协议、工业级EMC/EMI静电与浪涌抗扰度整改、元器件国产化替代选型与BOM降本。\n期望福利：周末双休、五险一金、项目量产奖金、带薪年假。",
+      "raw_resume_text": "性    别：女\n籍    贯：广州越秀\n政治面貌：中共党员\n英语水平：四级\n计算机水平：二级\n现居住地：武汉市洪山区\n邮    箱：hela215@163.com\n姓    名：林宇萧\n民    族：汉族\n出生年月：1990.05.12\n学    历：硕士学位\n专    业：国际经济与贸易\n毕业院校：华中师范大学\n联系电话：1589632000\n2013.09-2017.06  华中师范大学  国际经济与贸易   硕士\n2009.09-2013.06  广州科技大学  对外汉语         学士\n管理学、行政管理、企业运营管理，供应链管理，商务礼仪与谈判术、西方经济学会计学基础、税法、成本会计、财务会计、会计电算化、特殊事项会计、审计、经济学、税务学等。\n2011年 广州科技大学校级一等奖奖学金\n2012年 广州科技大学国家一等奖学金\n2015年 华中师范大学校园十大歌手一等奖\n2016年 湖北省创青春创业计划移动专项赛银奖\n2016年 武汉思拓外语学校“优秀骨干教师”称号\n2016年 大学生课外技术创新活动“优胜奖”\n2015.03-2017.06   华中师范大学经济管理学院学生会 副部长\n2013.02-2014.06   武汉思拓外语培训学校 英语口语教师\n2011.06-2012.12   广州科技大学组织部 宣传干事\n2009.09-2011.02   广州科技大学网络宣传部 部长\n本人具有良好的公共关系意识，善于沟通，具备活动策划和组织协调能力。良好的心态和责任感，吃苦耐劳，善于管理时间，勇于面对变化和挑战。良好的学习能力，习惯制定切实可行的学习计划，勤于学习能不断提高。通过几年的学习，掌握了三大力学，房屋建筑学，土木工程施工，建筑制图，建筑结构抗震等相关课程的基本知识，掌握了有关建筑机械，电工，工程测量与试验，施工技术与组织等方面的基本技术。\n<<<\n自我评价\n工作经验\n获奖情况\n全国计算机等级二级证书\n英语四级证书\n普通话水平测试二级甲等\nAdobe认证设计师资格证书\n机动车驾驶证\n全国信息技术应用培训教育工程职业技能证书（AutoCAD建筑设计）\n个人能力\n主修课程\n教育背景\n个人信息",
       "ground_truth": {
-        "candidate_title": "嵌入式硬件研发工程师 (RTOS / 工业控制)",
-        "years_of_experience": "5年工业自动化控制器、STM32/ARM嵌入式软硬件开发与EMC电磁兼容整改经验",
-        "education_summary": "本科 · 电子信息工程",
+        "candidate_title": "英语教师 / 国际贸易与行政运营专员",
+        "years_of_experience": "约1年半英语口语教学及多年高校组织宣传与活动策划经验",
+        "education_summary": "硕士 · 国际经济与贸易（华中师范大学）｜学士 · 对外汉语（广州科技大学）",
         "target_cities": [
-          "西安",
-          "成都"
-        ],
-        "industry_background": [
-          "工业自动化与PLC控制",
-          "智能物联网硬件(IoT)",
-          "电力与储能BMS设备"
-        ],
-        "core_skills": [
-          "STM32/GD32与FreeRTOS实时操作系统开发",
-          "Altium Designer多层高速PCB原理图与Layout",
-          "CAN/RS485/Modbus/EtherCAT工业总线协议",
-          "工业级EMC/EMI静电与浪涌抗扰度整改",
-          "元器件国产化替代选型与BOM降本"
-        ],
-        "experience_highlights": [
-          "主导多轴伺服运动控制板卡硬件原理图与6层PCB设计，一次性通过工业级EMC四级严酷度测试并实现量产5万套",
-          "完成核心控制板MCU与电源芯片100%国产化替代方案验证，单板BOM物料成本降低26%，年节约采购成本400余万元",
-          "优化FreeRTOS底层CANopen与EtherCAT通信驱动中断调度，将总线同步抖动控制在10微秒以内"
-        ],
-        "inferred_salary_floor": "1.8w",
-        "inferred_welfare_prefs": [
-          "周末双休",
-          "五险一金",
-          "项目量产奖金",
-          "带薪年假"
-        ]
-      }
-    },
-    {
-      "id": "QUAL-025",
-      "file_name": "QUAL-025_luxury_hotel_front_office_manager.png",
-      "relative_path": "dataset/qualified/QUAL-025_luxury_hotel_front_office_manager.png",
-      "extension": ".png",
-      "mime_type": "image/png",
-      "file_size_bytes": 4549,
-      "industry_category": "高星级酒店与文旅服务",
-      "edge_case_tags": [
-        "image_format_png",
-        "hospitality_service",
-        "contains_pii_in_raw_text"
-      ],
-      "raw_pii_tokens": [
-        "13976008822",
-        "fengyaqin_hotel@example.com",
-        "460200199201165529"
-      ],
-      "raw_resume_text": "冯雅琴 - 星级酒店前厅部经理 / 高端客户关系主管\n手机：13976008822 | 邮箱：fengyaqin_hotel@example.com | 身份证：460200199201165529\n意向城市：三亚、海口、广州 | 期望月薪：1.4w以上\n\n【个人总结】\n8年国际五星级度假酒店前厅部全盘运营、VIP宾客关系及客房收益升级管理经验（英语流利，精通Opera PMS系统）。\n\n【工作经历】\n2020.10 - 至今  某国际豪华酒店集团三亚海棠湾度假酒店  前厅部经理 (FOM)\n- 统筹管理三亚450间客房国际五星级度假酒店前厅部45人团队，春节满房高峰期实现日均接待1200人次零重大客诉。\n- 推行前台入住海景套房与餐饮包价Upselling激励计划，年度前厅附加升级营收突破360万元，同比增长35%。\n- 优化VIP到店礼遇与离店满意度回访闭环，酒店携程网评点评分由4.7分稳步提升至4.92分，集团宾客满意度排名大中华区前五。\n\n【教育背景】\n2014.09 - 2018.06  海南大学  酒店管理  本科\n技能：前厅部(Front Office)SOP运营与排班管理、Opera PMS系统与动态房态收益控制、前台Upselling行政酒廊与海景房升级销售、OTA携程/万豪旅享家差评危机公关处理、外籍宾客英语口语接待与跨部门协同。\n期望福利：五险一金、提供酒店公寓食宿、年终双薪与Upsell提成。",
-      "ground_truth": {
-        "candidate_title": "星级酒店前厅部经理 / 高端客户关系主管",
-        "years_of_experience": "8年国际五星级度假酒店前厅部全盘运营、VIP宾客关系及客房收益升级管理经验",
-        "education_summary": "本科 · 酒店管理",
-        "target_cities": [
-          "三亚",
-          "海口",
+          "武汉",
           "广州"
         ],
         "industry_background": [
-          "国际五星级豪华酒店",
-          "高端海岛文旅度假村",
-          "VIP宾客体验与会员服务"
+          "教育培训/外语教学",
+          "国际经济与贸易",
+          "行政管理与活动策划"
         ],
         "core_skills": [
-          "前厅部(Front Office)SOP运营与排班管理",
-          "Opera PMS系统与动态房态收益控制",
-          "前台Upselling行政酒廊与海景房升级销售",
-          "OTA携程/万豪旅享家差评危机公关处理",
-          "外籍宾客英语口语接待与跨部门协同"
+          "英语口语教学与课程辅导",
+          "活动策划与公共关系协调",
+          "企业运营与供应链管理基础",
+          "商务礼仪与谈判",
+          "Adobe认证设计与AutoCAD建筑制图",
+          "英语四级(CET-4)与普通话二级甲等"
         ],
         "experience_highlights": [
-          "统筹管理三亚450间客房国际五星级度假酒店前厅部45人团队，春节满房高峰期实现日均接待1200人次零重大客诉",
-          "推行前台入住海景套房与餐饮包价Upselling激励计划，年度前厅附加升级营收突破360万元，同比增长35%",
-          "优化VIP到店礼遇与离店满意度回访闭环，酒店携程网评点评分由4.7分稳步提升至4.92分，集团宾客满意度排名大中华区前五"
+          "于武汉思拓外语培训学校担任英语口语教师（2013.02-2014.06），并荣获2016年武汉思拓外语学校“优秀骨干教师”称号",
+          "荣获2016年湖北省创青春创业计划移动专项赛银奖、大学生课外技术创新活动优胜奖及2012年广州科技大学国家一等奖学金",
+          "历任华中师范大学经济管理学院学生会副部长、广州科技大学网络宣传部部长及组织部宣传干事，具备丰富的组织协调与活动策划经验"
         ],
-        "inferred_salary_floor": "1.4w",
+        "inferred_salary_floor": "0.8w",
         "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金"
+        ]
+      }
+    },
+    {
+      "id": "QUAL-06",
+      "file_name": "QUAL-06.docx",
+      "relative_path": "dataset/qualified/QUAL-06.docx",
+      "extension": ".docx",
+      "industry_category": "互联网广告/市场运营",
+      "raw_pii_tokens": [
+        "张全峰",
+        "15000000000",
+        "4584314@qq.com"
+      ],
+      "raw_resume_text": "基本信息\n生日：1993.4\n地址：广州\n电话：15000000000\n邮箱：4584314@qq.com\n策划\n摄影\n写作\nPHOTOSHOP\nTEAMWORK\nIEADERSHIP\nILLUSTRATOR\n软件技能\n优势特长\n校园经历\n技能证书\n自我评价\n求职意向：市场运营专员\n张全峰\n实习经历\n教育背景\n普通话一级甲等；\n大学英语四六级（CET-4/6),良好的听说读写能力，快速浏览英语专业书籍;\n通过全国计算机二级考试，熟练运用office相关软件。\n深度互联网从业人员，对互联网保持高度的敏感性和关注度，熟悉产品开发流程，有很强的产品规划、需求分析、交互设计能力，能独立承担APP和WEB项目的管控工作，善于沟通，贴近用户。\n2005.05-2008.06             大庆稻田大学            辩论队（队长）\n● 负责50人的团队日常训练，选拔及团队建设；\n● 作为负责人对接多项商业校园行活动，如《奔跑吧兄弟》大庆稻田大学站录制、长安福特全球校园行、《时代周末》校园行；\n● 代表大庆大学辩论队参与多项国际型比赛，并取得多项荣誉：\n大庆大学“唇舌烽火”辩论赛冠军、亚军；\n2013年全程最佳辩手；\n大庆大学2011级“杰出辩手”；\n2010.03-2012.03         广州蓝光信息有限公司    软件工程师\n● 负责公司线上端资源的销售工作，公司主要资源广点通，智慧推小米360，沃门户等；\n● 负责客户调研、客户需求分析、方案写作等工作，参与公司多个大型电子商务项目的策划工作，担任大商集团网上商城一期建设项目经理。\n2012-04至今           长丰科技有限公司         市场营销（实习生）\n● 实时了解行业的变化，跟踪客户详细数据，为客户制定更完善的投放计划（合作过珍爱网、世纪佳缘、56视频，京东等客户）\n2005.07.2009.06         宁波科技大学             市场营销（本科）\n主修课程：管理学、宏观经济学、微观经济学、管理信息技术、统计学、会计学、财务管理、市场营销、经济法、消费者行为、学国际市场营销。\nRESUME",
+      "ground_truth": {
+        "candidate_title": "市场运营专员 / 互联网广告销售与产品项目运营",
+        "years_of_experience": "4年以上互联网市场运营、线上广告销售与电商项目管理经验",
+        "education_summary": "本科 · 市场营销（宁波科技大学）",
+        "target_cities": [
+          "广州"
+        ],
+        "industry_background": [
+          "互联网市场运营",
+          "数字广告投放与销售",
+          "电子商务与产品策划"
+        ],
+        "core_skills": [
+          "线上广告资源销售(广点通/智慧推/小米/360)",
+          "广告投放计划制定与客户数据跟踪",
+          "产品规划、需求分析与交互设计",
+          "APP与WEB项目管控",
+          "活动策划、摄影与文案写作",
+          "Photoshop / Illustrator 视觉工具",
+          "大学英语六级(CET-6)与普通话一级甲等"
+        ],
+        "experience_highlights": [
+          "在长丰科技有限公司负责广点通、智慧推、小米、360、沃门户等线上资源销售，为珍爱网、世纪佳缘、56视频、京东等客户定制投放计划",
+          "在广州蓝光信息有限公司担任软件工程师及大商集团网上商城一期建设项目经理，主导客户调研、需求分析与大型电商项目策划",
+          "曾任大庆稻田大学辩论队队长管理50人团队，作为负责人对接《奔跑吧兄弟》高校站录制、长安福特全球校园行及《时代周末》校园行活动"
+        ],
+        "inferred_salary_floor": "1w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金"
+        ]
+      }
+    },
+    {
+      "id": "QUAL-07",
+      "file_name": "QUAL-07.jpg",
+      "relative_path": "dataset/qualified/QUAL-07.jpg",
+      "extension": ".jpg",
+      "industry_category": "设计服务/软件与系统开发",
+      "raw_pii_tokens": [
+        "15800000000",
+        "banana@qq.com"
+      ],
+      "raw_resume_text": "基本信息：生日：1990.12.24 | 所在地：湖北·武汉 | 电话：15800000000 | 邮箱：banana@qq.com\n求职意向：武汉地区设计相关岗位\n自我评价：良好的公共关系意识，善于沟通，具备一定的活动策划和组织协调能力。良好的心态和责任感，吃苦耐劳，擅于管理时间。\n教育背景：\n- 2014-2016 武汉师范大学 专业：学科教学（语文） 学历：教育硕士\n- 2010-2014 湖北大学 专业：汉语言文学 学历：文学学士\n工作经历：\n- 2014年11月-2016年3月 湖北武汉国际设计公司 设计师：负责撰写起草、整理、归档学校日常公文、资料、文档及相关统计数据。\n- 2010年8月-2014年10月 湖北武汉国际设计公司 设计助理：负责收发设计传真复印、扫描文档、收发信件、文件、快递包裹的接收等。\n技能水平：产品管理、项目管理、Java、移动应用、Linux\n项目经历：\n1. 2015.03-2015.05 网上购物系统：参与该系统购物模块设计，独立开发了购物车模块，完成对该系统部分的测试工作并完善项目相关文档资料。\n2. 2008.05-2008.10 小型OA系统：系统平台Windows XP，数据库Oracle；独立开发了管理员管理模块和权限管理模块（包括设计、编码、模块单元测试，实现了对权限管理子模块的增删查）。",
+      "ground_truth": {
+        "candidate_title": "设计师 / 产品项目管理与系统开发专员",
+        "years_of_experience": "5年以上设计公司任职、公文数据统筹及软件系统模块开发经验",
+        "education_summary": "教育硕士 · 学科教学（语文）（武汉师范大学）｜文学学士 · 汉语言文学（湖北大学）",
+        "target_cities": [
+          "武汉"
+        ],
+        "industry_background": [
+          "设计服务与文档统筹",
+          "软件系统与电商开发",
+          "教育与行政公文管理"
+        ],
+        "core_skills": [
+          "产品管理与项目管理",
+          "Java 与 Linux 应用开发",
+          "Oracle 数据库与OA权限模块开发",
+          "移动应用与电商购物车模块设计",
+          "公文起草、档案整理与数据统计",
+          "活动策划与组织协调"
+        ],
+        "experience_highlights": [
+          "于湖北武汉国际设计公司历任设计助理与设计师（2010.08-2016.03），负责公文起草、设计文档归档及相关统计数据管理",
+          "参与网上购物系统研发，参与购物模块设计并独立完成购物车模块开发、系统测试与技术文档编写",
+          "基于Oracle数据库独立开发小型OA系统的管理员管理模块和权限管理模块，完成设计、编码与单元测试"
+        ],
+        "inferred_salary_floor": "0.8w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金"
+        ]
+      }
+    },
+    {
+      "id": "QUAL-08",
+      "file_name": "QUAL-08.jpg",
+      "relative_path": "dataset/qualified/QUAL-08.jpg",
+      "extension": ".jpg",
+      "industry_category": "互联网/项目管理与视觉设计",
+      "raw_pii_tokens": [
+        "15031088888",
+        "123456@qq.com"
+      ],
+      "raw_resume_text": "求职岗位：项目经理/项目负责人\n基本信息：出生年月：1990/12/8 | 毕业学校：中央美院 | 学历：本科 | 专业：项目经理 | 籍贯：北京 | 现居：北京\n联系方式：手机：15031088888 | 邮箱：123456@qq.com | 地址：北京\n工作经历：2013.09 上海宝山互联网公司 历任高级项目负责人、UI高级美工、设计部主管\n教育/培训经历：2013.09 上海宝山互联网公司 担任职位：经理、总经理\n掌握技能：平面设计、网页设计、办公软件、C++；语言：普通话、英文、北京话\n主修课程：英文口语、笔译口译、英文写作、英美文学、导游实务、商务礼仪、文化交流、旅游心理学\n获得荣誉：\n1. 大学一直担任班长，荣获“优秀班干”；\n2. 在校园创业者协会担任“宣传部长”；\n3. 2011年荣获第四届全国大学生广告艺术设计大赛江西赛区平面作品类三等奖。",
+      "ground_truth": {
+        "candidate_title": "项目经理 / 项目负责人 / 设计部主管",
+        "years_of_experience": "多年互联网项目管理、UI视觉设计与设计团队管理经验（2013年9月起任职）",
+        "education_summary": "本科 · 项目管理/艺术设计（中央美术学院）",
+        "target_cities": [
+          "北京",
+          "上海"
+        ],
+        "industry_background": [
+          "互联网/IT项目管理",
+          "UI与网页视觉设计",
+          "广告艺术与创意设计"
+        ],
+        "core_skills": [
+          "互联网项目管理与统筹",
+          "设计团队管理",
+          "UI高级美工与网页设计",
+          "平面视觉设计",
+          "C++编程与办公软件应用",
+          "英语听说读写与笔译口译"
+        ],
+        "experience_highlights": [
+          "于上海宝山互联网公司历任UI高级美工、设计部主管及高级项目负责人，具备视觉设计与互联网项目管理的复合管理经验",
+          "2011年荣获第四届全国大学生广告艺术设计大赛江西赛区平面作品类三等奖",
+          "大学期间长期担任班长并获评“优秀班干”，曾任校园创业者协会宣传部长"
+        ],
+        "inferred_salary_floor": "1.2w",
+        "inferred_welfare_prefs": [
+          "周末双休",
+          "五险一金"
+        ]
+      }
+    },
+    {
+      "id": "QUAL-09",
+      "file_name": "QUAL-09.md",
+      "relative_path": "dataset/qualified/QUAL-09.md",
+      "extension": ".md",
+      "industry_category": "互联网/后端研发",
+      "raw_pii_tokens": [
+        "阿杆"
+      ],
+      "raw_resume_text": "<table>\n\t<tr style=\"height: 50px;\">\n\t\t<td style=\"font-size: 1.8em;\"><strong>阿杆👨‍💻</strong></td>\n\t\t<td style=\"font-size: 1.5em;\"><strong>求职意向：后端开发</strong></td>\n\t\t<td rowspan=\"5\">\n\t\t\t<img src=\"./image/sticki_avatar.jpg\" height=\"140\" alt=\"\">\n\t\t</td>\n\t</tr>\n\t<tr>\n\t\t<td>工作经验：一年</td>\n\t\t<td>电话：sticki</td>\n\t</tr>\n\t<tr>\n\t\t<td>出生年月：2000年10月</td>\n\t\t<td>邮箱：sticki</td>\n\t</tr>\n\t<tr>\n\t\t<td>现住址：广东广州</td>\n\t\t<td>教育背景：2023届 XX大学 本科 软件工程</td>\n\t</tr>\n\t<tr>\n\t\t<td><a href=\"https://juejin.cn/user/4182956056773160/posts\">博客主页</a></td>\n\t\t<td><a href=\"https://github.com/stick-i\">GitHub主页</a></td>\n\t</tr>\n</table>\n<hr/>\n\n### ==😎专业技能==\n\n- 熟悉 **Java** 、**Kotlin** 服务端开发，熟悉 **JVM** 基础知识，如内存模型、垃圾回收等，熟悉 **多线程** 用法\n- 熟悉 **Spring、SpringBoot、Mybatis-Plus** 等常用框架，熟悉 **SpringCloud** 常用组件\n- 熟悉 **MySQL** 数据库，熟悉 **SQL优化** 和 **索引结构** ，熟悉底层 B+树 的结构\n- 熟悉 **Redis** 缓存、分布式锁，熟悉 **ElasticSearch** 分词、搜索，熟练使用 **MQ** 处理异步场景\n- 具备 **分布式微服务** 项目的设计开发经验，有 **Jenkins自动化部署** 经验，有 **Arthas** 排查线上问题的经验\n- [稀土掘金](https://juejin.cn/user/4182956056773160/posts) 优秀创作者，[CSDN](https://blog.csdn.net/little_stick_i?type=blog) 万粉博主，个人公众号 程序员阿杆，**全网阅读量超 80W**\n- 本科期间有10余次省级及以上学科竞赛获奖经历\n\n<hr/>\n\n### ==🏢工作经历==\n\n<h4 style=\"display: flex;justify-content: space-between;\">\n<span>一、公司名称 - 部门</span><span>Web后台研发</span><span>2023.04 - 至今</span>\n</h4>\n\n- 公司应用的功能版本迭代、开发上线、公共组件库维护、软件技术文档编写；\n- 线上故障定位和解决、性能优化、模块代码重构。\n\n<h4 style=\"display: flex;justify-content: space-between;\">\n<span>二、公司名称 - 部门</span><span>Java后台开发实习</span><span>2022.08 - 2022.12</span>\n</h4>\n\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n\n<hr/>\n\n### ==💻工作项目==\n\n> ps：工作项目的内容都是我瞎写的，仅作为模板参考，并不是真实的项目经历。\n\n<h4 style=\"display: flex;justify-content: space-between;\">\n<span>一、微信小程序</span><span>主力开发</span><span>2024.02 - 2024.04</span>\n</h4>\n项目背景及描述：\n\n- 对公司现有的APP应用开发一款微信小程序，实现了主要的业务功能，提升用户体验和业务效率。\n\n我的工作内容：\n\n- 从 0 到 1 进行项目功能设计、开发、备案、运维、上线等所有工作；\n- 接入微信开放平台和微信商户平台，支持 **微信登录、微信支付**；\n- 接入阿里云OSS，实现服务端签名、客户端直传、服务端接收回调通知的应用方式；\n- 设计并实现 **消息系统**，支持消息群发和单独发送，群发状态下仅存储一条主体消息，节省存储空间。\n\n<h4 style=\"display: flex;justify-content: space-between;\">\n<span>二、根据实际情况填写</span><span>协作开发</span><span>2023.10 - 2024.01</span>\n</h4>\n项目描述：\n\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n\n我的工作内容：\n\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n- 根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写根据实际情况填写\n\n<h4 style=\"display: flex;justify-content: space-between;\">\n<span>三、其他</span><span>2023.05 - 至今</span>\n</h4>\n\n- 优化“xxx”应用，对慢SQL和复杂查询进行排查和优化，**p95延时从4000ms降低到了50ms**；\n- 根据自己实际情况填写\n\n<hr/>\n\n### ==🚀个人项目==\n\n<h4 style=\"display: flex;justify-content: space-between;\">\n<span>一、校园博客</span><span>个人开源项目</span><span>2022.03 - 2022.07</span>\n</h4>\n\n> 基于Spring + Mybatis-Plus + MySQL + Redis + RabbitMQ + ES + Docker + Nacos + Fegin的微服务项目。是个类似于CSDN的博客社区，但博客的推送是基于院校的。**<u>GitHub Star 380+</u>，[开源地址](https://github.com/stick-i/scblogs)，[系统架构图](https://gitee.com/sticki/scblogs/raw/main/document/image/scblogs-framework.png)**。\n\n- 采用 **微服务架构设计开发** ，各服务间通过 **Fegin** 进行同步通信、通过 **RabbitMQ** 进行异步通信；\n- 服务拆分：用户服务、博客服务、网关服务、搜索服务、评论服务、动态服务、资源服务、消息服务；\n- 搭建网关服务，负责路由、鉴权、限流，设计并实现 **缓存** + **异步** 的方式记录请求日志；\n- 设计并实现 **AOP** + **自定义注解** + **Redis** 限制IP接口访问次数，并支持细粒度的访问控制；\n- 基于 **ES** 搭建搜索服务、使用 **Redis** 做系统缓存功能，提升整体访问速度；\n- 基于 **Jenkins** + **Docker** 进行 **自动化部署** 和持续集成，解决微服务项目部署繁琐的问题。\n\n\n<h4  style=\"display: flex;justify-content: space-between;\">\n<span>二、SpEL Validator</span><span>个人开源项目</span><span>2024.04 - 至今</span>\n</h4>\n\n> 基于 SpEL 的参数校验包，也是 javax.validation 的扩展增强包，用于简化参数校验。**<u>GitHub Star 70+</u>，[开源地址](https://github.com/stick-i/spel-validator)**。\n\n- 提供强大的参数校验功能，几乎支持任何场景下的参数校验。扩展自 javax.validation 包，只新增不修改，无缝集成到项目中；\n- 基于 SpEL（Spring Expression Language） 表达式，支持复杂的校验逻辑。支持调用 Spring Bean，可在表达式中使用注入的 Bean 对象；\n- 简单易用，使用方式几乎与 javax.validation 一致，学习成本低，上手快；\n- 无需额外的异常处理，校验失败时会上报到 javax.validation 的异常体系中；\n- 支持自定义校验注解，可根据业务需求自定义校验逻辑。\n\n<hr/>\n\n### ==🏆获奖经历==\n\n- 蓝桥杯 <u>算法类</u> 竞赛 - 省赛一等奖 3次、国赛三等奖 2次\n- 中国大学生计算机设计大赛 - 中南地区二等奖\n- 湖南省大学生计算机 <u>程序设计</u> 竞赛 - 二等奖 1次、三等奖 1次\n- 湖南省优秀毕业生、软件著作权 2项\n\n<style>\n    #write {\n        padding: 25px 25px 0px;\n    }\n    hr {\n        margin: 6px;\n    }\n    li {\n        margin: 4px;\n    }\n    p {\n        margin: 4px 13px;\n    }\n    li p{\n        margin: 5px 0;\n    }\n    h1 {\n        margin: 8px 15px;\n    }\n    h3 {\n        margin: 9px;\n    }\n    h4 {\n        margin: 7px;\n    }\n    figure {\n        margin: 7px 0px;\n    }\n    blockquote {\n        padding-left: 16px;\n    }\n    /* 链接下划线 */\n    a {\n        text-decoration:underline;\n    }\n    /* 图片阴影效果 */\n    img {\n        box-shadow: 0px 0px 10px rgba(0,0,0,.5);\n    }\n    /* 表格样式，去除边框显示 */\n    table, table td, table tr, table th, th {\n        font-weight: normal;\n        padding: 3px 13px;\n        border: 0px;\n        background-color: #ffffff;\n    }\n</style>",
+      "ground_truth": {
+        "candidate_title": "Java后端开发工程师 / Web后台研发工程师",
+        "years_of_experience": "1年Java/Web后端开发经验（2023届本科毕业，含Java后台开发实习经历）",
+        "education_summary": "本科 · 软件工程（2023届 XX大学）",
+        "target_cities": [
+          "广州"
+        ],
+        "industry_background": [
+          "互联网/后端开发",
+          "分布式微服务架构",
+          "技术社区与开源软件"
+        ],
+        "core_skills": [
+          "Java / Kotlin 服务端开发",
+          "Spring / SpringBoot / SpringCloud 微服务",
+          "MySQL 慢SQL调优与B+树索引优化",
+          "Redis 缓存与分布式锁",
+          "ElasticSearch 与 RabbitMQ 消息队列",
+          "Jenkins + Docker 自动化部署与持续集成",
+          "Arthas 线上故障排查与JVM调优"
+        ],
+        "experience_highlights": [
+          "负责Web后台研发与性能优化，针对慢SQL和复杂查询进行排查调优，将接口p95延时从4000ms降低至50ms",
+          "从0到1主力开发微信小程序后端，接入微信登录、微信支付与阿里云OSS直传，设计单主体存储的消息群发系统",
+          "独立开发开源微服务项目“校园博客”(GitHub Star 380+)与“SpEL Validator”参数校验扩展包(GitHub Star 70+)，技术文章全网阅读量超80W",
+          "获蓝桥杯算法赛省赛一等奖3次及国赛三等奖2次、中国大学生计算机设计大赛中南地区二等奖，拥有软件著作权2项"
+        ],
+        "inferred_salary_floor": "1.2w",
+        "inferred_welfare_prefs": [
+          "周末双休",
           "五险一金",
-          "提供酒店公寓食宿",
-          "年终双薪与Upsell提成"
+          "年终奖"
         ]
       }
     }

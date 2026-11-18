@@ -11,6 +11,7 @@ Stage 1 简历画像提取 LLM-as-a-Judge 原子级评测器 (Atomic 9-Field Eva
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
@@ -137,14 +138,16 @@ STAGE1_JUDGE_PROMPT_TEMPLATE = """你是一位极其严苛的 AI 简历解析质
 
 ### 三、 9 个字段的专项核对细则（必须按顺序输出全部 9 项）
 
-1. **`candidate_title`**：核对核心职级（如经理/店长/督导/专家）与职能方向是否与 GT 一致，有无虚构头衔。
-2. **`years_of_experience`**：**重点核对工作年限数字**（如 `6年` vs `6年`）以及资历概括的核心行业范围。
-3. **`education_summary`**：**重点核对最高学历等级（本科/大专/硕士/未注明学历）与专业名称**是否与 GT 完全一致。
-4. **`target_cities`**：核对市级标准城市集合是否与 GT 一致（且不含区县街道门牌详细地址）。
+1. **`candidate_title`**：核对求职头衔：若简历原文明确提到求职岗位/应聘岗位，核对是否准确提取了该岗位；若未明确提到，核对是否结合最近 1~2 份工作的核心岗位提炼出精准专业头衔，有无虚构或夸大职级。
+2. **`years_of_experience`**：**重点核对工作年限数字**（如 `1年`、`4年以上`、`5年以上`；若简历时间线写有“2012-04至今”等未注明截止年份的模板表述，只要模型按简历内工作时间跨度合理折算均视为数字匹配 `entity_number_match=True`）以及资历概括的核心行业范围。
+3. **`education_summary`**：**重点核对简历中提及的所有高等教育学历阶段（如同时提到本科和硕士研究生，或最高的博士，应全部抓取）**，核对各阶段的学历等级、专业名称与毕业院校是否与 GT 一致（若仅提取了最高学历而漏掉本科学段，则酌情扣 1.5~2.5 分，但不标为 `entity_number_match=False`）。
+4. **`target_cities`**：核对市级标准城市集合是否与 GT 一致（若简历未直接写城市但提取了最高学历院校所在城市亦视为合规；严禁包含区县街道门牌详细地址）。
 5. **`industry_background`**：按集合比对过往细分行业标签的语义覆盖率，检查是否漏掉核心行业或编造未从业过的行业。
-6. **`core_skills`**：按集合比对核心专业技能与管理能力标签的语义覆盖率，检查是否漏掉核心技能或编造简历未提及的技能。
-7. **`experience_highlights`**：**最核心核对项**！逐条核对 GT 中的关键业绩亮点，**重点比对所有量化数字（门店数量、团队规模、GMV/营收金额、增长率、损耗率、培养人数等）**是否 100% 吻合，严查张冠李戴与夸大数字。
-8. **`inferred_salary_floor`**：核对月薪底线数值（如 `1.5w`）是否与 GT 一致或处于合理区间（完全一致得 10 分；误差在 ±20% 以内得 7~9 分；误差过大得低分）。
+6. **`core_skills`**：按集合比对核心专业技能与管理能力标签的语义覆盖率，检查是否漏掉核心硬技能或编造简历未提及的技能。
+7. **`experience_highlights`**：**最核心核对项**！逐条核对 GT 中的关键业绩亮点，**重点比对所有量化数字（参与人数、转发数、延时毫秒数、GitHub Star数、团队人数、获奖等级与次数等）及核心职务名称（如“项目经理”）**是否 100% 吻合，严查张冠李戴与篡改数字/职务。
+8. **`inferred_salary_floor`**：**区分“简历明示金额”与“经验推断金额”两种情况核对**：
+   - **情况 A（简历原文明确指出了期望薪资具体金额，如 `期望薪资：6K-7K`）**：**必须严格遵守“数字与硬实体零容忍”铁律**！提取的月薪底线必须与简历明示金额完全一致（如 `0.6w`），若不一致则 `entity_number_match` 标为 `false`，得分上限锁死为 3.0 分；
+   - **情况 B（简历原文未写明期望薪资，属于结合工作经验和年限推断出来的月薪底线）**：**允许与 `ground_truth` 存在上下 ±40% 以内（即 `|extracted - gt| / gt <= 40%`）的差异**！只要在 ±40% 容差区间内，**`entity_number_match` 必须标为 `true`**（完全一致得 10 分；偏差在 ±20% 以内得 8.5~9.5 分；偏差在 20%~40% 之间得 7.0~8.0 分；仅当偏差超过 ±40% 时才将 `entity_number_match` 标为 `false` 并扣至 3.0 分以下）。
 9. **`inferred_welfare_prefs`**：核对建议福利标签（如 `五险一金`、`周末双休`、`年终奖`）与 GT 的语义重合度。
 
 ---
@@ -191,7 +194,7 @@ def evaluate_profile_with_llm_judge(
     ground_truth: Dict[str, Any],
     raw_pii_tokens: Optional[List[str]] = None,
     raw_resume_text: Optional[str] = None,
-    judge_model: str = "gemini-3.8-flash",
+    judge_model: str = "gemini-4-argon",
     api_key: Optional[str] = None,
     proxy_url: Optional[str] = None,
 ) -> Dict[str, Any]:
@@ -245,6 +248,30 @@ def evaluate_profile_with_llm_judge(
             ent_match = False
             has_hal = False
             reason_str = "Judge 未返回该字段评估结果，默认计 0 分。"
+
+        # 专项校准 inferred_salary_floor：
+        # 若简历原文明确指出期望薪资，则严格执行零容忍；若为推断得出，则允许上下 ±40% 的差异
+        if fname == "inferred_salary_floor":
+            has_explicit_salary = bool(
+                raw_resume_text
+                and re.search(r"(期望薪资|期望月薪|薪资要求|目标薪资)\s*[:：]?\s*\d", raw_resume_text)
+            )
+            m_gt = re.search(r"(\d+(?:\.\d+)?)\s*w", str(ground_truth.get(fname, "")).lower())
+            m_pred = re.search(r"(\d+(?:\.\d+)?)\s*w", str(extracted_profile.get(fname, "")).lower())
+            if m_gt and m_pred:
+                gt_w = float(m_gt.group(1))
+                pred_w = float(m_pred.group(1))
+                rel_diff = abs(pred_w - gt_w) / gt_w if gt_w > 0 else 0.0
+                if has_explicit_salary:
+                    if rel_diff > 1e-6:
+                        ent_match = False
+                else:
+                    if rel_diff <= 0.40 + 1e-6:
+                        ent_match = True
+                        if score_val < 7.5:
+                            score_val = 9.0 if rel_diff <= 0.20 + 1e-6 else 8.0
+                    else:
+                        ent_match = False
 
         # 铁律 1 强制执行：若关键数字或硬实体不匹配，最高得分不超过 3.0 分
         if not ent_match and score_val > 3.0:

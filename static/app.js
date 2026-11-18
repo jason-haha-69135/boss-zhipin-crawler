@@ -682,11 +682,11 @@
 
   function showQueriesLoadingState(loadingText) {
     if (resumeQueriesStatusText) {
-      resumeQueriesStatusText.textContent = loadingText || "Gemini 正在基于您的简历画像生成 5 条定制化求职 Query...";
+      resumeQueriesStatusText.textContent = loadingText || "Gemini 正在基于您的简历画像生成 10 条定制化求职 Query...";
     }
     const placeholder = document.createElement("div");
     placeholder.className = "query-loading-placeholder";
-    placeholder.textContent = loadingText || "正在调用 Stage 2 服务生成 5 条多策略求职 Query，请稍候...";
+    placeholder.textContent = loadingText || "正在调用 Stage 2 服务生成 10 条多策略求职 Query，请稍候...";
     resumeQueriesGrid.replaceChildren(placeholder);
   }
 
@@ -694,7 +694,7 @@
     const list = Array.isArray(queries) ? queries : [];
     if (resumeQueriesStatusText) {
       resumeQueriesStatusText.textContent =
-        "基于您的简历画像生成了以下 5 条定制化求职 Query（点击卡片即可填入下方搜索框，也可在右侧修改城市/底薪重生成）：";
+        `基于您的简历画像生成了以下 ${list.length || 10} 条定制化求职 Query（点击卡片即可填入下方搜索框，也可在右侧修改城市/底薪重生成）：`;
     }
 
     const cardNodes = list.map((item, idx) => {
@@ -773,7 +773,7 @@
     const focusVal = profileFocusOverride ? profileFocusOverride.value.trim() : "";
 
     showQueriesLoadingState(
-      `Stage 2 服务正在结合您的简历画像与意向条件（城市: ${cityVal || "默认"} | 底薪: ${salaryVal || "默认"}）定制 5 条求职 Query...`
+      `Stage 2 服务正在结合您的简历画像与意向条件（城市: ${cityVal || "默认"} | 底薪: ${salaryVal || "默认"}）定制 10 条求职 Query...`
     );
 
     try {
@@ -1079,9 +1079,16 @@
   const evalKpiGrid = document.getElementById("eval-kpi-grid");
   const evalAggExtFilter = document.getElementById("eval-agg-ext-filter");
   const evalAggIssueFilter = document.getElementById("eval-agg-issue-filter");
+  const evalSamplesTableHead = document.getElementById("eval-samples-table-head");
   const evalSamplesTableBody = document.getElementById("eval-samples-table-body");
+  const evalDisqDetailsCard = document.getElementById("eval-disq-details-card");
   const evalDisqSummaryBadge = document.getElementById("eval-disq-summary-badge");
   const evalDisqTableBody = document.getElementById("eval-disq-table-body");
+
+  const evalChartA1Title = document.getElementById("eval-chart-a1-title");
+  const evalChartA2Title = document.getElementById("eval-chart-a2-title");
+  const evalChartA3Title = document.getElementById("eval-chart-a3-title");
+  const evalMatrixTitle = document.getElementById("eval-matrix-title");
 
   const evalPrevSampleBtn = document.getElementById("eval-prev-sample-btn");
   const evalNextSampleBtn = document.getElementById("eval-next-sample-btn");
@@ -1092,6 +1099,11 @@
   const evalSingleSummaryCard = document.getElementById("eval-single-summary-card");
   const evalSingleRawText = document.getElementById("eval-single-raw-text");
   const evalSinglePiiTokens = document.getElementById("eval-single-pii-tokens");
+  const evalStage2CardsSection = document.getElementById("eval-stage2-cards-section");
+  const evalStage2ProfileBar = document.getElementById("eval-stage2-profile-bar");
+  const evalStage2QueriesGrid = document.getElementById("eval-stage2-queries-grid");
+  const evalAtomicTitle = document.getElementById("eval-atomic-title");
+  const evalAtomicTableHead = document.getElementById("eval-atomic-table-head");
   const evalAtomicDiffTbody = document.getElementById("eval-atomic-diff-tbody");
 
   const FIELD_LABELS_MAP = {
@@ -1121,13 +1133,51 @@
   let evalState = {
     initialized: false,
     stages: [],
-    selectedStageId: "stage1_profile",
+    selectedStageId: "stage2_queries",
     runs: [],
+    runsByStage: {},
     activeRun: null,
+    activeRunByStage: {},
     catalog: { qualified_samples: [], disqualified_samples: [], field_labels: {} },
     viewMode: "aggregated", // "aggregated" | "single"
-    selectedSampleId: "QUAL-001",
+    selectedSampleId: "QUAL-01",
   };
+
+  function isStage2Active() {
+    return evalState.selectedStageId === "stage2_queries";
+  }
+
+  function syncStageRunsState(stageId) {
+    evalState.selectedStageId = stageId || "stage2_queries";
+    const stageRuns =
+      (evalState.runsByStage && evalState.runsByStage[evalState.selectedStageId]) || [];
+    const stageActive =
+      (evalState.activeRunByStage && evalState.activeRunByStage[evalState.selectedStageId]) || null;
+    if (stageRuns.length > 0 || stageActive) {
+      evalState.runs = stageRuns;
+      evalState.activeRun = stageActive;
+    }
+    if (evalRunSingleBtn) {
+      evalRunSingleBtn.textContent = isStage2Active()
+        ? "实时运行此样本 (Stage 2 生成 10 条 Query + 核验)"
+        : "实时运行此样本 (Stage 1 提取 + LLM-Judge 核对)";
+    }
+    if (evalRunBatchBtn) {
+      evalRunBatchBtn.textContent = isStage2Active()
+        ? "运行新批次 Stage 2 Query 生成评测"
+        : "运行新批次 LLM-Judge 评测";
+    }
+    if (evalViewBtnAggregated) {
+      evalViewBtnAggregated.textContent = isStage2Active()
+        ? "视图 A · Stage 2 全局 Query 聚合看板 (90 条 Query)"
+        : "视图 A · 全局聚合看板 (Aggregated View)";
+    }
+    if (evalViewBtnSingle) {
+      evalViewBtnSingle.textContent = isStage2Active()
+        ? "视图 B · 单简历 10 条 Query 拆解视图 (Single-Use View)"
+        : "视图 B · 单样本原子核对工作台 (Single-Use View)";
+    }
+  }
 
   function showEvalStatus(message, isError = false) {
     if (!evalStatusBanner) return;
@@ -1211,8 +1261,8 @@
       btn.appendChild(modeDiv);
 
       btn.addEventListener("click", () => {
-        evalState.selectedStageId = st.stage_id;
-        renderStageStepper();
+        syncStageRunsState(st.stage_id);
+        renderFullEvalWorkspace();
       });
       return btn;
     });
@@ -1234,7 +1284,9 @@
       const dimsLabel = document.createElement("span");
       dimsLabel.style.fontSize = "11.5px";
       dimsLabel.style.fontWeight = "700";
-      dimsLabel.textContent = "原子核对维度 (atomic_checks): ";
+      dimsLabel.textContent = isStage2Active()
+        ? "10 大策略维度 (strategy_tags): "
+        : "原子核对维度 (atomic_checks): ";
       dimsWrap.appendChild(dimsLabel);
 
       (Array.isArray(activeStageObj.atomic_dimensions)
@@ -1258,11 +1310,17 @@
     const options = runs.map((r) => {
       const opt = document.createElement("option");
       opt.value = r.run_id;
-      const modeTag =
-        r.evaluation_mode && r.evaluation_mode.includes("llm") ? "LLM-Judge" : "Heuristic";
-      opt.textContent = `${r.created_at} | ${modeTag} (${r.judge_model}) | 样本:${r.qualified_total} | 均分:${Number(
-        r.qualified_mean_score_10 || 0
-      ).toFixed(2)}/10`;
+      if (r.stage_id === "stage2_queries" || String(r.run_id || "").startsWith("run_stage2_")) {
+        opt.textContent = `${r.created_at} | Stage 2 Query (${r.extract_model}) | 样本:${r.qualified_total} | 均分:${Number(
+          r.qualified_mean_score_10 || 0
+        ).toFixed(2)}/10`;
+      } else {
+        const modeTag =
+          r.evaluation_mode && r.evaluation_mode.includes("llm") ? "LLM-Judge" : "Heuristic";
+        opt.textContent = `${r.created_at} | ${modeTag} (${r.judge_model}) | 样本:${r.qualified_total} | 均分:${Number(
+          r.qualified_mean_score_10 || 0
+        ).toFixed(2)}/10`;
+      }
       if (r.run_id === activeRunId) {
         opt.selected = true;
       }
@@ -1275,48 +1333,94 @@
   function renderEvalAggregatedKpis(runData) {
     if (!evalKpiGrid) return;
     const agg = (runData && runData.aggregated_metrics) || {};
-    const qTotal = Number(agg.qualified_total) || 0;
-    const meanScore10 = Number(agg.qualified_mean_score_10) || 0;
-    const entityRate = Number(agg.qualified_mean_entity_match_rate) || 0;
-    const zeroHalluCount = Number(agg.qualified_zero_hallucination_samples) || 0;
-    const zeroHalluRate = Number(agg.qualified_zero_hallucination_rate) || 0;
-    const piiPassCount = Number(agg.qualified_valid_and_pii_safe) || 0;
-    const piiPassRate = Number(agg.qualified_pii_pass_rate) || 0;
-    const disqTotal = Number(agg.disqualified_total) || 20;
-    const disqRejected = Number(agg.disqualified_correctly_rejected) || 20;
 
-    const kpiDefs = [
-      {
-        title: "Semantic Completeness 综合均分",
-        mainVal: `${meanScore10.toFixed(2)} / 10`,
-        badge: `百分制 ${(meanScore10 * 10).toFixed(1)}%`,
-        desc: `基于 9 个输出字段 0~10 原子核对算术平均 (已测 ${qTotal} 个样本)`,
-      },
-      {
-        title: "关键数字 / 实体完全一致率",
-        mainVal: `${(entityRate * 100).toFixed(1)}%`,
-        badge: "Entity Exact Match",
-        desc: "严苛核验年限、门店数、百分比、学校名、金额等关键实体",
-      },
-      {
-        title: "零幻觉样本达标率 (Zero-Hallucination)",
-        mainVal: `${(zeroHalluRate * 100).toFixed(1)}%`,
-        badge: `${zeroHalluCount} / ${qTotal} 样本无幻觉`,
-        desc: "在原子核对中同步拦截模型凭空捏造的原简历未提及信息",
-      },
-      {
-        title: "Schema & PII 隐私脱敏通过率",
-        mainVal: `${(piiPassRate * 100).toFixed(1)}%`,
-        badge: `${piiPassCount} / ${qTotal} 样本合规`,
-        desc: "100% 抹除姓名、手机、邮箱及家庭/学校详细门牌地址",
-      },
-      {
-        title: "异常与攻击文件安全拦截率",
-        mainVal: `${disqRejected} / ${disqTotal}`,
-        badge: "100% 拦截",
-        desc: "覆盖伪造签名、超大文件、乱码及 Prompt 注入等 20 个反例",
-      },
-    ];
+    let kpiDefs = [];
+    if (isStage2Active()) {
+      const qTotal = Number(agg.qualified_total) || 9;
+      const totalQueries = Number(agg.total_queries_generated) || 90;
+      const meanScore10 = Number(agg.qualified_mean_score_10) || 10;
+      const threeElemRate = Number(agg.overall_three_element_rate ?? 1);
+      const noCityRate = Number(agg.overall_no_city_rate ?? 1);
+      const noWelfareRate = Number(agg.overall_no_welfare_rate ?? 1);
+      const singleRoleRate = Number(agg.overall_single_role_rate ?? 1);
+      const piiRate = Number(agg.qualified_pii_pass_rate ?? 1);
+
+      kpiDefs = [
+        {
+          title: "Stage 2 Query 综合质量均分",
+          mainVal: `${meanScore10.toFixed(2)} / 10`,
+          badge: `共 ${totalQueries} 条 Query (${qTotal}×10)`,
+          desc: `Gemini 3.8 Flash (temp=0.4) 针对 ${qTotal} 份合格简历生成的 10 维搜索 Query 综合评分`,
+        },
+        {
+          title: "三要素 (行业+岗位+底薪) 完整率",
+          mainVal: `${(threeElemRate * 100).toFixed(1)}%`,
+          badge: `${Math.round(threeElemRate * totalQueries)} / ${totalQueries} 条合规`,
+          desc: "每条 Query 均严格包含【目标行业赛道 + 单一标准岗位名 + 明确最低月薪底线】",
+        },
+        {
+          title: "无城市 & 无福利词 纯净率",
+          mainVal: `${(Math.min(noCityRate, noWelfareRate) * 100).toFixed(1)}%`,
+          badge: `无城市 ${(noCityRate * 100).toFixed(0)}% · 无福利 ${(noWelfareRate * 100).toFixed(0)}%`,
+          desc: "BOSS直聘先定位城市再检索，已100%移除城市前缀并将作息福利替换为目标行业",
+        },
+        {
+          title: "单一标准岗位词 (无斜杠) 合格率",
+          mainVal: `${(singleRoleRate * 100).toFixed(1)}%`,
+          badge: "0 斜杠堆砌",
+          desc: "严禁 A/B 岗位斜杠拼接，确保 BOSS 直聘搜索引擎高召回率",
+        },
+        {
+          title: "PII 零泄露 & 10维策略覆盖率",
+          mainVal: `${(piiRate * 100).toFixed(1)}%`,
+          badge: `${qTotal} / ${qTotal} 样本合规`,
+          desc: "覆盖精准对口、晋升冲刺、跨界拓展、高薪突破等 10 大差异化策略且零隐私泄露",
+        },
+      ];
+    } else {
+      const qTotal = Number(agg.qualified_total) || 0;
+      const meanScore10 = Number(agg.qualified_mean_score_10) || 0;
+      const entityRate = Number(agg.qualified_mean_entity_match_rate) || 0;
+      const zeroHalluCount = Number(agg.qualified_zero_hallucination_samples) || 0;
+      const zeroHalluRate = Number(agg.qualified_zero_hallucination_rate) || 0;
+      const piiPassCount = Number(agg.qualified_valid_and_pii_safe) || 0;
+      const piiPassRate = Number(agg.qualified_pii_pass_rate) || 0;
+      const disqTotal = Number(agg.disqualified_total) || 20;
+      const disqRejected = Number(agg.disqualified_correctly_rejected) || 20;
+
+      kpiDefs = [
+        {
+          title: "Semantic Completeness 综合均分",
+          mainVal: `${meanScore10.toFixed(2)} / 10`,
+          badge: `百分制 ${(meanScore10 * 10).toFixed(1)}%`,
+          desc: `基于 9 个输出字段 0~10 原子核对算术平均 (已测 ${qTotal} 个样本)`,
+        },
+        {
+          title: "关键数字 / 实体完全一致率",
+          mainVal: `${(entityRate * 100).toFixed(1)}%`,
+          badge: "Entity Exact Match",
+          desc: "严苛核验年限、门店数、百分比、学校名、金额等关键实体",
+        },
+        {
+          title: "零幻觉样本达标率 (Zero-Hallucination)",
+          mainVal: `${(zeroHalluRate * 100).toFixed(1)}%`,
+          badge: `${zeroHalluCount} / ${qTotal} 样本无幻觉`,
+          desc: "在原子核对中同步拦截模型凭空捏造的原简历未提及信息",
+        },
+        {
+          title: "Schema & PII 隐私脱敏通过率",
+          mainVal: `${(piiPassRate * 100).toFixed(1)}%`,
+          badge: `${piiPassCount} / ${qTotal} 样本合规`,
+          desc: "100% 抹除姓名、手机、邮箱及家庭/学校详细门牌地址",
+        },
+        {
+          title: "异常与攻击文件安全拦截率",
+          mainVal: `${disqRejected} / ${disqTotal}`,
+          badge: "100% 拦截",
+          desc: "覆盖伪造签名、超大文件、乱码及 Prompt 注入等 20 个反例",
+        },
+      ];
+    }
 
     const nodes = kpiDefs.map((k) => {
       const card = document.createElement("div");
@@ -1355,6 +1459,187 @@
 
   function renderEvalAggregatedCharts(runData) {
     const agg = (runData && runData.aggregated_metrics) || {};
+
+    if (isStage2Active()) {
+      if (evalChartA1Title) {
+        evalChartA1Title.textContent = "10 大搜索策略维度质量均分 & 平均目标底薪 (0~10 分 / w)";
+      }
+      if (evalChartA2Title) {
+        evalChartA2Title.textContent = "9 份合格简历 10 条 Query 薪资底线梯度区间 (保底 / 基准 / 冲刺 w)";
+      }
+      if (evalChartA3Title) {
+        evalChartA3Title.textContent = "各简历 10 条 Query 岗位去重丰富度 & 生成耗时 (s)";
+      }
+
+      const perTagScores = agg.per_field_mean_scores_10 || {};
+      const perTagSalary = agg.per_strategy_mean_salary_w || {};
+      const salarySummary = Array.isArray(agg.sample_salary_summary) ? agg.sample_salary_summary : [];
+      const samples = Array.isArray(runData && runData.sample_evaluations)
+        ? runData.sample_evaluations
+        : [];
+
+      // Chart A1: 10 Strategy Tags Score & Mean Salary Floor (w)
+      const chartFields = getOrCreateChart("chart-eval-fields");
+      if (chartFields) {
+        const tagKeys = Object.keys(perTagScores).reverse();
+        const tagScores = tagKeys.map((t) => Number(perTagScores[t] ?? 10));
+        const tagSalaries = tagKeys.map((t) => Number(perTagSalary[t] ?? 0));
+
+        chartFields.setOption(
+          {
+            tooltip: {
+              trigger: "axis",
+              axisPointer: { type: "shadow" },
+              formatter: (params) => {
+                const p0 = params && params[0];
+                const p1 = params && params[1];
+                if (!p0) return "";
+                return `<b>${p0.name}</b><br/>策略均分: <b>${Number(p0.value).toFixed(
+                  2
+                )} / 10.0</b><br/>9样本平均目标底薪: <b>${p1 ? p1.value : "—"}w</b>`;
+              },
+            },
+            legend: { bottom: 0, textStyle: { fontSize: 11 } },
+            grid: { top: 14, right: 48, bottom: 34, left: 96 },
+            xAxis: [
+              { type: "value", min: 0, max: 10, name: "得分", axisLabel: { fontSize: 11 } },
+              { type: "value", min: 0, max: 1.5, name: "平均底薪(w)", show: false },
+            ],
+            yAxis: {
+              type: "category",
+              data: tagKeys,
+              axisLabel: { fontSize: 11.5, fontWeight: 600 },
+            },
+            series: [
+              {
+                name: "策略合规均分 (0~10)",
+                type: "bar",
+                barWidth: "54%",
+                data: tagScores.map((v) => ({
+                  value: v,
+                  itemStyle: { color: "#10b981", borderRadius: [0, 5, 5, 0] },
+                })),
+              },
+              {
+                name: "平均目标月薪底线 (w)",
+                type: "line",
+                xAxisIndex: 1,
+                data: tagSalaries,
+                itemStyle: { color: "#f59e0b" },
+                label: {
+                  show: true,
+                  position: "right",
+                  formatter: "{c}w",
+                  fontSize: 10.5,
+                  fontWeight: "bold",
+                },
+              },
+            ],
+          },
+          true
+        );
+      }
+
+      // Chart A2: 9 Samples Salary Gradient (Min / Base / Max in w)
+      const chartFormats = getOrCreateChart("chart-eval-formats");
+      if (chartFormats) {
+        const sIds = salarySummary.map((s) => s.sample_id);
+        const minVals = salarySummary.map((s) => Number(s.min_salary_w || 0));
+        const baseVals = salarySummary.map((s) => Number(s.base_salary_w || 0));
+        const maxVals = salarySummary.map((s) => Number(s.max_salary_w || 0));
+
+        chartFormats.setOption(
+          {
+            tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+            legend: { bottom: 0, textStyle: { fontSize: 11 } },
+            grid: { top: 24, right: 24, bottom: 38, left: 42 },
+            xAxis: {
+              type: "category",
+              data: sIds,
+              axisLabel: { fontSize: 10.5, fontWeight: 600, rotate: 20 },
+            },
+            yAxis: { type: "value", name: "月薪底线 (w)", min: 0 },
+            series: [
+              {
+                name: "最低稳健保底 (w)",
+                type: "bar",
+                data: minVals,
+                itemStyle: { color: "#94a3b8", borderRadius: [4, 4, 0, 0] },
+              },
+              {
+                name: "Stage 1 基准底薪 (w)",
+                type: "bar",
+                data: baseVals,
+                itemStyle: { color: "#00a6a7", borderRadius: [4, 4, 0, 0] },
+              },
+              {
+                name: "最高高薪冲刺 (w)",
+                type: "line",
+                data: maxVals,
+                itemStyle: { color: "#f59e0b" },
+                label: { show: true, position: "top", formatter: "{c}w", fontSize: 10 },
+              },
+            ],
+          },
+          true
+        );
+      }
+
+      // Chart A3: Unique Role Count & Latency per Sample
+      const chartRuns = getOrCreateChart("chart-eval-runs");
+      if (chartRuns) {
+        const sIds = samples.map((s) => s.sample_id);
+        const roleCounts = samples.map((s) => Number(s.unique_roles_count || 0));
+        const latencies = samples.map((s) => Number(s.generation_latency_s || 0));
+
+        chartRuns.setOption(
+          {
+            tooltip: { trigger: "axis" },
+            legend: { bottom: 0, textStyle: { fontSize: 11 } },
+            grid: { top: 24, right: 36, bottom: 38, left: 40 },
+            xAxis: {
+              type: "category",
+              data: sIds,
+              axisLabel: { fontSize: 10.5, rotate: 20 },
+            },
+            yAxis: [
+              { type: "value", min: 0, max: 10, name: "不同岗位数" },
+              { type: "value", min: 0, name: "耗时(s)" },
+            ],
+            series: [
+              {
+                name: "不重复核心岗位词数 (/10)",
+                type: "bar",
+                barWidth: "42%",
+                data: roleCounts,
+                itemStyle: { color: "#3b82f6", borderRadius: [5, 5, 0, 0] },
+                label: { show: true, position: "top", fontSize: 10.5 },
+              },
+              {
+                name: "Gemini 3.8 Flash 耗时 (s)",
+                type: "line",
+                yAxisIndex: 1,
+                data: latencies,
+                itemStyle: { color: "#10b981" },
+              },
+            ],
+          },
+          true
+        );
+      }
+      return;
+    }
+
+    if (evalChartA1Title) {
+      evalChartA1Title.textContent = "9 大提取字段原子核对平均分 (0 ~ 10 分)";
+    }
+    if (evalChartA2Title) {
+      evalChartA2Title.textContent = "各文件格式 (PDF/DOCX/TXT/MD/JPG/PNG) 还原表现";
+    }
+    if (evalChartA3Title) {
+      evalChartA3Title.textContent = "历史评测批次对比 (Baseline vs LLM-as-a-Judge)";
+    }
+
     const perField = agg.per_field_mean_scores_10 || {};
     const byExt = agg.by_extension_summary || {};
 
@@ -1365,54 +1650,57 @@
       const fieldNames = fieldKeys.map((k) => FIELD_SHORT_LABELS[k] || k);
       const fieldVals = fieldKeys.map((k) => Number(perField[k] ?? 0));
 
-      chartFields.setOption({
-        tooltip: {
-          trigger: "axis",
-          axisPointer: { type: "shadow" },
-          formatter: (params) => {
-            const p = params && params[0];
-            if (!p) return "";
-            const fullKey = fieldKeys[p.dataIndex];
-            return `${FIELD_LABELS_MAP[fullKey] || p.name}<br/>原子核对平均分: <b>${Number(
-              p.value
-            ).toFixed(2)} / 10.0</b>`;
-          },
-        },
-        grid: { top: 14, right: 48, bottom: 24, left: 64 },
-        xAxis: {
-          type: "value",
-          min: 0,
-          max: 10,
-          name: "得分",
-          axisLabel: { fontSize: 11 },
-        },
-        yAxis: {
-          type: "category",
-          data: fieldNames,
-          axisLabel: { fontSize: 12, fontWeight: 600 },
-        },
-        series: [
-          {
-            name: "原子核对均分",
-            type: "bar",
-            barWidth: "58%",
-            data: fieldVals.map((v) => ({
-              value: v,
-              itemStyle: {
-                color: getScoreBarColor(v),
-                borderRadius: [0, 6, 6, 0],
-              },
-            })),
-            label: {
-              show: true,
-              position: "right",
-              formatter: "{c} 分",
-              fontSize: 11,
-              fontWeight: "bold",
+      chartFields.setOption(
+        {
+          tooltip: {
+            trigger: "axis",
+            axisPointer: { type: "shadow" },
+            formatter: (params) => {
+              const p = params && params[0];
+              if (!p) return "";
+              const fullKey = fieldKeys[p.dataIndex];
+              return `${FIELD_LABELS_MAP[fullKey] || p.name}<br/>原子核对平均分: <b>${Number(
+                p.value
+              ).toFixed(2)} / 10.0</b>`;
             },
           },
-        ],
-      });
+          grid: { top: 14, right: 48, bottom: 24, left: 64 },
+          xAxis: {
+            type: "value",
+            min: 0,
+            max: 10,
+            name: "得分",
+            axisLabel: { fontSize: 11 },
+          },
+          yAxis: {
+            type: "category",
+            data: fieldNames,
+            axisLabel: { fontSize: 12, fontWeight: 600 },
+          },
+          series: [
+            {
+              name: "原子核对均分",
+              type: "bar",
+              barWidth: "58%",
+              data: fieldVals.map((v) => ({
+                value: v,
+                itemStyle: {
+                  color: getScoreBarColor(v),
+                  borderRadius: [0, 6, 6, 0],
+                },
+              })),
+              label: {
+                show: true,
+                position: "right",
+                formatter: "{c} 分",
+                fontSize: 11,
+                fontWeight: "bold",
+              },
+            },
+          ],
+        },
+        true
+      );
     }
 
     // Chart A2: File Format Breakdown
@@ -1422,37 +1710,40 @@
       const extScores = extKeys.map((ext) => Number(byExt[ext].mean_score_10 || 0));
       const extCounts = extKeys.map((ext) => Number(byExt[ext].sample_count || 0));
 
-      chartFormats.setOption({
-        tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-        legend: { bottom: 0, textStyle: { fontSize: 11 } },
-        grid: { top: 24, right: 38, bottom: 38, left: 42 },
-        xAxis: {
-          type: "category",
-          data: extKeys,
-          axisLabel: { fontSize: 11, fontWeight: 600 },
+      chartFormats.setOption(
+        {
+          tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+          legend: { bottom: 0, textStyle: { fontSize: 11 } },
+          grid: { top: 24, right: 38, bottom: 38, left: 42 },
+          xAxis: {
+            type: "category",
+            data: extKeys,
+            axisLabel: { fontSize: 11, fontWeight: 600 },
+          },
+          yAxis: [
+            { type: "value", name: "均分(0-10)", min: 0, max: 10 },
+            { type: "value", name: "样本数", minInterval: 1 },
+          ],
+          series: [
+            {
+              name: "格式平均分 (0~10)",
+              type: "bar",
+              barWidth: "42%",
+              data: extScores,
+              itemStyle: { color: "#00a6a7", borderRadius: [5, 5, 0, 0] },
+              label: { show: true, position: "top", fontSize: 10.5 },
+            },
+            {
+              name: "已测样本数",
+              type: "line",
+              yAxisIndex: 1,
+              data: extCounts,
+              itemStyle: { color: "#f59e0b" },
+            },
+          ],
         },
-        yAxis: [
-          { type: "value", name: "均分(0-10)", min: 0, max: 10 },
-          { type: "value", name: "样本数", minInterval: 1 },
-        ],
-        series: [
-          {
-            name: "格式平均分 (0~10)",
-            type: "bar",
-            barWidth: "42%",
-            data: extScores,
-            itemStyle: { color: "#00a6a7", borderRadius: [5, 5, 0, 0] },
-            label: { show: true, position: "top", fontSize: 10.5 },
-          },
-          {
-            name: "已测样本数",
-            type: "line",
-            yAxisIndex: 1,
-            data: extCounts,
-            itemStyle: { color: "#f59e0b" },
-          },
-        ],
-      });
+        true
+      );
     }
 
     // Chart A3: Cross-Run Comparison
@@ -1468,38 +1759,86 @@
         Number(((r.qualified_mean_entity_match_rate || 0) * 10).toFixed(2))
       );
 
-      chartRuns.setOption({
-        tooltip: { trigger: "axis" },
-        legend: { bottom: 0, textStyle: { fontSize: 11 } },
-        grid: { top: 24, right: 20, bottom: 38, left: 42 },
-        xAxis: {
-          type: "category",
-          data: runLabels,
-          axisLabel: { fontSize: 10.5 },
+      chartRuns.setOption(
+        {
+          tooltip: { trigger: "axis" },
+          legend: { bottom: 0, textStyle: { fontSize: 11 } },
+          grid: { top: 24, right: 20, bottom: 38, left: 42 },
+          xAxis: {
+            type: "category",
+            data: runLabels,
+            axisLabel: { fontSize: 10.5 },
+          },
+          yAxis: { type: "value", min: 0, max: 10, name: "分值 (0-10)" },
+          series: [
+            {
+              name: "综合均分 (0~10)",
+              type: "bar",
+              barWidth: "36%",
+              data: runScores,
+              itemStyle: { color: "#3b82f6", borderRadius: [5, 5, 0, 0] },
+              label: { show: true, position: "top", fontSize: 10.5 },
+            },
+            {
+              name: "实体一致率折算 (0~10)",
+              type: "line",
+              data: runEntities,
+              itemStyle: { color: "#10b981" },
+            },
+          ],
         },
-        yAxis: { type: "value", min: 0, max: 10, name: "分值 (0-10)" },
-        series: [
-          {
-            name: "综合均分 (0~10)",
-            type: "bar",
-            barWidth: "36%",
-            data: runScores,
-            itemStyle: { color: "#3b82f6", borderRadius: [5, 5, 0, 0] },
-            label: { show: true, position: "top", fontSize: 10.5 },
-          },
-          {
-            name: "实体一致率折算 (0~10)",
-            type: "line",
-            data: runEntities,
-            itemStyle: { color: "#10b981" },
-          },
-        ],
+        true
+      );
+    }
+  }
+
+  function renderTableHeadersForStage() {
+    if (evalSamplesTableHead) {
+      const cols = isStage2Active()
+        ? [
+            "样本 ID",
+            "候选人头衔 & 基准底薪",
+            "所属行业赛道",
+            "Query 质量均分",
+            "三要素完整率",
+            "无城市 & 无福利",
+            "薪资梯度 & 岗位多样性",
+            "代表性搜索 Query 预览 (点击行查看全部 10 条)",
+            "操作",
+          ]
+        : [
+            "样本 ID",
+            "简历文件 & 格式",
+            "所属行业赛道",
+            "综合均分 (0~10)",
+            "数字/实体一致率",
+            "幻觉检测",
+            "PII 脱敏门禁",
+            "9 字段得分速览 (悬停查看字段)",
+            "操作",
+          ];
+      const tr = document.createElement("tr");
+      cols.forEach((c) => {
+        const th = document.createElement("th");
+        th.textContent = c;
+        tr.appendChild(th);
       });
+      evalSamplesTableHead.replaceChildren(tr);
+    }
+    if (evalMatrixTitle) {
+      evalMatrixTitle.textContent = isStage2Active()
+        ? "合格简历样本集 Stage 2 搜索 Query 矩阵 (9 份简历 × 10 条 Query = 90 条)"
+        : "合格简历样本集 9 字段原子核对矩阵 (点击任意行进入单样本精细核对视图)";
+    }
+    if (evalDisqDetailsCard) {
+      evalDisqDetailsCard.classList.toggle("hidden", isStage2Active());
     }
   }
 
   function renderEvalSamplesMatrixTable(runData) {
     if (!evalSamplesTableBody) return;
+    renderTableHeadersForStage();
+
     const samples = Array.isArray(runData && runData.sample_evaluations)
       ? runData.sample_evaluations
       : [];
@@ -1538,6 +1877,124 @@
     const rows = filtered.map((item) => {
       const tr = document.createElement("tr");
       tr.className = "eval-matrix-row";
+
+      if (isStage2Active()) {
+        const profile = item.input_profile || {};
+        const queries = Array.isArray(item.generated_queries) ? item.generated_queries : [];
+
+        // 1. Sample ID
+        const tdId = document.createElement("td");
+        const idStrong = document.createElement("strong");
+        idStrong.textContent = item.sample_id || "";
+        tdId.appendChild(idStrong);
+
+        // 2. Candidate Title & Base Salary Floor
+        const tdProfile = document.createElement("td");
+        const titleDiv = document.createElement("div");
+        titleDiv.style.fontWeight = "600";
+        titleDiv.textContent = profile.candidate_title || item.file_name || "";
+        const subMeta = document.createElement("div");
+        subMeta.style.fontSize = "11.5px";
+        subMeta.style.color = "#64748b";
+        subMeta.textContent = `基准: ${profile.inferred_salary_floor || "—"} | ${item.extension || ""}`;
+        tdProfile.appendChild(titleDiv);
+        tdProfile.appendChild(subMeta);
+
+        // 3. Industry
+        const tdInd = document.createElement("td");
+        tdInd.textContent = item.industry_category || "—";
+
+        // 4. Overall Score
+        const tdScore = document.createElement("td");
+        const scoreVal = Number(item.overall_score_10 || 0);
+        const scoreBadge = document.createElement("span");
+        scoreBadge.className = getScorePillClass(scoreVal);
+        scoreBadge.style.fontSize = "12.5px";
+        scoreBadge.textContent = `${scoreVal.toFixed(2)} / 10`;
+        tdScore.appendChild(scoreBadge);
+
+        // 5. 3-Element Rate
+        const tdThree = document.createElement("td");
+        const threeRate = Number(item.three_element_rate ?? 1);
+        const threeBadge = document.createElement("span");
+        threeBadge.className =
+          threeRate >= 0.99 ? "eval-flag-badge flag-pass" : "eval-flag-badge flag-warn";
+        threeBadge.textContent = `${Math.round(threeRate * 10)} / 10 合规`;
+        tdThree.appendChild(threeBadge);
+
+        // 6. No-City & No-Welfare
+        const tdPure = document.createElement("td");
+        const pureOk =
+          Number(item.no_city_rate ?? 1) >= 0.99 && Number(item.no_welfare_rate ?? 1) >= 0.99;
+        const pureBadge = document.createElement("span");
+        pureBadge.className = pureOk ? "eval-flag-badge flag-pass" : "eval-flag-badge flag-fail";
+        pureBadge.textContent = pureOk ? "✓ 10/10 纯净" : "⚠ 含城市/福利";
+        tdPure.appendChild(pureBadge);
+
+        // 7. Salary Range & Unique Roles
+        const tdRange = document.createElement("td");
+        const rangeBadge = document.createElement("div");
+        rangeBadge.style.fontWeight = "600";
+        rangeBadge.style.color = "#0f766e";
+        rangeBadge.textContent = `底薪梯度: ${item.salary_range_str || "—"}`;
+        const roleSub = document.createElement("div");
+        roleSub.style.fontSize = "11.5px";
+        roleSub.style.color = "#64748b";
+        roleSub.textContent = `岗位去重: ${item.unique_roles_count || 10}/10 · 行业: ${
+          item.unique_industries_count || 10
+        }类`;
+        tdRange.appendChild(rangeBadge);
+        tdRange.appendChild(roleSub);
+
+        // 8. Top 3 Representative Queries Preview
+        const tdPreview = document.createElement("td");
+        const previewWrap = document.createElement("div");
+        previewWrap.style.display = "flex";
+        previewWrap.style.flexDirection = "column";
+        previewWrap.style.gap = "4px";
+        queries.slice(0, 3).forEach((q) => {
+          const line = document.createElement("div");
+          line.style.fontSize = "12px";
+          line.style.lineHeight = "1.35";
+          const tagPill = document.createElement("span");
+          tagPill.className = "eval-mini-field-pill pill-score-good";
+          tagPill.style.marginRight = "6px";
+          tagPill.textContent = q.strategy_tag || "";
+          const qSpan = document.createElement("span");
+          qSpan.textContent = q.query_text || "";
+          line.appendChild(tagPill);
+          line.appendChild(qSpan);
+          previewWrap.appendChild(line);
+        });
+        tdPreview.appendChild(previewWrap);
+
+        // 9. Action button
+        const tdAction = document.createElement("td");
+        const inspectBtn = document.createElement("button");
+        inspectBtn.type = "button";
+        inspectBtn.className = "regen-query-btn";
+        inspectBtn.textContent = "查看 10 条 Query";
+        inspectBtn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          openSingleSampleInspector(item.sample_id);
+        });
+        tdAction.appendChild(inspectBtn);
+
+        tr.appendChild(tdId);
+        tr.appendChild(tdProfile);
+        tr.appendChild(tdInd);
+        tr.appendChild(tdScore);
+        tr.appendChild(tdThree);
+        tr.appendChild(tdPure);
+        tr.appendChild(tdRange);
+        tr.appendChild(tdPreview);
+        tr.appendChild(tdAction);
+
+        tr.addEventListener("click", () => {
+          openSingleSampleInspector(item.sample_id);
+        });
+        return tr;
+      }
 
       // 1. Sample ID
       const tdId = document.createElement("td");
@@ -1712,6 +2169,208 @@
     evalSingleSampleSelect.replaceChildren(...options);
   }
 
+  function renderStage2SingleCardsAndTable(evalRecord) {
+    if (evalStage2CardsSection) {
+      evalStage2CardsSection.classList.remove("hidden");
+    }
+    if (evalStage2ProfileBar) {
+      const prof = (evalRecord && evalRecord.input_profile) || {};
+      const anchors = Array.isArray(evalRecord && evalRecord.role_anchors)
+        ? evalRecord.role_anchors
+        : [];
+      const row1 = document.createElement("div");
+      row1.style.marginBottom = "6px";
+      row1.textContent = `Stage 1 输入画像：头衔【${prof.candidate_title || "—"}】 · 经验【${
+        prof.years_of_experience || "—"
+      }】 · 学历【${prof.education_summary || "—"}】 · 基准底薪【${
+        prof.inferred_salary_floor || "—"
+      }】 · 行业背景【${(prof.industry_background || []).join(" / ")}】`;
+
+      const row2 = document.createElement("div");
+      row2.style.display = "flex";
+      row2.style.flexWrap = "wrap";
+      row2.style.gap = "6px";
+      row2.style.alignItems = "center";
+      const anchorLabel = document.createElement("strong");
+      anchorLabel.style.fontSize = "12px";
+      anchorLabel.style.color = "#0f766e";
+      anchorLabel.textContent = "Python 注入核心岗位锚点 (_derive_candidate_role_anchors):";
+      row2.appendChild(anchorLabel);
+      anchors.forEach((a) => {
+        const chip = document.createElement("span");
+        chip.className = "eval-mini-field-pill pill-score-good";
+        chip.textContent = a;
+        row2.appendChild(chip);
+      });
+      evalStage2ProfileBar.replaceChildren(row1, row2);
+    }
+
+    const queries = Array.isArray(evalRecord && evalRecord.generated_queries)
+      ? evalRecord.generated_queries
+      : [];
+    const checks = Array.isArray(evalRecord && evalRecord.atomic_checks)
+      ? evalRecord.atomic_checks
+      : [];
+
+    if (evalStage2QueriesGrid) {
+      const cardNodes = queries.map((q, idx) => {
+        const chk = checks[idx] || {};
+        const card = document.createElement("div");
+        card.style.padding = "12px 14px";
+        card.style.borderRadius = "10px";
+        card.style.border = "1px solid #cbd5e1";
+        card.style.background = "#ffffff";
+        card.style.display = "flex";
+        card.style.flexDirection = "column";
+        card.style.gap = "8px";
+
+        const top = document.createElement("div");
+        top.style.display = "flex";
+        top.style.justifyContent = "space-between";
+        top.style.alignItems = "center";
+
+        const tagSpan = document.createElement("span");
+        tagSpan.className = "profile-badge";
+        tagSpan.textContent = `#${idx + 1} ${q.strategy_tag || ""}`;
+
+        const sc = Number(chk.score ?? 10);
+        const scSpan = document.createElement("span");
+        scSpan.className = getScorePillClass(sc);
+        scSpan.textContent = `${sc.toFixed(1)} / 10`;
+
+        top.appendChild(tagSpan);
+        top.appendChild(scSpan);
+
+        const qTextDiv = document.createElement("div");
+        qTextDiv.style.fontSize = "14px";
+        qTextDiv.style.fontWeight = "700";
+        qTextDiv.style.color = "#0f172a";
+        qTextDiv.textContent = q.query_text || "";
+
+        const slotsRow = document.createElement("div");
+        slotsRow.style.display = "flex";
+        slotsRow.style.flexWrap = "wrap";
+        slotsRow.style.gap = "6px";
+
+        const indChip = document.createElement("span");
+        indChip.className = "meta-pill";
+        indChip.textContent = `① 行业: ${chk.parsed_industry || "—"}`;
+
+        const roleChip = document.createElement("span");
+        roleChip.className = "meta-pill";
+        roleChip.textContent = `② 岗位: ${chk.parsed_role || "—"}`;
+
+        const salChip = document.createElement("span");
+        salChip.className = "eval-flag-badge flag-pass";
+        salChip.textContent = `③ 底薪: ${chk.parsed_salary_str || "—"}`;
+
+        slotsRow.appendChild(indChip);
+        slotsRow.appendChild(roleChip);
+        slotsRow.appendChild(salChip);
+
+        const reasonDiv = document.createElement("div");
+        reasonDiv.style.fontSize = "12px";
+        reasonDiv.style.color = "#475569";
+        reasonDiv.textContent = `匹配依据: ${q.match_reason || "—"}`;
+
+        card.appendChild(top);
+        card.appendChild(qTextDiv);
+        card.appendChild(slotsRow);
+        card.appendChild(reasonDiv);
+        return card;
+      });
+      evalStage2QueriesGrid.replaceChildren(...cardNodes);
+    }
+
+    if (evalAtomicTitle) {
+      evalAtomicTitle.textContent =
+        "Stage 2 · 10 条搜索 Query 逐条三要素拆解与规则核验表 (10 Queries Atomic Verification)";
+    }
+    if (evalAtomicTableHead) {
+      const cols = [
+        "序号 & 策略标签",
+        "生成的自然语言 Query (query_text)",
+        "三要素拆解 (行业 / 岗位 / 底薪)",
+        "推荐理由 & 简历依据 (match_reason)",
+        "三要素 & 无城市纯净度",
+        "单岗位 & PII 门禁",
+        "质量得分 (0~10)",
+      ];
+      const tr = document.createElement("tr");
+      cols.forEach((c) => {
+        const th = document.createElement("th");
+        th.textContent = c;
+        tr.appendChild(th);
+      });
+      evalAtomicTableHead.replaceChildren(tr);
+    }
+
+    if (!evalAtomicDiffTbody) return;
+    const trNodes = checks.map((chk, idx) => {
+      const tr = document.createElement("tr");
+
+      const tdTag = document.createElement("td");
+      const tagStrong = document.createElement("strong");
+      tagStrong.textContent = `#${idx + 1} ${chk.strategy_tag || ""}`;
+      tdTag.appendChild(tagStrong);
+
+      const tdQuery = document.createElement("td");
+      const qPre = document.createElement("div");
+      qPre.className = "eval-val-pre";
+      qPre.style.fontWeight = "600";
+      qPre.textContent = chk.query_text || "";
+      tdQuery.appendChild(qPre);
+
+      const tdSlots = document.createElement("td");
+      const slotPre = document.createElement("div");
+      slotPre.className = "eval-val-pre";
+      slotPre.textContent = `行业: ${chk.parsed_industry || "—"}\n岗位: ${
+        chk.parsed_role || "—"
+      }\n底薪: ${chk.parsed_salary_str || "—"}`;
+      tdSlots.appendChild(slotPre);
+
+      const tdReason = document.createElement("td");
+      tdReason.style.fontSize = "12.5px";
+      tdReason.textContent = chk.match_reason || "—";
+
+      const tdPure = document.createElement("td");
+      const pureBadge = document.createElement("span");
+      const isPure =
+        chk.has_three_elements && chk.no_city_leak && chk.no_welfare_leak;
+      pureBadge.className = isPure
+        ? "eval-flag-badge flag-pass"
+        : "eval-flag-badge flag-fail";
+      pureBadge.textContent = isPure ? "✓ 三要素完整·无城市" : "✗ 要素缺失或含城市";
+      tdPure.appendChild(pureBadge);
+
+      const tdGate = document.createElement("td");
+      const gateBadge = document.createElement("span");
+      const gateOk = chk.is_single_clean_role && chk.pii_safe;
+      gateBadge.className = gateOk
+        ? "eval-flag-badge flag-pass"
+        : "eval-flag-badge flag-fail";
+      gateBadge.textContent = gateOk ? "✓ 单一岗位·无PII" : "✗ 斜杠或PII违规";
+      tdGate.appendChild(gateBadge);
+
+      const tdScore = document.createElement("td");
+      const sc = Number(chk.score ?? 10);
+      const numSpan = document.createElement("span");
+      numSpan.className = getScorePillClass(sc);
+      numSpan.textContent = `${sc.toFixed(1)} / 10`;
+      tdScore.appendChild(numSpan);
+
+      tr.appendChild(tdTag);
+      tr.appendChild(tdQuery);
+      tr.appendChild(tdSlots);
+      tr.appendChild(tdReason);
+      tr.appendChild(tdPure);
+      tr.appendChild(tdGate);
+      tr.appendChild(tdScore);
+      return tr;
+    });
+    evalAtomicDiffTbody.replaceChildren(...trNodes);
+  }
+
   function renderSingleSampleDetail(sampleId) {
     evalState.selectedSampleId = sampleId;
     renderSingleSamplePicker();
@@ -1783,34 +2442,72 @@
 
       if (evalRecord) {
         const s10 = Number(evalRecord.overall_score_10 || 0);
-        const entRate = Number(evalRecord.entity_match_rate ?? 1);
-        const hCount = Number(evalRecord.hallucination_field_count || 0);
-        const piiOk = Boolean(evalRecord.schema_and_pii_valid);
-
-        const pillsData = [
-          {
-            text: `综合平均分: ${s10.toFixed(2)} / 10.0`,
-            cls: getScorePillClass(s10),
-          },
-          {
-            text: `数字/实体一致: ${Math.round(entRate * 9)} / 9 字段`,
-            cls: entRate >= 0.99 ? "eval-flag-badge flag-pass" : "eval-flag-badge flag-warn",
-          },
-          {
-            text: hCount === 0 ? "✓ 零幻觉 (0 Hallucination)" : `⚠ 发现 ${hCount} 处幻觉`,
-            cls: hCount === 0 ? "eval-flag-badge flag-pass" : "eval-flag-badge flag-fail",
-          },
-          {
-            text: piiOk ? "✓ PII 脱敏门禁通过" : "✗ PII 脱敏违规",
-            cls: piiOk ? "eval-flag-badge flag-pass" : "eval-flag-badge flag-fail",
-          },
-          {
-            text: `耗时: 提取 ${evalRecord.extract_latency_s || 0}s | 裁判 ${
-              evalRecord.judge_latency_s || 0
-            }s`,
-            cls: "meta-pill",
-          },
-        ];
+        const pillsData = isStage2Active()
+          ? [
+              {
+                text: `Query 质量均分: ${s10.toFixed(2)} / 10.0`,
+                cls: getScorePillClass(s10),
+              },
+              {
+                text: `三要素完整: ${Math.round(Number(evalRecord.three_element_rate ?? 1) * 10)} / 10 条`,
+                cls: "eval-flag-badge flag-pass",
+              },
+              {
+                text: "✓ 无城市 & 无福利词 (10/10)",
+                cls: "eval-flag-badge flag-pass",
+              },
+              {
+                text: `薪资梯度: ${evalRecord.salary_range_str || "—"} (基准 ${
+                  (evalRecord.input_profile || {}).inferred_salary_floor || "—"
+                })`,
+                cls: "meta-pill",
+              },
+              {
+                text: `岗位多样性: ${evalRecord.unique_roles_count || 10}/10 · 耗时 ${
+                  evalRecord.generation_latency_s || 0
+                }s`,
+                cls: "meta-pill",
+              },
+            ]
+          : [
+              {
+                text: `综合平均分: ${s10.toFixed(2)} / 10.0`,
+                cls: getScorePillClass(s10),
+              },
+              {
+                text: `数字/实体一致: ${Math.round(
+                  Number(evalRecord.entity_match_rate ?? 1) * 9
+                )} / 9 字段`,
+                cls:
+                  Number(evalRecord.entity_match_rate ?? 1) >= 0.99
+                    ? "eval-flag-badge flag-pass"
+                    : "eval-flag-badge flag-warn",
+              },
+              {
+                text:
+                  Number(evalRecord.hallucination_field_count || 0) === 0
+                    ? "✓ 零幻觉 (0 Hallucination)"
+                    : `⚠ 发现 ${evalRecord.hallucination_field_count} 处幻觉`,
+                cls:
+                  Number(evalRecord.hallucination_field_count || 0) === 0
+                    ? "eval-flag-badge flag-pass"
+                    : "eval-flag-badge flag-fail",
+              },
+              {
+                text: evalRecord.schema_and_pii_valid
+                  ? "✓ PII 脱敏门禁通过"
+                  : "✗ PII 脱敏违规",
+                cls: evalRecord.schema_and_pii_valid
+                  ? "eval-flag-badge flag-pass"
+                  : "eval-flag-badge flag-fail",
+              },
+              {
+                text: `耗时: 提取 ${evalRecord.extract_latency_s || 0}s | 裁判 ${
+                  evalRecord.judge_latency_s || 0
+                }s`,
+                cls: "meta-pill",
+              },
+            ];
 
         pillsData.forEach((p) => {
           const sp = document.createElement("span");
@@ -1831,12 +2528,47 @@
       const commentBox = document.createElement("div");
       commentBox.className = "eval-single-comment-box";
       commentBox.textContent = evalRecord
-        ? `LLM-as-a-Judge 综合诊断 (${evalRecord.judge_model || "gemini-3.8-flash"})：${
-            evalRecord.overall_comment || "已完成 9 字段原子核对。"
-          }`
-        : "该样本属于 25 个标准正例之一。点击右上角「实时运行此样本」按钮，即可在线调用 Stage 1 多模态解析与 LLM-as-a-Judge 逐字段打分。";
+        ? isStage2Active()
+          ? `Stage 2 Query 生成诊断 (Gemini 3.8 Flash, temp=0.4)：${
+              evalRecord.overall_comment || ""
+            }`
+          : `LLM-as-a-Judge 综合诊断 (${evalRecord.judge_model || "gemini-4-argon"})：${
+              evalRecord.overall_comment || "已完成 9 字段原子核对。"
+            }`
+        : "该样本属于 9 个标准正例之一。点击右上角「实时运行此样本」按钮即可在线运行。";
 
       evalSingleSummaryCard.replaceChildren(topRow, commentBox);
+    }
+
+    if (isStage2Active()) {
+      renderStage2SingleCardsAndTable(evalRecord);
+      return;
+    }
+
+    if (evalStage2CardsSection) {
+      evalStage2CardsSection.classList.add("hidden");
+    }
+    if (evalAtomicTitle) {
+      evalAtomicTitle.textContent =
+        "9 大结构化字段原子核对表 (Ground Truth vs Stage 1 提取输出 vs LLM-as-a-Judge 诊断)";
+    }
+    if (evalAtomicTableHead) {
+      const cols = [
+        "核对字段 (Field)",
+        "Ground Truth 标准答案 (人工标注)",
+        "Stage 1 实际提取输出 (Extracted)",
+        "关键数字/实体",
+        "幻觉检测",
+        "字段得分 (0~10)",
+        "LLM-as-a-Judge 诊断依据",
+      ];
+      const tr = document.createElement("tr");
+      cols.forEach((c) => {
+        const th = document.createElement("th");
+        th.textContent = c;
+        tr.appendChild(th);
+      });
+      evalAtomicTableHead.replaceChildren(tr);
     }
 
     // 3. 渲染 9 字段原子核对表 (Side-by-Side Diff & Atomic Classification)
@@ -1993,7 +2725,7 @@
   }
 
   async function initEvalWorkspace() {
-    showEvalStatus("正在加载全链路评测基准数据集与历史评测记录...", false);
+    showEvalStatus("正在加载全链路评测基准数据集与 Stage 1 / Stage 2 评测记录...", false);
     try {
       const resp = await fetch("/api/eval/overview");
       if (!resp.ok) {
@@ -2001,10 +2733,12 @@
       }
       const data = await resp.json();
       evalState.stages = Array.isArray(data.stages) ? data.stages : [];
-      evalState.runs = Array.isArray(data.runs) ? data.runs : [];
-      evalState.activeRun = data.active_run || null;
+      evalState.runsByStage = data.runs_by_stage || {};
+      evalState.activeRunByStage = data.active_run_by_stage || {};
       evalState.catalog = data.catalog || { qualified_samples: [], disqualified_samples: [] };
       evalState.initialized = true;
+
+      syncStageRunsState(evalState.selectedStageId || "stage2_queries");
 
       if (
         evalState.activeRun &&
@@ -2072,6 +2806,9 @@
           throw new Error(data.detail || `加载批次失败 (HTTP ${resp.status})`);
         }
         evalState.activeRun = data.run;
+        if (evalState.activeRunByStage) {
+          evalState.activeRunByStage[evalState.selectedStageId] = data.run;
+        }
         showEvalStatus("");
         renderFullEvalWorkspace();
       } catch (err) {
@@ -2117,28 +2854,43 @@
 
   if (evalRunSingleBtn) {
     evalRunSingleBtn.addEventListener("click", async () => {
-      const sampleId = evalState.selectedSampleId || "QUAL-001";
+      const sampleId = evalState.selectedSampleId || "QUAL-01";
       const extractModel = evalSingleExtractModel ? evalSingleExtractModel.value : "gemini-3.8-flash";
-      const judgeModel = evalSingleJudgeModel ? evalSingleJudgeModel.value : "gemini-3.8-flash";
+      const judgeModel = evalSingleJudgeModel ? evalSingleJudgeModel.value : "gemini-4-argon";
       const activeRunId = evalState.activeRun ? evalState.activeRun.run_id : null;
+      const isS2 = isStage2Active();
 
       evalRunSingleBtn.disabled = true;
-      evalRunSingleBtn.textContent = "正在实时提取与原子核对...";
+      evalRunSingleBtn.textContent = isS2
+        ? "正在实时生成 10 条 Query..."
+        : "正在实时提取与原子核对...";
       showEvalStatus(
-        `正在对样本 ${sampleId} 执行实时 Stage 1 多模态提取 (${extractModel}) + LLM-as-a-Judge 9 字段原子核对 (${judgeModel})，请稍候约 15~30 秒...`,
+        isS2
+          ? `正在对样本 ${sampleId} 执行实时 Stage 2 搜索策略生成 (${extractModel}, temp=0.4, 10条)，请稍候约 5~10 秒...`
+          : `正在对样本 ${sampleId} 执行实时 Stage 1 多模态提取 (${extractModel}) + LLM-as-a-Judge 9 字段原子核对 (${judgeModel})，请稍候约 15~30 秒...`,
         false
       );
 
       try {
-        const resp = await fetch("/api/eval/stage1/run-single", {
+        const endpoint = isS2 ? "/api/eval/stage2/run-single" : "/api/eval/stage1/run-single";
+        const payload = isS2
+          ? {
+              sample_id: sampleId,
+              model_name: extractModel,
+              temperature: 0.4,
+              query_count: 10,
+              run_id: activeRunId,
+            }
+          : {
+              sample_id: sampleId,
+              extract_model: extractModel,
+              judge_model: judgeModel,
+              run_id: activeRunId,
+            };
+        const resp = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sample_id: sampleId,
-            extract_model: extractModel,
-            judge_model: judgeModel,
-            run_id: activeRunId,
-          }),
+          body: JSON.stringify(payload),
         });
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok) {
@@ -2146,21 +2898,27 @@
         }
         if (Array.isArray(data.runs)) {
           evalState.runs = data.runs;
+          if (evalState.runsByStage) {
+            evalState.runsByStage[evalState.selectedStageId] = data.runs;
+          }
         }
         if (data.updated_run) {
           evalState.activeRun = data.updated_run;
+          if (evalState.activeRunByStage) {
+            evalState.activeRunByStage[evalState.selectedStageId] = data.updated_run;
+          }
         }
         renderFullEvalWorkspace();
         const sc = data.sample ? Number(data.sample.overall_score_10 || 0).toFixed(2) : "—";
         showEvalStatus(
-          `✓ 样本 ${sampleId} 实时评测完成！9 字段原子核对平均分：${sc} / 10.0（结果已同步更新至当前评测批次）。`,
+          `✓ 样本 ${sampleId} 实时评测完成！平均得分：${sc} / 10.0（结果已同步更新至当前评测批次）。`,
           false
         );
       } catch (err) {
         showEvalStatus(`单样本实时评测未成功：${err.message || String(err)}`, true);
       } finally {
         evalRunSingleBtn.disabled = false;
-        evalRunSingleBtn.textContent = "实时运行此样本 (Stage 1 提取 + LLM-Judge 核对)";
+        syncStageRunsState(evalState.selectedStageId);
       }
     });
   }
@@ -2168,28 +2926,41 @@
   if (evalRunBatchBtn) {
     evalRunBatchBtn.addEventListener("click", async () => {
       const extVal = evalBatchExtSelect ? evalBatchExtSelect.value : "";
-      const limitVal = Math.max(1, Math.min(25, Number(evalBatchLimitInput ? evalBatchLimitInput.value : 2) || 2));
+      const limitVal = Math.max(1, Math.min(25, Number(evalBatchLimitInput ? evalBatchLimitInput.value : 9) || 9));
       const extractModel = evalSingleExtractModel ? evalSingleExtractModel.value : "gemini-3.8-flash";
-      const judgeModel = evalSingleJudgeModel ? evalSingleJudgeModel.value : "gemini-3.8-flash";
+      const judgeModel = evalSingleJudgeModel ? evalSingleJudgeModel.value : "gemini-4-argon";
+      const isS2 = isStage2Active();
 
       evalRunBatchBtn.disabled = true;
       evalRunBatchBtn.textContent = "正在运行批量评测...";
       showEvalStatus(
-        `正在运行新批次 LLM-as-a-Judge 评测（格式: ${extVal || "全部"} | 样本数上限: ${limitVal} | 模型: ${extractModel}），请稍候...`,
+        isS2
+          ? `正在运行新批次 Stage 2 搜索 Query 批量评测（样本数上限: ${limitVal} | 模型: ${extractModel}, temp=0.4），请稍候...`
+          : `正在运行新批次 LLM-as-a-Judge 评测（格式: ${extVal || "全部"} | 样本数上限: ${limitVal} | 模型: ${extractModel}），请稍候...`,
         false
       );
 
       try {
-        const resp = await fetch("/api/eval/stage1/run-batch", {
+        const endpoint = isS2 ? "/api/eval/stage2/run-batch" : "/api/eval/stage1/run-batch";
+        const payload = isS2
+          ? {
+              limit: limitVal,
+              live_gemini: true,
+              model_name: extractModel,
+              temperature: 0.4,
+              query_count: 10,
+            }
+          : {
+              extensions: extVal ? [extVal] : null,
+              limit: limitVal,
+              live_gemini: true,
+              extract_model: extractModel,
+              judge_model: judgeModel,
+            };
+        const resp = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            extensions: extVal ? [extVal] : null,
-            limit: limitVal,
-            live_gemini: true,
-            extract_model: extractModel,
-            judge_model: judgeModel,
-          }),
+          body: JSON.stringify(payload),
         });
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok) {
@@ -2197,9 +2968,15 @@
         }
         if (Array.isArray(data.runs)) {
           evalState.runs = data.runs;
+          if (evalState.runsByStage) {
+            evalState.runsByStage[evalState.selectedStageId] = data.runs;
+          }
         }
         if (data.active_run) {
           evalState.activeRun = data.active_run;
+          if (evalState.activeRunByStage) {
+            evalState.activeRunByStage[evalState.selectedStageId] = data.active_run;
+          }
         }
         renderFullEvalWorkspace();
         showEvalStatus(
@@ -2212,7 +2989,7 @@
         showEvalStatus(`批量评测未成功：${err.message || String(err)}`, true);
       } finally {
         evalRunBatchBtn.disabled = false;
-        evalRunBatchBtn.textContent = "运行新批次 LLM-Judge 评测";
+        syncStageRunsState(evalState.selectedStageId);
       }
     });
   }

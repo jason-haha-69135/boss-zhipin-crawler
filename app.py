@@ -37,10 +37,16 @@ from core.gemini_client import (
     load_backend_api_key,
 )
 from core.intent_parser import parse_user_intent
+# Stage 2 已独立解耦至 core.query_generator
+from core.query_generator import (
+    DEFAULT_QUERY_COUNT,
+    DEFAULT_STAGE2_QUERY_MODEL,
+    DEFAULT_STAGE2_TEMPERATURE,
+    generate_queries_from_profile_with_gemini,
+)
 from core.resume_parser import (
     MAX_RESUME_BYTES,
     extract_resume_profile_with_gemini,
-    generate_queries_from_profile_with_gemini,
     parse_resume_with_gemini,
 )
 from resume_eval_benchmark.eval_store import (
@@ -50,9 +56,11 @@ from resume_eval_benchmark.eval_store import (
     load_benchmark_catalog,
     load_eval_run_by_id,
     run_single_sample_live_eval,
+    run_single_sample_stage2_live_eval,
     save_eval_run_archive,
 )
 from resume_eval_benchmark.evaluate_parser import run_dataset_verification
+from resume_eval_benchmark.evaluate_stage2_queries import run_stage2_dataset_evaluation
 
 STATIC_DIR = BASE_DIR / "static"
 
@@ -210,7 +218,19 @@ class GenerateQueriesRequest(BaseModel):
         max_length=150,
         description="可选：用户附加的求职方向或细分赛道偏好（如 '偏向服装买手或商品企划岗'）",
     )
-    model: str = Field(default="gemini-3.8-flash", description="选择的 Gemini 模型")
+    query_count: int = Field(
+        default=DEFAULT_QUERY_COUNT,
+        ge=1,
+        le=20,
+        description="输出的求职 Query 条数（默认 10 条）",
+    )
+    temperature: float = Field(
+        default=DEFAULT_STAGE2_TEMPERATURE,
+        ge=0.0,
+        le=1.0,
+        description="Stage 2 模型采样温度（默认 0.4）",
+    )
+    model: str = Field(default=DEFAULT_STAGE2_QUERY_MODEL, description="选择的 Gemini 模型（默认 gemini-3.8-flash）")
     filename: Optional[str] = Field(default=None, max_length=120, description="关联的简历文件名（用于更新快照）")
 
 
@@ -284,12 +304,12 @@ async def parse_resume_profile_endpoint(request: Request) -> Dict[str, Any]:
 @app.post("/api/resume/generate-queries")
 async def generate_resume_queries_endpoint(req: GenerateQueriesRequest) -> Dict[str, Any]:
     """
-    【阶段二独立服务接口】基于结构化求职画像（及用户微调的目标城市/底薪/附加偏好）生成 5 条多策略求职 Query：
+    【阶段二独立服务接口】基于结构化求职画像（及用户微调的目标城市/底薪/附加偏好）生成 10 条多策略求职 Query：
     1. 无需重复上传简历原文件，仅接收轻量级 `profile` JSON 与可选覆盖参数；
-    2. 由 Python 注入 BOSS直聘 高频标准岗位词锚点，调用 Gemini (`temperature=0.35`) 生成 5 条差异化自然语言 Query；
-    3. 同步更新本地最新快照并返回 `{ filename, model_used, profile, recommended_queries }`。
+    2. 由 Python 注入 BOSS直聘 高频标准岗位词锚点，调用 `core/query_generator.py`（默认 `gemini-3.8-flash`, `temperature=0.4`）生成 10 条差异化自然语言 Query；
+    3. 同步更新本地最新快照并返回 `{ filename, model_used, temperature_used, query_count, profile, recommended_queries }`。
     """
-    selected_model = req.model if req.model in ALLOWED_MODELS else "gemini-3.8-flash"
+    selected_model = req.model if req.model in ALLOWED_MODELS else DEFAULT_STAGE2_QUERY_MODEL
     saved_cfg = load_runtime_config()
     effective_api_key = load_backend_api_key(saved_cfg.get("api_key"))
     effective_proxy = saved_cfg.get("proxy_url", "").strip() or None
@@ -302,7 +322,9 @@ async def generate_resume_queries_endpoint(req: GenerateQueriesRequest) -> Dict[
             salary_floor=req.salary_floor,
             welfare_prefs=req.welfare_prefs,
             custom_focus=req.custom_focus,
+            query_count=req.query_count,
             model_name=selected_model,
+            temperature=req.temperature,
             api_key=effective_api_key,
             proxy_url=effective_proxy,
         )
@@ -499,7 +521,7 @@ class EvalRunSingleRequest(BaseModel):
 
     sample_id: str = Field(..., min_length=4, max_length=20, description="标准集样本 ID，例如 QUAL-001")
     extract_model: str = Field(default="gemini-3.8-flash", description="Stage 1 画像提取模型")
-    judge_model: str = Field(default="gemini-3.8-flash", description="LLM-as-a-Judge 裁判模型")
+    judge_model: str = Field(default="gemini-4-argon", description="LLM-as-a-Judge 裁判模型")
     run_id: Optional[str] = Field(default=None, description="可选：将评测结果合并更新到指定的历史 Run ID")
 
 
@@ -511,30 +533,56 @@ class EvalRunBatchRequest(BaseModel):
     limit: int = Field(default=3, ge=1, le=25, description="评测样本数量上限 (1-25)")
     live_gemini: bool = Field(default=True, description="是否调用真实 Gemini 进行 Stage 1 提取与 LLM-as-a-Judge 评测")
     extract_model: str = Field(default="gemini-3.8-flash", description="Stage 1 画像提取模型")
-    judge_model: str = Field(default="gemini-3.8-flash", description="LLM-as-a-Judge 裁判模型")
+    judge_model: str = Field(default="gemini-4-argon", description="LLM-as-a-Judge 裁判模型")
 
 
 @app.get("/api/eval/overview")
-async def get_eval_overview() -> Dict[str, Any]:
+async def get_eval_overview(stage_id: str = "stage1_profile") -> Dict[str, Any]:
     """
-    获取全链路评测工作台 (Option A) 初始化概览：
+    获取全链路评测工作台 (Option A) 初始化概览（同时返回 Stage 1 与 Stage 2 最新报告与历史批次）：
     - stages: Stage 1 ~ Stage 5 统一三层评测协议注册表
-    - runs: 历史评测运行记录元数据列表
-    - active_run: 最新一次评测运行完整报告（含 Aggregated 大盘与 Single-Use 样本原子核对明细）
-    - catalog: 25 个正例多模态样本与 20 个反例安全拦截样本目录
+    - runs: 当前请求 stage_id 的历史评测运行记录列表
+    - active_run: 当前请求 stage_id 的最新一次评测运行完整报告
+    - runs_by_stage: { stage1_profile: [...], stage2_queries: [...] }
+    - active_run_by_stage: { stage1_profile: {...}, stage2_queries: {...} }
+    - catalog: 9 个正例多模态样本与 9 个反例安全拦截样本目录
     """
-    runs = await asyncio.to_thread(list_eval_runs)
-    active_run: Dict[str, Any] = {}
-    if runs:
+    runs_s1 = await asyncio.to_thread(list_eval_runs, "stage1_profile")
+    runs_s2 = await asyncio.to_thread(list_eval_runs, "stage2_queries")
+
+    active_s1: Dict[str, Any] = {}
+    if runs_s1:
         try:
-            active_run = await asyncio.to_thread(load_eval_run_by_id, runs[0]["run_id"])
+            active_s1 = await asyncio.to_thread(load_eval_run_by_id, runs_s1[0]["run_id"], "stage1_profile")
         except Exception:
-            active_run = {}
+            active_s1 = {}
+
+    active_s2: Dict[str, Any] = {}
+    if runs_s2:
+        try:
+            active_s2 = await asyncio.to_thread(load_eval_run_by_id, runs_s2[0]["run_id"], "stage2_queries")
+        except Exception:
+            active_s2 = {}
+    else:
+        try:
+            active_s2 = await asyncio.to_thread(load_eval_run_by_id, "latest", "stage2_queries")
+        except Exception:
+            active_s2 = {}
+
     catalog = await asyncio.to_thread(load_benchmark_catalog)
+    eff_stage = stage_id if stage_id in ("stage1_profile", "stage2_queries") else "stage1_profile"
     return {
         "stages": STAGE_REGISTRY,
-        "runs": runs,
-        "active_run": active_run,
+        "runs": runs_s2 if eff_stage == "stage2_queries" else runs_s1,
+        "active_run": active_s2 if eff_stage == "stage2_queries" else active_s1,
+        "runs_by_stage": {
+            "stage1_profile": runs_s1,
+            "stage2_queries": runs_s2,
+        },
+        "active_run_by_stage": {
+            "stage1_profile": active_s1,
+            "stage2_queries": active_s2,
+        },
         "catalog": catalog,
     }
 
@@ -562,7 +610,7 @@ async def run_stage1_single_sample_endpoint(req: EvalRunSingleRequest) -> Dict[s
     并将最新原子核对结果写回评测历史档案。
     """
     selected_extract = req.extract_model if req.extract_model in ALLOWED_MODELS else "gemini-3.8-flash"
-    selected_judge = req.judge_model if req.judge_model in ALLOWED_MODELS else "gemini-3.8-flash"
+    selected_judge = req.judge_model if req.judge_model in ALLOWED_MODELS else "gemini-4-argon"
     try:
         res = await asyncio.to_thread(
             run_single_sample_live_eval,
@@ -590,7 +638,7 @@ async def run_stage1_batch_eval_endpoint(req: EvalRunBatchRequest) -> Dict[str, 
     生成新的历史评测 Run 并返回更新后的 Aggregated View 大盘数据。
     """
     selected_extract = req.extract_model if req.extract_model in ALLOWED_MODELS else "gemini-3.8-flash"
-    selected_judge = req.judge_model if req.judge_model in ALLOWED_MODELS else "gemini-3.8-flash"
+    selected_judge = req.judge_model if req.judge_model in ALLOWED_MODELS else "gemini-4-argon"
 
     sample_ids_set = (
         {s.strip().upper() for s in req.sample_ids if s and s.strip()}
@@ -641,6 +689,62 @@ async def run_stage1_batch_eval_endpoint(req: EvalRunBatchRequest) -> Dict[str, 
     try:
         active_run = await asyncio.to_thread(_run_batch_sync)
         runs = await asyncio.to_thread(list_eval_runs)
+        return {
+            "run_id": active_run["run_id"],
+            "active_run": active_run,
+            "runs": runs,
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/eval/stage2/run-single")
+async def run_stage2_single_sample_endpoint(req: EvalRunSingleRequest) -> Dict[str, Any]:
+    """
+    【Stage 2 Single-Use 实时单样本评测接口】
+    针对指定样本（如 QUAL-01 ~ QUAL-09），实时调用 `core.query_generator.generate_queries_from_profile_with_gemini`
+    生成 10 条求职 Query 并执行三要素与零城市/零福利核验。
+    """
+    selected_model = req.extract_model if req.extract_model in ALLOWED_MODELS else DEFAULT_STAGE2_QUERY_MODEL
+    try:
+        res = await asyncio.to_thread(
+            run_single_sample_stage2_live_eval,
+            sample_id=req.sample_id.strip().upper(),
+            model_name=selected_model,
+            temperature=DEFAULT_STAGE2_TEMPERATURE,
+            query_count=DEFAULT_QUERY_COUNT,
+            run_id_to_update=req.run_id,
+        )
+        return res
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve)) from ve
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/eval/stage2/run-batch")
+async def run_stage2_batch_eval_endpoint(req: EvalRunBatchRequest) -> Dict[str, Any]:
+    """
+    【Stage 2 Batch 批量评测接口】
+    对合格简历数据集批量运行 Stage 2 多策略求职 Query 生成（10 条/样本）并归档。
+    """
+    selected_model = req.extract_model if req.extract_model in ALLOWED_MODELS else DEFAULT_STAGE2_QUERY_MODEL
+    sample_ids_set = (
+        {s.strip().upper() for s in req.sample_ids if s and s.strip()}
+        if req.sample_ids
+        else None
+    )
+    try:
+        active_run = await asyncio.to_thread(
+            run_stage2_dataset_evaluation,
+            base_dir=BENCHMARK_DIR,
+            model_name=selected_model,
+            temperature=DEFAULT_STAGE2_TEMPERATURE,
+            query_count=DEFAULT_QUERY_COUNT,
+            sample_ids_filter=sample_ids_set,
+            limit=max(1, min(req.limit, 25)) if req.limit else None,
+        )
+        runs = await asyncio.to_thread(list_eval_runs, "stage2_queries")
         return {
             "run_id": active_run["run_id"],
             "active_run": active_run,

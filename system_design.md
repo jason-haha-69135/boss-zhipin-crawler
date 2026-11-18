@@ -1,428 +1,430 @@
-# BOSS直聘智能求职分析 Agent — 五大核心模块系统架构与实现详解 (`system_design.md`)
+<div align="center">
 
-> [!IMPORTANT]
-> 本文档完整梳理 **BOSS直聘智能求职分析 Agent** 的系统架构、五大核心模块的**设计思路（Design Philosophy）**、**设计细节（Design Details）**与**代码级实现细节（Implementation Details）**，并附带底层双通道 Gemini Interactions API 架构及端到端实测验证数据。
+# BOSS直聘智能求职分析 Agent — 系统架构与分阶段设计文档 (`system_design.md`)
 
----
+**📑 分页导航 (Page Navigation)**
 
-## 目录
+[**第 1 页：全局设计逻辑与架构总览**](#page-1-全局设计逻辑与架构总览) ｜ [**第 2 页：Stage 1 简历读取与画像解析**](#page-2-stage-1-简历安全读取与多模态画像解析) ｜ [**第 3 页：Stage 2 多策略求职 Query 生成**](#page-3-stage-2-基于画像的多策略求职-query-生成) ｜ [**第 4 页：Stage 3 意图解析与 URL 映射**](#page-4-stage-3-自然语言求职意图解析与-url-映射) ｜ [**第 5 页：Stage 4 两阶段反爬采集与初筛**](#page-5-stage-4-boss直聘两阶段反爬采集与初筛打分) ｜ [**第 6 页：Stage 5 六维分析、看板与评测体系**](#page-6-stage-5-六维统计人岗匹配评估与三层评测体系)
 
-1. [系统整体架构与端到端数据流](#1-系统整体架构与端到端数据流)
-2. [底层支撑：Gemini Interactions API 双通道自适应客户端](#2-底层支撑gemini-interactions-api-双通道自适应客户端)
-3. [模块一：简历文件安全网关与 PII 隐私脱敏模块](#3-模块一简历文件安全网关与-pii-隐私脱敏模块)
-4. [模块二：Gemini 多模态简历深度理解与多策略 Query 预生成模块](#4-模块二gemini-多模态简历深度理解与多策略-query-预生成模块)
-5. [模块三：自然语言求职意图解析与 BOSS直聘 URL 映射模块](#5-模块三自然语言求职意图解析与-boss直聘-url-映射模块)
-6. [模块四：BOSS直聘两阶段反爬采集与候选岗位初筛打分模块](#6-模块四boss直聘两阶段反爬采集与候选岗位初筛打分模块)
-7. [模块五：六维统计计算、人岗双向深度匹配评估与可视化看板模块](#7-模块五六维统计计算人岗双向深度匹配评估与可视化看板模块)
-8. [全链路接口契约与安全编码规范汇总](#8-全链路接口契约与安全编码规范汇总)
+</div>
 
 ---
 
-## 1. 系统整体架构与端到端数据流
+<a id="page-1-全局设计逻辑与架构总览"></a>
 
-### 1.1 系统设计目标
-本系统旨在解决传统求职者在招聘平台搜索岗位时的三大核心痛点：
-1. **搜索词构建盲目**：求职者往往不清楚自己的简历资历在目标城市适合搜什么岗位词、定多少底薪、能争取什么福利；
-2. **列表页信息缺失与关键词误伤**：BOSS直聘列表页不展示完整职位描述（JD），且“周末双休 vs 门店排班轮休”往往隐藏在详情页正文中；此外直接搜索“服装店面督导”会漏掉大量标题仅写“店面督导”但属于知名服装品牌公司的岗位；
-3. **缺乏全局市场统计与人岗真实履历对比**：求职者只能逐条点开查看，缺乏对几百个在招岗位的六维统计分布（行业、薪资、技能、经验学历、品牌规模、福利作息）以及结合自身真实简历的客观匹配度诊断。
+## 【第 1 页 / 共 6 页】全局设计逻辑、核心架构思路与全链路总览
 
-### 1.2 端到端系统架构图
+### 1.1 核心痛点与系统设计哲学 (Design Philosophy)
 
-```mermaid
-flowchart TD
-    subgraph Frontend["前端交互与可视化层 (static/index.html + static/app.js)"]
-        UI_Resume["Step 0: 简历拖拽/点击上传面板\n(.pdf / .docx / .png / .jpg / .txt)"]
-        UI_Profile["候选人脱敏画像标签 + 5张多策略预生成 Query 卡片"]
-        UI_Search["自然语言搜索框 + 自定义 Top 候选岗数量控件 (3-20)"]
-        UI_Progress["SSE 实时进度条 + 结构化意图拆解标签栏"]
-        UI_Dashboard["综合匹配度仪表盘 + 六维 ECharts 图表 + Top 3-20 候选岗位深度榜"]
-    end
+传统求职者在招聘平台搜索岗位时面临三大核心痛点：
+1. **搜索词构建盲目（“不知道搜什么”）**：求职者往往不清楚自己的简历资历在目标城市适合搜索什么标准岗位名、定多少月薪底线、能争取哪些作息福利；
+2. **列表页信息缺失与关键词误伤（“搜不准、看不全”）**：BOSS直聘列表页不展示完整职位描述（JD），“周末双休 vs 门店排班轮休”往往隐藏在详情页正文中；此外直接搜索带修饰词的“服装店面督导”会漏掉大量标题仅写“店面督导”但属于知名服装品牌公司的优质岗位；
+3. **缺乏全局市场统计与人岗真实履历对比（“缺乏全局洞察”）**：求职者只能逐条点开查看，缺乏对数百个在招岗位的六维统计分布（行业、薪资、技能、经验学历、品牌规模、福利作息）以及结合自身真实简历的客观匹配度诊断。
 
-    subgraph Backend["FastAPI 服务编排层 (app.py)"]
-        API_Resume["POST /api/resume/parse"]
-        API_Analyze["POST /api/analyze (SSE Streaming)"]
-        API_Snapshot["GET /api/latest-snapshot"]
-        API_Download["GET /api/download/{filename}"]
-    end
+围绕上述痛点，本系统确立了 **五大核心架构设计思路**：
 
-    subgraph CoreModules["五大核心业务模块 (core/)"]
-        M1["模块一：简历安全网关与 PII 隐私脱敏\n(validate_and_detect_resume_format / mask_sensitive_pii)"]
-        M2["模块二：Gemini 多模态简历深度理解与 Query 预生成\n(parse_resume_with_gemini)"]
-        M3["模块三：自然语言求职意图解析与 URL 映射\n(parse_user_intent / fallback_parse_intent)"]
-        M4["模块四：Playwright CDP 两阶段反爬采集与初筛打分\n(crawl_boss_two_stage / score_candidate_for_detail)"]
-        M5["模块五：Python 六维精确统计 + Gemini 人岗双向评估\n(compute_six_dimension_stats / analyze_jobs_with_gemini)"]
-    end
-
-    subgraph Infra["底层基础设施"]
-        GeminiClient["Gemini Interactions API 双通道客户端\n(core/gemini_client.py: Vertex AI Global / AI Studio)"]
-        ChromeCDP["本地已登录 Chrome 调试实例\n(127.0.0.1:9222 / start_chrome.sh)"]
-        Storage["本地输出与快照存储\n(output/*.xlsx + latest_test_snapshot.json)"]
-    end
-
-    UI_Resume -->|"Base64 JSON 或 Multipart"| API_Resume
-    API_Resume --> M1 --> M2
-    M2 <--> GeminiClient
-    M2 -->|"profile + 5条 recommended_queries"| UI_Profile
-    UI_Profile -->|"点击卡片自动填入 Query + 绑定 currentResumeProfile"| UI_Search
-    UI_Search -->|"query + model + max_batches + top_detail_count(3-20) + resume_profile"| API_Analyze
-    API_Analyze --> M3 --> M4 --> M5
-    M3 <--> GeminiClient
-    M4 <--> ChromeCDP
-    M4 -->|"导出 17 列格式化岗位表"| Storage
-    M5 <--> GeminiClient
-    M5 -->|"SSE 实时推送 progress / intent / result"| UI_Progress --> UI_Dashboard
-    API_Snapshot <--> Storage
-    API_Download <--> Storage
-```
-
-### 1.3 代码仓库目录结构与核心文件映射
-
-| 模块层级 | 文件路径 | 核心职责与关键符号 |
+| 核心设计原则 | 架构决策与工程思路 | 解决的核心问题 |
 | :--- | :--- | :--- |
-| **Web 服务入口** | [app.py](file:///Users/yafan/boss-zhipin-crawler/app.py) | FastAPI 路由编排、SSE 异步流推送、`CRAWL_LOCK` 并发互斥锁、快照持久化 |
-| **底层 AI 客户端** | [core/gemini_client.py](file:///Users/yafan/boss-zhipin-crawler/core/gemini_client.py) | [`create_interaction_with_fallback`](file:///Users/yafan/boss-zhipin-crawler/core/gemini_client.py#L363-L551)、Vertex AI / AI Studio 双通道切换、SSL 证书修复 |
-| **模块一 & 模块二** | [core/resume_parser.py](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py) | [`validate_and_detect_resume_format`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L136-L190)、[`mask_sensitive_pii`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L108-L134)、[`parse_resume_with_gemini`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L357-L466) |
-| **模块三** | [core/intent_parser.py](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py) | [`parse_user_intent`](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py#L253-L311)、[`fallback_parse_intent`](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py#L163-L251)、[`ParsedSearchIntent`](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py#L127-L161) |
-| **模块四** | [core/boss_crawler.py](file:///Users/yafan/boss-zhipin-crawler/core/boss_crawler.py) | [`crawl_boss_two_stage`](file:///Users/yafan/boss-zhipin-crawler/core/boss_crawler.py#L224-L437)、[`score_candidate_for_detail`](file:///Users/yafan/boss-zhipin-crawler/core/boss_crawler.py#L110-L165)、[`detect_weekend_policy`](file:///Users/yafan/boss-zhipin-crawler/core/boss_crawler.py#L50-L60) |
-| **模块五（后端）** | [core/gemini_analyzer.py](file:///Users/yafan/boss-zhipin-crawler/core/gemini_analyzer.py) | [`compute_six_dimension_stats`](file:///Users/yafan/boss-zhipin-crawler/core/gemini_analyzer.py#L87-L241)、[`analyze_jobs_with_gemini`](file:///Users/yafan/boss-zhipin-crawler/core/gemini_analyzer.py#L379-L580) |
-| **模块五（前端）** | [static/index.html](file:///Users/yafan/boss-zhipin-crawler/static/index.html)、[static/app.js](file:///Users/yafan/boss-zhipin-crawler/static/app.js)、[static/styles.css](file:///Users/yafan/boss-zhipin-crawler/static/styles.css) | Step 0 简历面板、ECharts 六维图表、自定义 Top 3-20 双向同步控件、零 XSS DOM 渲染 |
+| **① 简历理解与策略生成双阶段解耦** | 将简历处理拆分为 **Stage 1（`core/resume_parser.py`，`temperature=0.1` 收敛型多模态事实抽取）** 与 **Stage 2（`core/query_generator.py`，`temperature=0.4` 发散型求职策略生成）**，中间插入 Python 确定性校准、PII 二次脱敏与 BOSS直聘 高频岗位词锚点桥接 | 兼顾“简历事实提取零幻觉”与“求职策略生成多样性”；前端修改意向城市/底薪时无需重传简历即可秒级重生成 10 条推荐 Query |
+| **② 硬性 URL 筛选与软性语义条件分离** | **Stage 3** 将用户自然语言拆解为 **BOSS直聘 原生 URL 编码参数**（城市码、薪资档位码、剥离定语后的纯净岗位核心词）与 **软性评估条件**（具体底薪数值、双休要求、行业同义词扩展组） | 既保证 BOSS直聘 搜索引擎的高召回率（不因行业前缀漏掉好岗位），又为下游初筛打分与 LLM 深度评估提供精准判据 |
+| **③ CDP 真实会话接管 + 两阶段采集** | **Stage 4** 通过 Playwright CDP 接管本机已登录 Chrome（`:9222`），先滚动拦截 `N` 批列表 JSON（广度覆盖 75~450 条），再经数学公式初筛打分，仅对 **Top 3~20** 候选岗同源 `fetch` 详情页完整 JD | 彻底规避 Headless 指纹封禁与高频详情页滑块验证码，以最小请求代价同时获取全量统计样本与头部岗位完整 JD |
+| **④ Python 确定性统计 + LLM 语义推理** | **Stage 5** 由 Python 100% 精确计算六大维度分布、中位数与达标率，再将统计结果 + Top N 完整 JD + 候选人脱敏画像注入 Gemini 生成六维洞察与人岗双向评分 | 杜绝大模型算术统计幻觉（算错百分比/中位数），同时发挥 LLM 在隐性 JD 要求核查与人岗履历契合度诊断上的深度推理优势 |
+| **⑤ 纵深防御安全网关 + 三层自动化评测** | 全程纯内存流式处理简历（零磁盘落盘）、五层文件魔数/防 XXE 校验、四类 PII 正则掩码、前端零 `innerHTML` 渲染，并配套 In-House 三层自动化评测看板（LLM-as-a-Judge + 确定性门禁） | 严格防御任意文件上传、Zip Bomb、XXE、Prompt 注入、PII 隐私泄露与 DOM XSS，并使每一阶段的质量可量化、可回归 |
 
 ---
 
-## 2. 底层支撑：Gemini Interactions API 双通道自适应客户端
+### 1.2 全链路五阶段（Stage 1 ~ Stage 5）高层架构图
 
-在深入五大业务模块前，模块二、三、五均依赖底层 [core/gemini_client.py](file:///Users/yafan/boss-zhipin-crawler/core/gemini_client.py) 提供的统一大模型推理能力。
-
-### 2.1 设计思路
-1. **全面采用 Interactions API**：遵循 Google GenAI 最新规范，统一使用 `client.interactions.create(...)` 接口替代旧版 `generate_content`，原生支持多模态输入块（`document` / `image` / `text`）与结构化 JSON Schema 输出（`response_format` + `response_mime_type="application/json"`）。
-2. **解决中国大陆 + Google Corp VPN 环境痛点**：
-   - 消费级 Google AI Studio (`generativelanguage.googleapis.com`) 会对中国大陆出口 IP 返回 `400 FAILED_PRECONDITION: User location is not supported for the API use`；
-   - 企业级 **GCP Vertex AI Global Endpoint (`aiplatform.googleapis.com`, `location="global"`)** 不受消费级地区封锁限制，在 Corp VPN 下无需第三方代理即可直连。
-   - 因此设计了**「Vertex AI OAuth ADC 优先 + AI Studio 本地代理自动探测」双通道自适应路由**。
-3. **解决 macOS Python 3.14 SSL 证书报错与 mTLS 冲突**：
-   - 自动注入 `certifi.where()` 与 `/etc/ssl/cert.pem` 双根证书库；
-   - 强制设置 `os.environ["GOOGLE_API_USE_CLIENT_CERTIFICATE"] = "false"`，防止 Corp Mac 上的客户端证书触发 Vertex AI mTLS 校验异常；
-   - 若遇到本地代理网关 MITM 自签名证书导致 `CERTIFICATE_VERIFY_FAILED`，自动降级 `verify_ssl=False` 重试。
-
-### 2.2 实现细节
-- **JSON Schema 内联展开算法 ([`clean_json_schema`](file:///Users/yafan/boss-zhipin-crawler/core/gemini_client.py#L94-L120))**：
-  Pydantic 生成的嵌套模型 Schema 会包含 `$defs` 与 `$ref` 引用，而 Interactions API 的 `response_format` 要求纯平内联 Schema。`clean_json_schema` 递归遍历字典树，将所有 `{"$ref": "#/$defs/SubModel"}` 替换为对应子模型的完整定义，并剔除冗余 `title` 与 `$defs` 键。
-- **四大模型候选回退链 ([`MODEL_CANDIDATES_MAP`](file:///Users/yafan/boss-zhipin-crawler/core/gemini_client.py#L50-L72))**：
-  - `gemini-3.8-flash`: `["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-flash-latest"]`
-  - `gemini-3.5-flash-lite`: `["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash"]`
-  - `gemini-3.1-pro`: `["gemini-3.1-pro-preview", "gemini-3.1-pro", "gemini-3.8-flash"]`
-  - `gemini-4-argon`: `["gemini-4-argon", "gemini-3.8-flash"]`
-  一旦某个具体模型标识在当前通道调用成功，立即缓存至 `_RESOLVED_MODEL_CACHE[(backend, requested_model)]`，后续请求直接命中，实现 **0 探测延迟**。
-- **密钥后端隔离 ([`load_backend_api_key`](file:///Users/yafan/boss-zhipin-crawler/core/gemini_client.py#L225-L241))**：
-  API Key 仅从服务端环境变量 `GEMINI_API_KEY` 或后端 `0600` 权限私有文件 `.gemini_runtime.json` 读取，前端 UI 与接口响应绝不暴露任何密钥明文。
-
----
-
-## 3. 模块一：简历文件安全网关与 PII 隐私脱敏模块
-
-### 3.1 设计思路 (Design Philosophy)
-简历文件属于高敏感个人数据且来源不可信（用户可能误传伪造后缀的可执行程序、超大型文件、损坏的压缩包，同时简历内包含手机号、身份证号、私人邮箱等敏感隐私）。因此模块一遵循两条核心原则：
-1. **纵深防御（Defense-in-Depth）与纯内存流式处理**：上传的简历字节流全程在 Python 内存 (`bytes` / `io.BytesIO`) 中完成校验、解析与 Base64 编码，**绝不写入服务器磁盘临时目录**，从根源上消除恶意脚本落地执行与历史简历文件泄露风险。
-2. **个人敏感隐私（PII）双端强制脱敏**：不仅在提取文本送入 LLM 前以及 LLM 返回结果后通过确定性正则掩码（Masking）抹除手机号、身份证号和邮箱，还在 Prompt 层面指令约束模型禁止输出个人联系方式。
-
-### 3.2 设计细节 (Design Details)
-
-#### 五层文件上传安全校验流水线
 ```mermaid
 flowchart LR
-    A["1. 请求体体积拦截\nContent-Length / Body <= 15MB\n原始文件 <= 10MB"] --> B["2. 文件名净化\nsanitize_filename\n剔除 ../ 与控制字符"]
-    B --> C["3. 扩展名白名单校验\n.pdf/.docx/.png/.jpg/.webp/.txt/.md"]
-    C --> D["4. 文件头 Magic Bytes 核验\n防伪造后缀恶意程序"]
-    D --> E["5. 结构级抗攻击检验\nDOCX 防 Zip Bomb (<=20MB)\n防 XXE 外部实体注入"]
+    User(["👤 求职者\n上传简历 / 输入诉求"])
+
+    subgraph Pipeline["BOSS直聘智能求职分析 Agent 核心五阶段流水线"]
+        direction LR
+        S1["📄 Stage 1\n简历安全读取与画像解析\n(提取 9 维结构化画像)"]
+        S2["🎯 Stage 2\n多策略求职 Query 生成\n(定制 10 条多维度搜索词)"]
+        S3["🧭 Stage 3\n自然语言意图与 URL 映射\n(硬筛选码 + 软语义条件)"]
+        S4["🕷️ Stage 4\n两阶段反爬采集与初筛\n(全量列表 + Top N 完整 JD)"]
+        S5["📊 Stage 5\n六维统计与人岗双向评估\n(Python 统计 + Gemini 诊断)"]
+
+        S1 ==> S2 ==> S3 ==> S4 ==> S5
+    end
+
+    S1 -.->|"透传脱敏简历画像"| S5
+    User --> S1
+    User -.->|"直接输入或点选推荐 Query"| S3
+    S5 ==> Output(["✨ 六维 ECharts 看板\n& 人岗匹配深度报告"])
+
+    classDef userNode fill:#f8fafc,stroke:#475569,stroke-width:2px,color:#0f172a,font-weight:bold
+    classDef stage12 fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,color:#1e3a8a
+    classDef stage34 fill:#f0fdf4,stroke:#10b981,stroke-width:2px,color:#065f46
+    classDef stage5 fill:#faf5ff,stroke:#8b5cf6,stroke-width:2px,color:#4c1d95
+    classDef outNode fill:#ecfeff,stroke:#0891b2,stroke-width:2px,color:#164e63,font-weight:bold
+
+    class User userNode
+    class S1,S2 stage12
+    class S3,S4 stage34
+    class S5 stage5
+    class Output outNode
 ```
-
-| 校验层级 | 安全威胁防护目标 | 具体阈值与判定规则 |
-| :--- | :--- | :--- |
-| **L1 体积上限** | 防止内存耗尽型 DoS | 原始字节流 `MAX_RESUME_BYTES = 10 * 1024 * 1024` (10 MB)；HTTP 请求体上限 15 MB（兼容 Base64 1.37 倍膨胀） |
-| **L2 文件名净化** | 防止路径穿越（Path Traversal）与日志注入 | `os.path.basename` + 正则替换 `[\x00-\x1f\x7f/\\]+` 为 `_`，长度截断 120 字符 |
-| **L3 扩展名白名单** | 拦截 `.exe` / `.sh` / `.html` / `.svg` 等高危格式 | 仅允许 `.pdf`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.docx`, `.txt`, `.md`（注：排除可内嵌 `<script>` 的 `.svg`） |
-| **L4 Magic Bytes 签名** | 拦截改名为 `resume.pdf` 的可执行文件或脚本 | 逐字节核对二进制文件头魔数（见下方实现表） |
-| **L5 压缩与 XML 安全** | 防御 DOCX Zip Bomb 炸弹与 XXE 注入攻击 | 累计未压缩体积 `sum(info.file_size) <= 20 MB`；扫描 XML 前 2048 字节拒绝 `<!DOCTYPE` 与 `<!ENTITY` |
-
-### 3.3 实现细节 (Implementation Details)
-
-#### (1) 文件头魔数（Magic Bytes）精确核验（[`validate_and_detect_resume_format`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L136-L190)）
-- **PDF (`.pdf`)**：必须以 `b"%PDF-"` 开头，返回 `("application/pdf")`；
-- **PNG (`.png`)**：必须以 `b"\x89PNG\r\n\x1a\n"` 开头，返回 `("image/png")`；
-- **JPEG (`.jpg` / `.jpeg`)**：必须以 `b"\xff\xd8\xff"` 开头，返回 `("image/jpeg")`；
-- **WebP (`.webp`)**：长度 `>= 12` 且前 4 字节为 `b"RIFF"`、第 8~12 字节为 `b"WEBP"`，返回 `("image/webp")`；
-- **Word (`.docx`)**：必须以 PKZip 签名 `b"PK\x03\x04"` 开头，且内部包含 `word/document.xml`；
-- **纯文本 (`.txt` / `.md`)**：检查前 4096 字节不得包含空字节 `b"\x00"`（拦截二进制文件伪装文本），并按 `("utf-8-sig", "utf-8", "gb18030")` 顺序自适应解码。
-
-#### (2) DOCX 内存安全解析（[`extract_text_from_docx`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L192-L240)）
-许多中文简历使用表格（Table）排版，单纯按段落读取会丢失表格或产生重复文本。实现中通过 `xml.etree.ElementTree.fromstring` 解析 `word/document.xml`，遍历 `<w:p>`（段落）与 `<w:tr>`（表格行）节点，拼接内部 `<w:t>` 文本与 `<w:tab>` 制表符，并对相邻重复行去重，截断前 `15,000` 字符。
-
-#### (3) PII 个人隐私正则掩码算法（[`mask_sensitive_pii`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L132-L190)）
-涵盖 **手机号、18 位身份证号、电子邮箱** 以及 **家庭或学校详细地址（街道门牌、住宅小区楼栋室号、学校校区与学生宿舍）**：
-```python
-# 1. 中国大陆 11 位手机号脱敏：18682447902 -> 186****7902
-masked = re.sub(r"(?<!\d)(1[3-9]\d)\d{4}(\d{4})(?!\d)", r"\1****\2", text)
-# 2. 18 位二代身份证号脱敏：420106199908151234 -> 420106********1234
-masked = re.sub(r"(?<!\d)(\d{6})\d{8}(\d{3}[\dXx])(?!\d)", r"\1********\2", masked)
-# 3. 电子邮箱脱敏：345360875@qq.com -> 3***@qq.com
-masked = re.sub(r"([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*(@[A-Za-z0-9.-]+\.[A-Za-z]{2,})", r"\1***\2", masked)
-# 4a. 带显式标签的家庭/学校/现居/户籍/宿舍/通讯详细地址脱敏
-masked = re.sub(r"((?:家庭|现居|居住|联系|通讯|户籍|学校|院校|校区|宿舍|详细)(?:住址|地址)\s*[:：]\s*)([^\n，,；;。｜|]+)", r"\1[地址已脱敏]", masked)
-# 4b. 具体街道/路/巷 + 门牌号 + 小区/楼栋/校区/宿舍详细地址脱敏
-masked = re.sub(r"(?:[\u4e00-\u9fa5]{2,8}(?:区|县|镇|街道|乡))?[\u4e00-\u9fa5]{2,12}(?:路|街|道|大道|巷|弄|胡同)\s*(?:特?\d{1,5}\s*号(?:院|附\d+号)?)(?:[\u4e00-\u9fa5A-Za-z0-9\-—#幢栋座单元室层号楼苑园庭院村小区大厦广场公寓中心花园公馆校区宿舍]{0,25})?", "[地址已脱敏]", masked)
-# 4c. 住宅小区/花园/公寓/学校校区/学生宿舍 + 楼栋/单元/室号脱敏
-masked = re.sub(r"[\u4e00-\u9fa5]{2,14}(?:小区|花园|新村|公寓|家园|名苑|豪庭|雅苑|公馆|山庄|学生公寓|研究生公寓|宿舍(?:楼|区)?|校区)\s*(?:[A-Za-z0-9一二三四五六七八九十]{1,4}\s*(?:栋|幢|座|号楼|单元|期|区))+(?:\s*\d{1,5}\s*(?:室|房|号|层))?", "[地址已脱敏]", masked)
-# 4d. 独立楼栋 + 单元 + 门牌室号脱敏（如“3栋2单元502室”）
-masked = re.sub(r"(?<![A-Za-z0-9])\d{1,3}\s*(?:栋|幢|座|号楼)\s*(?:\d{1,2}\s*单元\s*)?\d{2,5}\s*(?:室|房|号)", "[地址已脱敏]", masked)
-```
-此外，在 [`_normalize_city_list`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L282-L310) 中，即使 `target_cities` 传入了完整地址（如 `"深圳市南山区粤海街道科技南十二路18号"`），也会自动剥离区县街道门牌细节，仅保留市级标准名 `["深圳"]`。
-
-#### (4) 零外部依赖 Multipart 解析器（[`_extract_resume_from_multipart`](file:///Users/yafan/boss-zhipin-crawler/app.py#L120-L141)）
-在 [app.py](file:///Users/yafan/boss-zhipin-crawler/app.py#L169-L230) 的 `POST /api/resume/parse` 端点中，同时支持前端 JSON Base64 传输与标准 `multipart/form-data` 表单上传。为了不引入第三方 `python-multipart` 依赖，直接使用 Python 标准库 `email.parser.BytesParser` 解析 HTTP `Content-Type` 与请求体字节流，提取 `file` 二进制载荷与 `model` 字段。
 
 ---
 
-## 4. 模块二：Gemini 多模态简历深度理解与多策略 Query 预生成模块（双阶段解耦微服务架构）
+### 1.3 五大阶段职责边界与输入输出契约
 
-### 4.1 设计思路 (Design Philosophy)
-1. **双阶段认知解耦与独立微服务化（Stage 1 事实抽取 + Stage 2 策略规划）**：
-   - **为什么拆分为两次独立调用与两个独立接口？**
-     - **任务认知特征不同**：任务一（理解简历提取 `profile`）是**收敛型事实抽取（Information Extraction）**，要求严格忠于原文、零幻觉，最佳温度为 `temperature=0.1`；任务二（预生成 5 条求职 Query）是**发散型职业策略规划（Career Strategy Generation）**，需要跨赛道迁移、职级晋升推演与 BOSS直聘 热搜词对齐，最佳温度为 `temperature=0.35`。
-     - **Python 确定性中间层赋能**：在 Stage 1 与 Stage 2 之间，Python 代码可介入执行 **PII 二次脱敏**、**标准城市词库对齐（[`_normalize_city_list`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L254-L270)）**、**薪资单位规整（[`_normalize_salary_floor`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L273-L291)）**，并根据画像自动匹配 **BOSS直聘 高频标准岗位词锚点（[`_infer_boss_role_anchors`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L331-L360)）** 注入 Stage 2 Prompt，彻底杜绝生造词。
-     - **前后端渐进式渲染与免重传秒级重生成**：前端先调 Stage 1（`POST /api/resume/parse-profile`），2~3 秒即刻渲染简历画像卡片；再调 Stage 2（`POST /api/resume/generate-queries`）生成 5 条推荐 Query。用户后续在 UI 上修改意向城市、期望底薪或补充求职方向时，**无需重新上传和解析 10MB 简历文件**，直接调用纯文本轻量级 Stage 2 接口（~300 Tokens，1.5 秒内）即可刷新 5 条定制化 Query。
-2. **原生多模态理解优于传统 OCR/PDF 文本抽取**：
-   真实求职者的 PDF 简历往往采用双栏排版、图标时间轴甚至扫描件图片。Stage 1 直接将 PDF 原始字节流构造为 Interactions API 的 `{"type": "document", "data": base64, "mime_type": "application/pdf"}`（图片简历构造为 `{"type": "image", ...}`）送入 **Gemini 3.8 Flash**，由模型直接结合视觉版面与文字语义提取画像。
-3. **猎头级五维求职策略生成与下游意图解析器 100% 契合**：
-   Stage 2 一次性生成 **5 条不同策略维度（`精准对口`、`晋升冲刺`、`作息福利优选`、`跨界拓展`、`高薪突破`）** 的自然语言求职 Query，且每条均严格包含 **【城市 + 简洁高频单一岗位名 + 月薪底线 + 作息/福利要求】** 四大要素。
+| 阶段编号 | 阶段名称 | 核心代码模块 | 后端 API 端点 | 核心输入 | 核心输出 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Stage 1** | **简历安全读取与多模态画像解析** | `core/resume_parser.py` | `POST /api/resume/parse-profile` | 原始简历字节流 (`raw_bytes`) + 文件名 | 经二次 PII 脱敏与标准化的 9 字段候选人画像 `profile` |
+| **Stage 2** | **基于画像的多策略求职 Query 生成** | `core/query_generator.py` | `POST /api/resume/generate-queries` | Stage 1 `profile` + 用户可选微调项（城市/底薪/方向） | 10 条覆盖不同求职策略的自然语言 `recommended_queries` |
+| **Stage 3** | **自然语言意图解析与 URL 映射** | `core/intent_parser.py` | `POST /api/analyze` (Step 1) | 自然语言求职句子 `query` | `ParsedSearchIntent`（目标搜索 URL + 软性过滤条件） |
+| **Stage 4** | **两阶段反爬采集与初筛打分** | `core/boss_crawler.py` | `POST /api/analyze` (Step 2) | `ParsedSearchIntent` + `max_batches` + `top_detail_count` | 全量列表 `collected_jobs` + 含完整 JD 的 `top_candidates` + `.xlsx` |
+| **Stage 5** | **六维统计、人岗匹配评估与三层评测** | `core/gemini_analyzer.py` / `resume_eval_benchmark/` | `POST /api/analyze` (Step 3) & `/api/eval/*` | 全量岗位 + Top N 完整 JD + `resume_profile` | 六维 ECharts 看板 JSON + 人岗匹配诊断 + 三层评测报告 |
 
-### 4.2 设计细节 (Design Details)
+---
 
-#### 双阶段解耦多模态解析与策略生成架构图
+### 1.4 公共底层支撑：Gemini Interactions API 双通道自适应客户端 (`core/gemini_client.py`)
+
+Stage 1、Stage 2、Stage 3 与 Stage 5 均通过底层统一客户端 `create_interaction_with_fallback` 调用 Gemini 模型：
+1. **统一采用 `client.interactions.create(...)` 原生接口**：支持多模态输入块列表（`document` / `image` / `text`）与结构化 JSON Schema 约束输出（通过 `clean_json_schema` 自动递归展开 Pydantic `$defs` / `$ref` 嵌套引用）。
+2. **Vertex AI Global 免代理直连 + AI Studio 自动回退双通道**：
+   - 优先使用 GCP Vertex AI Global Endpoint (`location="global"`)，在企业网络或中国大陆环境下无需第三方代理即可低延迟直连；
+   - 自动兼容 AI Studio API Key 通道与本地代理端口探测，并内置模型候选回退链缓存 `_RESOLVED_MODEL_CACHE`（支持 `gemini-3.8-flash`、`gemini-3.5-flash-lite`、`gemini-3.1-pro`、`gemini-4-argon`）。
+
+<div style="page-break-after: always;"></div>
+
+---
+
+<a id="page-2-stage-1-简历安全读取与多模态画像解析"></a>
+
+## 【第 2 页 / 共 6 页】Stage 1：简历安全读取、多模态解析与结构化画像提取 (`core/resume_parser.py`)
+
+> **返回总览**：[第 1 页：全局设计逻辑与架构总览](#page-1-全局设计逻辑与架构总览) ｜ **下一阶段**：[第 3 页：Stage 2 多策略求职 Query 生成](#page-3-stage-2-基于画像的多策略求职-query-生成)
+
+### 2.1 Stage 1 设计目标与核心职责
+
+Stage 1 对应后端独立接口 `POST /api/resume/parse-profile` 与核心入口函数 `extract_resume_profile_with_gemini`。其核心任务是将用户上传的异构格式简历（PDF、Word、图片、Markdown/纯文本）**在纯内存中安全读取、校验、脱敏，并转化为零幻觉、高保真的 9 字段结构化候选人求职画像 (`CandidateProfileSchema`)**。
+
+---
+
+### 2.2 `resume_parser.py` 读取与解析高层设计流程 (High-Level Design Flow)
+
 ```mermaid
-flowchart TD
-    subgraph Stage1["Stage 1 独立服务: POST /api/resume/parse-profile (extract_resume_profile_with_gemini)"]
-        Input["已通过模块一安全校验的简历字节流 (raw_bytes)"] --> Switch{"按扩展名 ext 分流"}
-        Switch -->|".pdf"| DocBlock["封装 DocumentContent\n{type: 'document', mime_type: 'application/pdf'}"]
-        Switch -->|".png / .jpg / .webp"| ImgBlock["封装 ImageContent\n{type: 'image', mime_type: 'image/*'}"]
-        Switch -->|".docx / .txt / .md"| TxtBlock["安全提取纯文本并执行本地正则 PII 脱敏"]
-        DocBlock & ImgBlock & TxtBlock --> Call1["Model Call 1: Gemini 多模态事实抽取\n(Schema: CandidateProfileSchema, temperature=0.1)"]
-        Call1 --> MidLayer["Python 确定性校准中间层 (sanitize_and_normalize_profile)\n二次 PII 脱敏 + CITY_CODE_MAP 对齐 + 薪资格式规整"]
-    end
+flowchart LR
+    In(["📁 上传简历字节流\n(.pdf / .docx / 图片 / 文本)"])
+    Step1["🛡️ Step 1: 前置安全校验\n体积上限 · 格式白名单 · 文件头魔数"]
+    Step2{"🔀 Step 2: 多模态与文本分流"}
+    M_Doc["📑 PDF / 图片分支\n封装原生视觉与文档多模态块"]
+    M_Txt["📝 Word / 文本分支\n内存提取纯文本 + 前置隐私脱敏"]
+    Step3["🤖 Step 3: Gemini 事实抽取\n低温度收敛提取 9 维候选人画像"]
+    Step4["✨ Step 4: 后置校准与脱敏\n二次隐私掩码 · 城市与薪资标准化"]
+    Out(["✅ 标准化候选人画像\n(CandidateProfileSchema)"])
 
-    MidLayer -->|"先行返回前端渲染画像卡片"| UI_Stage1["前端 Stage 1 画像卡片即刻上屏\n+ 自动回填【意向城市 / 月薪底线 / 附加方向】微调栏"]
+    In --> Step1 --> Step2
+    Step2 -->|".pdf / .png / .jpg / .webp"| M_Doc
+    Step2 -->|".docx / .txt / .md"| M_Txt
+    M_Doc & M_Txt --> Step3 --> Step4 --> Out
 
-    subgraph Stage2["Stage 2 独立服务: POST /api/resume/generate-queries (generate_queries_from_profile_with_gemini)"]
-        UI_Stage1 -->|"自动触发 或 用户微调城市/底薪后点击重生成"| MergeOverride["合并用户微调覆盖项\n(target_city / salary_floor / custom_focus)"]
-        MergeOverride --> AnchorInject["Python 词库桥接 (_infer_boss_role_anchors)\n结合 DOMAIN_SYNONYMS 注入 BOSS直聘 高频标准岗位词锚点"]
-        AnchorInject --> Call2["Model Call 2: Gemini 纯文本轻量级策略生成\n(Schema: ResumeQueryGenerationLLMOutput, temperature=0.35)"]
-        Call2 -->|"极端网络异常"| Fallback2["build_queries_from_profile_fallback\n基于 Stage 1 真实画像动态构建 5 条零损耗策略 Query"]
-    end
+    classDef ioNode fill:#f8fafc,stroke:#475569,stroke-width:2px,color:#0f172a,font-weight:bold
+    classDef gateNode fill:#fef2f2,stroke:#ef4444,stroke-width:1.5px,color:#991b1b
+    classDef branchNode fill:#eff6ff,stroke:#3b82f6,stroke-width:1.5px,color:#1e3a8a
+    classDef aiNode fill:#faf5ff,stroke:#8b5cf6,stroke-width:2px,color:#4c1d95
+    classDef normNode fill:#f0fdf4,stroke:#10b981,stroke-width:1.5px,color:#065f46
+
+    class In,Out ioNode
+    class Step1 gateNode
+    class Step2,M_Doc,M_Txt branchNode
+    class Step3 aiNode
+    class Step4 normNode
 ```
 
-### 4.3 实现细节 (Implementation Details)
-
-#### (1) 双阶段独立函数与结构化 Schema 定义（[`core/resume_parser.py`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py)）
-- **阶段一独立函数 [`extract_resume_profile_with_gemini`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L462-L566)**：
-  - 输出 Schema 为 [`CandidateProfileSchema`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L48-L78)，包含 `candidate_title`、`years_of_experience`、`education_summary`、`target_cities`、`industry_background`、`core_skills`、`experience_highlights`、`inferred_salary_floor`、`inferred_welfare_prefs`。
-- **阶段二独立函数 [`generate_queries_from_profile_with_gemini`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L572-L689)**：
-  - 接收 `profile: Dict[str, Any]` 及可选微调参数 `target_city`、`salary_floor`、`welfare_prefs`、`custom_focus`；
-  - 输出 Schema 为 [`ResumeQueryGenerationLLMOutput`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L98-L103)，内含 5 条 [`RecommendedQueryItem`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L81-L95)（`strategy_tag`、`query_text`、`match_reason`）。
-- **向后兼容组合入口 [`parse_resume_with_gemini`](file:///Users/yafan/boss-zhipin-crawler/core/resume_parser.py#L695-L725)**：
-  - 内部串联调用 Stage 1 与 Stage 2，保障旧版单接口调用方无缝兼容。
+高层处理流程分为四个核心阶段：
+1. **Step 1 — 前置安全与魔数校验 (`validate_and_detect_resume_format`)**：在纯内存中拦截空文件、超限文件（`>10MB`）、非白名单扩展名以及扩展名与二进制文件头签名（Magic Bytes）不匹配的伪装文件。
+2. **Step 2 — 多模态与文本分流读取**：
+   - **视觉与排版敏感格式（`.pdf` 与图片）**：直接编码为 Base64 多模态内容块（`DocumentContent` / `ImageContent`），完整保留双栏、时间轴与图文混排结构；
+   - **文档与文本格式（`.docx` / `.txt` / `.md`）**：在内存中安全解析段落文本（防 Zip Bomb 与 XXE），并在送入模型前执行前置 PII 隐私脱敏。
+3. **Step 3 — Gemini 收敛型事实抽取 (`extract_resume_profile_with_gemini`)**：以 `temperature=0.1` 调用 Gemini Interactions API，严格按 `CandidateProfileSchema` 提取 9 个核心画像字段（若网络异常则自动切换本地启发式规则 `build_heuristic_profile_from_text` 兜底）。
+4. **Step 4 — Python 后置确定性校准 (`sanitize_and_normalize_profile`)**：对模型输出的全部字段执行二次 PII 掩码兜底、目标城市词库对齐（`_normalize_city_list`）及期望底薪格式统一（`_normalize_salary_floor`）。
 
 ---
 
-## 5. 模块三：自然语言求职意图解析与 BOSS直聘 URL 映射模块
+### 2.3 核心子模块关键设计细节
 
-### 5.1 设计思路 (Design Philosophy)
-1. **「硬性 URL 筛选参数」与「软性语义评估条件」双层解耦**：
-   用户在自然语言中输入的需求包含两类性质截然不同的条件：
-   - **硬性参数（Hard Filters）**：BOSS直聘搜索接口原生支持的 URL 参数，如城市代码 (`city=101280600`)、核心岗位词 (`query=区域运营经理`)、薪资档位代码 (`salary=405`)、经验代码 (`experience`)、学历代码 (`degree`)；
-   - **软性偏好（Soft Requirements）**：BOSS直聘 URL 无法直接过滤、必须靠爬虫抓取后通过文本分析与 Gemini 语义推理核验的条件，如 `周末双休` (`require_double_weekend=True`)、具体底薪数值 (`min_salary_k=12`)、行业近义词集合 (`industry_keywords`)、五险一金与年终奖 (`soft_requirements`)。
-2. **核心岗位词「去定语剥离 + 行业同义词扩展」策略**：
-   若用户输入 *“深圳的服装店面督导，月薪至少1w，周末要双休”*，如果把 `query` 直接设为 `"服装店面督导"`，BOSS直聘只会召回岗位标题字面带有“服装”二字的职位，导致大批标题叫 `"店面督导"` 或 `"零售督导"` 的知名服装企业（如优衣库、UR、歌力思等）被漏掉。
-   因此本模块专门设计了**核心词剥离机制**：将 `query` 提纯为 `"店面督导"`，同时将 `"服装"` 扩展为近义词组 `["服装", "服饰", "女装", "男装", "鞋服", "纺织", "时尚"]` 存入 `industry_keywords`，在模块四初筛打分与模块五匹配度评估中进行加权！
-3. **LLM 极速解析 + 本地确定性正则引擎双擎容灾**：
-   优先调用低延迟的 **Gemini 3.5 Flash Light (`gemini-3.5-flash-lite`)** 进行结构化拆解；同时内置毫秒级确定性正则解析器 [`fallback_parse_intent`](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py#L163-L251)，对 LLM 输出的编码合法性进行白名单兜底校验，即使离线或网络异常也能 100% 生成合法 URL。
+#### (1) 前置文件安全与 Magic Bytes 校验规则 (`validate_and_detect_resume_format`)
 
-### 5.2 设计细节 (Design Details)
+| 允许的扩展名 | 标准 MIME 类型 | 二进制文件头 Magic Bytes 强校验规则 | 典型拦截场景（对应评测集 `DISQ-*`） |
+| :--- | :--- | :--- | :--- |
+| `.pdf` | `application/pdf` | `raw_bytes.startswith(b"%PDF-")` | 拦截改名为 `.pdf` 的 JPEG 图片 (`DISQ-05`) 或 EXE 程序 (`DISQ-06`) |
+| `.png` | `image/png` | `raw_bytes.startswith(b"\x89PNG\r\n\x1a\n")` | 拦截伪造 PNG 文件头的非图像文件 |
+| `.jpg` / `.jpeg` | `image/jpeg` | `raw_bytes.startswith(b"\xff\xd8\xff")` | 拦截伪造 JPEG 扩展名的损坏或异构文件 |
+| `.webp` | `image/webp` | `len >= 12 and startswith(b"RIFF") and raw_bytes[8:12] == b"WEBP"` | 拦截非法 RIFF 容器文件 |
+| `.docx` | `application/vnd.openxmlformats...` | `raw_bytes.startswith(b"PK\x03\x04")` 且含 `word/document.xml` | 拦截旧版二进制 Word 97-2003 `.doc` (`DISQ-01`) 或普通 `.zip` (`DISQ-02`) |
+| `.txt` / `.md` | `text/plain` / `text/markdown` | 前 4096 字节不含二进制空字节 `b"\x00"` | 拦截二进制流伪装为文本文件 |
 
-#### BOSS直聘核心参数编码映射表（[`core/intent_parser.py`](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py#L17-L76)）
+#### (2) `.docx` 安全提取与防文本框重复机制 (`extract_text_from_docx`)
+- **防 Zip Bomb 与防 XXE**：在内存 `ZipFile(BytesIO)` 中校验所有条目未压缩总体积 `<= 20 MB`（`MAX_DOCX_UNCOMPRESSED_BYTES`），并检查 `word/document.xml` 前 2048 字节拒绝 `<!DOCTYPE` 与 `<!ENTITY`。
+- **消除绘图文本框嵌套与兼容块重复**：针对复杂中文 Word 简历模板中包含 `w:txbxContent`（绘图文本框）或 `mc:AlternateContent`（`mc:Choice` + `mc:Fallback`）的结构，自动跳过包含嵌套子 `<w:p>` 的外层容器节点，并通过 `seen_lines` 集合对叶子段落去重。
 
-| 参数维度 | 字典常量名 | 核心编码映射关系 |
+#### (3) 双端确定性 PII 隐私脱敏 (`mask_sensitive_pii`)
+在送入模型前与模型输出后，通过确定性正则掩码抹除 4 大类敏感隐私：
+1. **中国大陆 11 位手机号**（如 `138****0000`）；
+2. **18 位二代身份证号**（如 `420106********1234`）；
+3. **电子邮箱地址**（如 `h***@163.com`）；
+4. **详细家庭住址 / 学校校区 / 学生宿舍门牌地址**（覆盖显式地址标签、街道门牌号、小区/校区/宿舍楼栋室号，统一替换为 `[地址已脱敏]`）。
+
+#### (4) 9 字段结构化画像 Schema 与后置校准 (`CandidateProfileSchema` & `sanitize_and_normalize_profile`)
+
+| 字段名 | 类型 | 提取规则与 Python 后置校准 (`sanitize_and_normalize_profile`) |
 | :--- | :--- | :--- |
-| **城市 (`city`)** | [`CITY_CODE_MAP`](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py#L18-L40) | `深圳`: `101280600`, `广州`: `101280100`, `上海`: `101020100`, `北京`: `101010100`, `武汉`: `101200100`, `杭州`: `101210100`, `成都`: `101270100` 等 21 个主流城市 |
-| **薪资 (`salary`)** | [`SALARY_CODE_LABELS`](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py#L43-L51) | `402`: 3K以下, `403`: 3-5K, `404`: 5-10K, **`405`: 10-20K**（覆盖 1w~2w 区间）, `406`: 20-50K, `407`: 50K以上 |
-| **经验 (`experience`)** | [`EXPERIENCE_CODE_LABELS`](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py#L54-L64) | `101`: 经验不限, `103`: 1年以内, `104`: 1-3年, `105`: 3-5年, `106`: 5-10年, `107`: 10年以上 |
-| **学历 (`degree`)** | [`DEGREE_CODE_LABELS`](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py#L67-L76) | `202`: 大专, `203`: 本科, `204`: 硕士, `205`: 博士 |
+| `candidate_title` | `str` | 结合最近 1~2 份工作与求职意向提炼专业头衔 + 二次 PII 掩码 |
+| `years_of_experience` | `str` | 核算工作时间线总年限与核心资历（应届生标注实习经历）+ 二次 PII 掩码 |
+| `education_summary` | `str` | 最高学历 · 专业（院校名称），严禁包含校区街道或宿舍楼号 + 二次 PII 掩码 |
+| `target_cities` | `List[str]` | 经 `_normalize_city_list` 优先匹配 `CITY_CODE_MAP` 标准市名，剥离区县街道门牌，最多保留 3 个城市 |
+| `industry_background` | `List[str]` | 2~4 个过往从业细分行业标签 |
+| `core_skills` | `List[str]` | 4~8 个核心硬技能与业务管理能力标签 |
+| `experience_highlights` | `List[str]` | 2~4 条最具说服力的量化业绩或项目成果（严禁含任何 PII） |
+| `inferred_salary_floor` | `str` | 经 `_normalize_salary_floor` 统一将 `12000` / `12k` / `1.2万` 规整为 `"1.2w"` 格式 |
+| `inferred_welfare_prefs` | `List[str]` | 2~4 项建议争取的作息与福利条件（默认兜底 `["周末双休", "五险一金", "年终奖"]`） |
 
-### 5.3 实现细节 (Implementation Details)
-
-1. **薪资单位自适应换算与档位映射（[`fallback_parse_intent`](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py#L175-L195)）**：
-   - 正则 `r"(\d+(?:\.\d+)?)\s*[wW万]"` 捕获以“万/w”为单位的薪资并乘以 10 转换为 `K`（如 `1.2w` -> `min_salary_k = 12`）；
-   - 正则 `r"(\d+)\s*[kK千]"` 捕获以“千/k”为单位的薪资（如 `15k` -> `min_salary_k = 15`）；
-   - 当 `10 <= min_salary_k < 20` 时，自动映射 `salary_code = "405"` (`10-20K`)。
-2. **分句剥离提取纯净岗位词（[`fallback_parse_intent`](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py#L213-L226)）**：
-   - 按中英文标点 `[，,。；;！!]` 切分子句，取第一子句（如 `"深圳的区域运营经理岗位"`）；
-   - 依次剥离城市前缀（`"深圳的"`）、行业前缀、动词前缀 `r"^(找|想找|搜索|查询|招聘|的)+"` 以及名词后缀 `r"(岗位|职位|工作)+$"`，得到纯净核心词 `"区域运营经理"`。
-3. **目标 URL 构造器（[`ParsedSearchIntent.build_boss_url`](file:///Users/yafan/boss-zhipin-crawler/core/intent_parser.py#L147-L161)）**：
-   使用 `urllib.parse.urlencode` 对非空硬性参数进行标准 URL 编码，生成形如：
-   `https://www.zhipin.com/web/geek/jobs?query=%E5%8C%BA%E5%9F%9F%E8%BF%90%E8%90%A5%E7%BB%8F%E7%90%86&city=101280600&salary=405` 的标准搜索地址。
+<div style="page-break-after: always;"></div>
 
 ---
 
-## 6. 模块四：BOSS直聘两阶段反爬采集与候选岗位初筛打分模块
+<a id="page-3-stage-2-基于画像的多策略求职-query-生成"></a>
 
-### 6.1 设计思路 (Design Philosophy)
-BOSS直聘具有极其严格的反爬机制（`__zp_stoken__` 动态加密签名、`disable-devtool` 开发者工具检测、高频打开详情页触发滑块验证码甚至账号封禁）。为了在**绝对安全**的前提下兼顾**全量统计广度**与**完整 JD 深度**，模块四采用了三大核心设计：
-1. **Playwright CDP 接管本机真实 Chrome 会话 (`127.0.0.1:9222`)**：
-   不启动容易被指纹识别的 Headless 浏览器，而是通过 `p.chromium.connect_over_cdp("http://127.0.0.1:9222")` 连接到用户通过 `./start_chrome.sh` 启动并已登录的真实 Chrome 实例，天然复用真实 Cookie、浏览器指纹与 `__zp_stoken__` 环境。
-2. **路由层反调试剥离 + 网络层被动监听 JSON**：
-   通过 Playwright `page.route` 拦截 BOSS直聘前端脚本中的反调试死循环跳转代码；同时不依赖脆弱的 DOM CSS 选择器解析列表，而是直接通过 `page.on("response")` 监听后台接口 `/wapi/zpgeek/search/joblist.json` 的原生 JSON 数据包。
-3. **Stage 1（广度滚动采集）+ 初筛打分排序 + Stage 2（自定义 Top 3-20 详情页同源 `fetch` 补全）两阶段架构**：
-   - **Stage 1** 通过拟人化滚动列表页，快速采集 `5~30` 批（约 `75~450` 条）岗位的 14 项基础元数据，支撑全量六维统计；
-   - **初筛打分** 利用确定性多维评分函数 [`score_candidate_for_detail`](file:///Users/yafan/boss-zhipin-crawler/core/boss_crawler.py#L110-L165) 对所有采集到的岗位按匹配度排序；
-   - **Stage 2** 仅针对排名最高的 **Top N（用户在 UI 自定义 `3-20`，默认 `8`）** 个候选岗位，在页面上下文内发起同源 `fetch('/wapi/zpgeek/job/detail.json?...')` 拉取完整职位描述（`postDescription`）、详细办公地址与 HR 活跃度，并用完整 JD 二次刷新作息制度识别与初筛得分。
+## 【第 3 页 / 共 6 页】Stage 2：基于画像的多策略求职 Query 生成 (`core/query_generator.py`)
 
-### 6.2 设计细节 (Design Details)
+> **上一阶段**：[第 2 页：Stage 1 简历读取与画像解析](#page-2-stage-1-简历安全读取与多模态画像解析) ｜ **下一阶段**：[第 4 页：Stage 3 意图解析与 URL 映射](#page-4-stage-3-自然语言求职意图解析与-url-映射)
 
-#### 两阶段采集与初筛打分流程图
+### 3.1 Stage 2 设计目标与为什么独立解耦
+
+Stage 2 对应独立模块 `core/query_generator.py`、后端独立接口 `POST /api/resume/generate-queries` 与核心函数 `generate_queries_from_profile_with_gemini`（默认模型 `gemini-3.8-flash`，默认 `temperature=0.4`，默认输出 `10` 条求职 Query）。将 Stage 2 从 `core/resume_parser.py` 中独立出来的三大工程收益：
+1. **温度参数与认知模式分离**：Stage 1 (`core/resume_parser.py`) 需要 `temperature=0.1` 的严格事实收敛，而 Stage 2 (`core/query_generator.py`) 需要 `temperature=0.4` 的猎头级职业规划发散能力（推演精准对口、晋升冲刺、跨界拓展、细分垂直深耕等 10 条差异化路径）；
+2. **Python 词库锚点注入防生造词**：在 Stage 1 得到 `profile` 后，Python 中间层调用 `_infer_boss_role_anchors` 匹配 `BOSS_ROLE_SYNONYMS`，将 BOSS直聘 上真实高频存在的简洁岗位词注入 Stage 2 Prompt，防止模型生成带斜杠或无人搜索的生造长难词；
+3. **前端免重传秒级交互闭环**：用户在前端简历卡片上调整“意向城市”、“月薪底线”或输入“附加求职偏好”时，前端仅需向 `/api/resume/generate-queries` 发送轻量级 JSON（约 300 Tokens），即可秒级刷新 10 条推荐 Query，无需重新上传和解析简历文件。
+
+---
+
+### 3.2 Stage 2 处理流程与十维求职策略矩阵
+
 ```mermaid
-sequenceDiagram
-    participant Backend as app.py (Worker)
-    participant Crawler as core/boss_crawler.py
-    participant Chrome as Chrome (CDP :9222)
-    participant BossAPI as zhipin.com WAPI
+flowchart LR
+    P(["📄 Stage 1 标准化画像\n(profile)"])
+    Override["⚙️ 合并用户微调项\n城市 · 底薪 · 福利 · 附加方向"]
+    Anchor["⚓ Python 词库锚点桥接\n提取高频标准岗位词锚点"]
+    Gemini2["🤖 Gemini 策略生成\n(temp=0.4 · 10大求职维度)"]
+    FallbackQ["🛡️ 零损耗规则兜底\n(build_queries_from_profile_fallback)"]
+    Out(["🎯 10 条定制化求职 Query\n(含策略标签与匹配理由)"])
 
-    Backend->>Crawler: crawl_boss_two_stage(intent, max_batches, top_detail_count=3..20)
-    Crawler->>Chrome: connect_over_cdp("http://127.0.0.1:9222")
-    Crawler->>Chrome: 注册 page.route 拦截 static.zhipin.com/**/*.js (移除 this.seact())
-    Crawler->>Chrome: 注册 page.on("response") 监听 /wapi/zpgeek/search/joblist.json
-    Crawler->>Chrome: page.goto(intent.build_boss_url())
+    P --> Override --> Anchor --> Gemini2 --> Out
+    Gemini2 -.->|"网络异常时自动切换"| FallbackQ --> Out
 
-    loop Stage 1: 批量滚动加载 (1 .. max_batches)
-        Chrome->>BossAPI: 触发滚动加载请求 joblist.json
-        BossAPI-->>Crawler: 捕获 15 条岗位 JSON -> parse_api_job_item() + URL 去重
-        Crawler->>Chrome: 拟人化延时 1.8~2.8s + 回滚再触底滚动触发下一批
-    end
+    classDef ioNode fill:#f8fafc,stroke:#475569,stroke-width:2px,color:#0f172a,font-weight:bold
+    classDef midNode fill:#eff6ff,stroke:#3b82f6,stroke-width:1.5px,color:#1e3a8a
+    classDef aiNode fill:#faf5ff,stroke:#8b5cf6,stroke-width:2px,color:#4c1d95
+    classDef fbNode fill:#fefce8,stroke:#eab308,stroke-width:1.5px,color:#713f12
 
-    Crawler->>Crawler: 对全部岗位计算初筛分 score_candidate_for_detail(job, intent)
-    Crawler->>Crawler: 按初筛分降序排列，截取前 top_detail_count (3-20) 名候选岗位
-
-    loop Stage 2: Top N (3-20) 候选岗位详情补全
-        Crawler->>Chrome: page.evaluate(fetch('/wapi/zpgeek/job/detail.json?securityId=...&lid=...'))
-        Chrome->>BossAPI: 带 credentials:'include' 同源请求详情 JSON
-        BossAPI-->>Crawler: 提取 postDescription(完整JD) / address / activeTimeDesc
-        Crawler->>Crawler: detect_weekend_policy(福利+完整JD) 更新作息制度并重算初筛分
-        Crawler->>Crawler: 拟人化延时 0.9~1.4s
-    end
-
-    Crawler->>Crawler: export_jobs_to_excel() 生成 17 列格式化 .xlsx 文件
-    Crawler-->>Backend: 返回 (collected_jobs, top_candidates, excel_filename)
+    class P,Out ioNode
+    class Override,Anchor midNode
+    class Gemini2 aiNode
+    class FallbackQ fbNode
 ```
 
-### 6.3 实现细节 (Implementation Details)
+#### 十大差异化求职策略维度规范
 
-#### (1) 反调试脚本动态剥离（[`handle_js_route`](file:///Users/yafan/boss-zhipin-crawler/core/boss_crawler.py#L245-L258)）
-BOSS直聘静态脚本中包含检测 CDP 调试端口并执行 `this.seact()` 跳转空白页或报错页的逻辑。`handle_js_route` 拦截 `**/static.zhipin.com/**/*.js*`，将响应文本中的 `"this.seact(),"` 替换为 `"return;this.seact(),"` 后写回浏览器，彻底解除反调试限制。
+由于 BOSS直聘 上是先定位城市再进行搜索，每条生成的 `query_text` **不包含城市名称**，并将原福利要求替换为**目标行业赛道**，严格包含 **【① 目标行业/细分赛道 + ② BOSS直聘高频简洁单一岗位名（2~8字，严禁含 `/` 拼接）+ ③ 明确最低月薪底线】** 3 个核心要素，以便与下游 Stage 3 (`intent_parser.py`) 100% 无缝对接：
 
-#### (2) Stage 1 拟人化防卡死滚动算法（[`crawl_boss_two_stage`](file:///Users/yafan/boss-zhipin-crawler/core/boss_crawler.py#L297-L358)）
-单纯执行 `window.scrollTo(0, document.body.scrollHeight)` 在 BOSS直聘前端有时无法触发 IntersectionObserver 懒加载。实现中采用**「先向上微滚 `-400px` -> 150ms 后滚到底部 -> 调用最后一个 `.job-card-box` 的 `scrollIntoView({block: 'end'})` -> 派发 `page.mouse.wheel(0, 4500)` 鼠标滚轮事件」**组合动作，并配合 `1.8s ~ 2.8s` 随机抖动延时；若检测到 URL 跳转至 `security-check` 或 `verify`，立即通过 SSE 向前端推送滑块验证提醒。
+| 策略序号 | `strategy_tag` | 岗位方向定位 | 薪资梯度设计 | 典型生成示例 (`query_text`) |
+| :--- | :--- | :--- | :--- | :--- |
+| **策略 1** | `精准对口` | 最贴合候选人核心头衔与过往行业的同级高频岗位 | 基准月薪 (`base_salary`) | `"企业服务软件行业的Java开发工程师岗位，月薪至少1.2w"` |
+| **策略 2** | `晋升冲刺` | 结合管理经验或核心业绩亮点向上跃迁一级（主管/经理/架构） | 基准月薪上浮 `15%~30%` | `"连锁服装零售行业的区域运营经理岗位，月薪至少1.5w"` |
+| **策略 3** | `核心行业优选` | 聚焦候选人履历中最具竞争力的主航道行业标准岗位 | 稳健底薪，对口赛道 | `"互联网新媒体行业的新媒体运营岗位，月薪至少0.8w"` |
+| **策略 4** | `跨界拓展` | 利用候选人 `core_skills` 中的可迁移能力切入相邻高景气赛道 | 基准月薪 (`base_salary`) | `"消费电子与智能硬件行业的互联网产品运营主管，月薪至少1w"` |
+| **策略 5** | `高薪突破` | 面向高薪酬溢价行业或高壁垒资深业务统筹岗 | 基准月薪上浮 `25%~40%` | `"金融科技行业的数字营销项目经理岗位，月薪至少1.8w"` |
+| **策略 6** | `细分垂直深耕` | 围绕候选人最擅长的一项垂直专业技能或细分垂直行业场景 | 基准月薪 (`base_salary`) | `"MCN与短视频电商行业的短视频内容策划岗位，月薪至少0.9w"` |
+| **策略 7** | `头部名企/大厂` | 结合学历背景与代表性项目经历，匹配中大型企业主导行业标准岗 | 基准月薪上浮 `10%~20%` | `"大型跨国贸易与供应链企业的国际贸易专员岗位，月薪至少0.8w"` |
+| **策略 8** | `复合技能溢价` | 结合 2 项以上交叉技能（如“技术+项目管理”、“外语+跨境贸易”） | 基准月薪上浮 `15%~25%` | `"跨境电商出海行业的跨境电商运营主管岗位，月薪至少1.2w"` |
+| **策略 9** | `高成长潜力岗` | 面向新兴数字化、AI 应用、智能制造或高增长业务线潜力岗 | 基准月薪 (`base_salary`) | `"人工智能与大模型行业的AI应用研发工程师岗位，月薪至少1.2w"` |
+| **策略 10** | `稳健保底优选` | 在对口主流行业适当放宽起薪门槛以换取极高的面试邀约密度 | 基准月薪下调 `10%~15%` | `"信息化软件开发行业的软件开发工程师岗位，月薪至少0.7w"` |
 
-#### (3) 作息制度三级分类状态机（[`detect_weekend_policy`](file:///Users/yafan/boss-zhipin-crawler/core/boss_crawler.py#L50-L60)）
-按优先级扫描福利标签与完整 JD 文本：
-1. **周末双休**：命中 `["双休", "做五休二", "周末双休", "五天八小时", "5天8小时", "周六日休"]`；
-2. **大小周/单双休**：命中 `["大小周", "大小休", "隔周双休", "单双休"]`；
-3. **排班轮休/单休**：命中 `["月休6天", "月休8天", "月休4天", "排班", "轮休", "调休", "做六休一", "单休"]`；
-4. **未明确注明**：以上均未命中。
+<div style="page-break-after: always;"></div>
 
-#### (4) 候选岗位初筛打分数学公式（[`score_candidate_for_detail`](file:///Users/yafan/boss-zhipin-crawler/core/boss_crawler.py#L110-L165)）
-为确保 Stage 2 有限的详情页请求名额（`3-20` 个）分配给最优质的岗位，定义初筛分计算公式（基础分 `50.0` 分）：
+---
+
+<a id="page-4-stage-3-自然语言求职意图解析与-url-映射"></a>
+
+## 【第 4 页 / 共 6 页】Stage 3：自然语言求职意图解析与 URL 映射 (`core/intent_parser.py`)
+
+> **上一阶段**：[第 3 页：Stage 2 多策略求职 Query 生成](#page-3-stage-2-基于画像的多策略求职-query-生成) ｜ **下一阶段**：[第 5 页：Stage 4 两阶段反爬采集与初筛](#page-5-stage-4-boss直聘两阶段反爬采集与初筛打分)
+
+### 4.1 Stage 3 设计思路：硬性 URL 筛选与软性语义条件解耦
+
+当用户在前端点击 Stage 2 预生成的任意推荐 Query（或手动输入如 *“深圳的服装店面督导，月薪至少1w，周末要双休，五险一金齐全”*）并发起分析时，Stage 3（`parse_user_intent`）负责将其转化为结构化的 `ParsedSearchIntent` 对象：
+
+1. **为什么不能把整句话或“行业+岗位”直接塞进 BOSS直聘 搜索词 `query`？**
+   - 如果在 BOSS直聘 搜索 `query=服装店面督导`，搜索引擎只匹配职位名称字面包含“服装”二字的岗位，导致优衣库、UR、绫致时装等大批职位名称仅写 `"店面督导"` 或 `"零售督导"` 的知名服装品牌岗位被全部漏掉！
+   - 因此，Stage 3 专门执行**「核心岗位词去定语提纯 + 行业同义词组扩展」**：将 URL 搜索词 `query` 提纯为 `"店面督导"`（保障最大化召回），同时将 `"服装"` 结合内置词典 `DOMAIN_SYNONYMS` 扩展为 `industry_keywords = ["服装", "服饰", "女装", "男装", "鞋服", "时尚", "零售", "连锁"]`，交由 Stage 4 初筛打分器对公司行业、职位名与技能标签进行加权匹配。
+2. **硬性 URL 参数 vs 软性语义判据分离**：
+   - **硬性 URL 参数（由 `build_boss_url()` 编码进请求地址）**：`city_code`（如深圳 `101280600`）、纯净 `query`、薪资档位码 `salary_code`（如 `405` 对应 `10-20K`）、经验码 `experience_code`、学历码 `degree_code`；
+   - **软性语义判据（透传给 Stage 4 初筛与 Stage 5 深度评估）**：精确期望底薪数值 `min_salary_k`（如 `12` 代表 `12K`）、是否要求周末双休 `require_double_weekend`（布尔值）、行业近义词列表 `industry_keywords`、福利软性要求列表 `soft_requirements`。
+
+---
+
+### 4.2 Stage 3 解析流程与双擎容灾架构
+
+```mermaid
+flowchart LR
+    RawQ(["💬 自然语言求职句\n(Query)"])
+    LocalPre["⚙️ 本地正则预解析\n(fallback_parse_intent)"]
+    LLMParse["🤖 Gemini 意图拆解\n(SearchIntentLLMOutput)"]
+    Validate["🛡️ 编码白名单校验\n+ 行业同义词扩展"]
+    Out(["🧭 ParsedSearchIntent\n目标搜索 URL + 软性判据"])
+
+    RawQ --> LocalPre --> LLMParse --> Validate --> Out
+    LLMParse -.->|"超时或异常回退"| Validate
+
+    classDef ioNode fill:#f8fafc,stroke:#475569,stroke-width:2px,color:#0f172a,font-weight:bold
+    classDef regNode fill:#eff6ff,stroke:#3b82f6,stroke-width:1.5px,color:#1e3a8a
+    classDef aiNode fill:#faf5ff,stroke:#8b5cf6,stroke-width:2px,color:#4c1d95
+    classDef valNode fill:#f0fdf4,stroke:#10b981,stroke-width:1.5px,color:#065f46
+
+    class RawQ,Out ioNode
+    class LocalPre regNode
+    class LLMParse aiNode
+    class Validate valNode
+```
+
+---
+
+### 4.3 核心字典映射与正则提纯规则
+
+| 映射维度 | 字典常量 (`core/intent_parser.py`) | 关键编码与转换规则 |
+| :--- | :--- | :--- |
+| **21 城标准编码** | `CITY_CODE_MAP` | `深圳: 101280600`, `广州: 101280100`, `上海: 101020100`, `北京: 101010100`, `武汉: 101200100`, `成都: 101270100`, `杭州: 101210100` 等 |
+| **薪资档位映射** | `SALARY_CODE_LABELS` | 正则提取 `(\d+(?:\.\d+)?)\s*[wW万]` 乘以 10 转为 `K`；`<3K` $\rightarrow$ `402`，`3-5K` $\rightarrow$ `403`，`5-10K` $\rightarrow$ `404`，**`10-20K` $\rightarrow$ `405`**，`20-50K` $\rightarrow$ `406`，`50K+` $\rightarrow$ `407` |
+| **经验与学历编码** | `EXPERIENCE_CODE_LABELS` / `DEGREE_CODE_LABELS` | 经验：`101`(不限), `103`(1年以内), `104`(1-3年), `105`(3-5年), `106`(5-10年)；学历：`202`(大专), `203`(本科), `204`(硕士), `205`(博士) |
+| **行业同义词扩展** | `DOMAIN_SYNONYMS` | 内置 `服装`、`餐饮`、`美妆`、`数码`、`珠宝`、`商超`、`教育`、`医疗` 8 大高频零售与服务赛道近义词簇 |
+
+<div style="page-break-after: always;"></div>
+
+---
+
+<a id="page-5-stage-4-boss直聘两阶段反爬采集与初筛打分"></a>
+
+## 【第 5 页 / 共 6 页】Stage 4：BOSS直聘两阶段反爬采集与初筛打分 (`core/boss_crawler.py`)
+
+> **上一阶段**：[第 4 页：Stage 3 意图解析与 URL 映射](#page-4-stage-3-自然语言求职意图解析与-url-映射) ｜ **下一阶段**：[第 6 页：Stage 5 六维分析、看板与评测体系](#page-6-stage-5-六维统计人岗匹配评估与三层评测体系)
+
+### 5.1 Stage 4 设计思路：为什么采用「CDP 接管 + 两阶段采集」
+
+BOSS直聘具备极强的动态反爬机制（`__zp_stoken__` 环境指纹签名、`disable-devtool` 调试器检测、高频请求详情页触发滑块验证码）。Stage 4（`crawl_boss_two_stage`）通过三大机制实现稳定采集：
+1. **接管本机真实已登录 Chrome (`127.0.0.1:9222`)**：通过 `p.chromium.connect_over_cdp("http://127.0.0.1:9222")` 复用真实浏览器指纹、登录态 Cookie 与 `__zp_stoken__` 生成环境；
+2. **路由层反调试剥离 + 网络层被动监听 JSON**：通过 `page.route` 拦截 `**/static.zhipin.com/**/*.js*`，将反调试跳转函数 `"this.seact(),"` 动态替换为 `"return;this.seact(),"`；通过 `page.on("response")` 直接捕获后台 `/wapi/zpgeek/search/joblist.json` 响应包，避免脆弱的 DOM 解析；
+3. **Stage 4A（全量列表广度采集）+ 数学公式初筛 + Stage 4B（Top 3~20 详情页同源 `fetch` 深挖）**：
+   - **Stage 4A** 滚动加载 `5~30` 批列表（75~450 个岗位），提取 14 项基础字段用于全局六维统计；
+   - **初筛排序** 使用确定性评分公式计算每个岗位的初筛分；
+   - **Stage 4B** 仅对排名前 `top_detail_count`（用户在前端可自定义 `3~20`，默认 `8`）的候选岗位，在浏览器上下文内执行同源 `fetch('/wapi/zpgeek/job/detail.json?...')`，获取完整职位描述 (`postDescription`)、精确办公地址 (`address`) 与 HR 活跃状态 (`activeTimeDesc`)。
+
+```mermaid
+flowchart LR
+    Intent(["🧭 ParsedSearchIntent\n搜索 URL + 软性条件"])
+    S4A["🕸️ Stage 4A: 广度列表采集\nCDP 滚动监听 joblist.json (75~450条)"]
+    Score["📐 多维数学公式初筛\n(score_candidate_for_detail)"]
+    S4B["🔍 Stage 4B: Top N 详情深挖\n同源 fetch detail.json 补全完整 JD"]
+    Out(["📦 采集产物\n全量岗位 + Top N 候选岗 + Excel"])
+
+    Intent --> S4A --> Score --> S4B --> Out
+
+    classDef ioNode fill:#f8fafc,stroke:#475569,stroke-width:2px,color:#0f172a,font-weight:bold
+    classDef crawlNode fill:#eff6ff,stroke:#3b82f6,stroke-width:1.5px,color:#1e3a8a
+    classDef scoreNode fill:#f0fdf4,stroke:#10b981,stroke-width:1.5px,color:#065f46
+
+    class Intent,Out ioNode
+    class S4A,S4B crawlNode
+    class Score scoreNode
+```
+
+---
+
+### 5.2 候选岗位初筛打分数学模型 (`score_candidate_for_detail`)
+
+为确保宝贵的 Stage 4B 详情页请求名额分配给最匹配的岗位，定义初筛评分函数（基础分 `50.0` 分）：
 
 $$\text{Score} = 50.0 + S_{\text{title}} + S_{\text{industry}} + S_{\text{salary}} + S_{\text{weekend}} + S_{\text{scale}} + S_{\text{welfare}} + S_{\text{online}}$$
 
-各分项权重如下：
-- **核心岗位词匹配 ($S_{\text{title}}$)**：若 `intent.query` 出现在 `岗位名称` 中，`+18.0` 分；
-- **行业关键词匹配 ($S_{\text{industry}}$)**：统计 `岗位名称 + 所属行业 + 公司名称 + 技能标签 + 福利待遇` 中命中的 `intent.industry_keywords` 个数 $k$：若 $k \ge 1$，加 $\min(25.0, 12.0 + 4.0k)$ 分；若用户有行业要求但 $k = 0$，扣 `-10.0` 分；
-- **薪资达标度 ($S_{\text{salary}}$)**：当用户设定了期望底薪 $M = \text{intent.min\_salary\_k} > 0$ 时：
-  - 若岗位最低月薪 $\text{min\_k} \ge M$（底薪稳超期望）：`+12.0` 分；
-  - 若 $\text{min\_k} < M \le \text{max\_k}$（薪资上限覆盖期望）：`+5.0` 分；
-  - 若 $\text{max\_k} < M$（最高薪资仍不达标）：`-15.0` 分；
-- **双休偏好匹配 ($S_{\text{weekend}}$)**：当 `intent.require_double_weekend == True` 时：
-  - 若识别为 `"周末双休"`：`+15.0` 分；
-  - 若识别为 `"大小周/单双休"` 或 `"排班轮休/单休"`：`-8.0` 分；
-- **公司规模与福利加分 ($S_{\text{scale}} + S_{\text{welfare}} + S_{\text{online}}$)**：
-  - `500人以上` 大中型企业 `+6.0` 分，`100-499人` `+3.0` 分；
-  - 每项福利标签 `+0.8` 分（上限 `+5.0` 分）；
-  - HR 在线 (`BOSS在线 == True`) `+2.0` 分。
+| 评分因子 | 符号 | 计算逻辑与分值权重 | 设计目的 |
+| :--- | :--- | :--- | :--- |
+| **核心岗位词命中** | $S_{\text{title}}$ | 若 `intent.query` 出现在 `岗位名称` 中：**`+18.0` 分** | 优先召回职能直接对口的岗位 |
+| **行业同义词命中** | $S_{\text{industry}}$ | 统计 `岗位名+行业+公司名+技能+福利` 命中的 `industry_keywords` 词数 $k$：<br>• $k \ge 1$：**$+\min(25.0, 12.0 + 4.0k)$ 分**<br>• 用户有行业要求但 $k = 0$：**`-10.0` 分** | 找回标题未写行业词但所属公司/技能属于目标行业的知名品牌岗位 |
+| **薪资底线达标度** | $S_{\text{salary}}$ | 设用户期望底薪为 $M = \text{min\_salary\_k} > 0$：<br>• 岗位最低薪 $\text{min\_k} \ge M$（底薪稳超期望）：**`+12.0` 分**<br>• $\text{min\_k} < M \le \text{max\_k}$（上限覆盖期望）：**`+5.0` 分**<br>• $\text{max\_k} < M$（最高薪仍不达标）：**`-15.0` 分** | 拉开“底薪实打实达标”与“靠提成才摸到期望线”的差距 |
+| **作息双休匹配度** | $S_{\text{weekend}}$ | 当 `require_double_weekend=True` 时，经 `detect_weekend_policy` 判定：<br>• `"周末双休"`：**`+15.0` 分**<br>• `"大小周/单双休"` 或 `"排班轮休/单休"`：**`-8.0` 分** | 过滤门店排班单休岗（注：Stage 4B 拿到完整 JD 后会二次刷新该项得分） |
+| **企业规模与活跃度** | $S_{\text{scale}} + S_{\text{welfare}} + S_{\text{online}}$ | • `500人以上` 大中型企业 **`+6.0` 分**，`100-499人` **`+3.0` 分**<br>• 每项福利标签 **`+0.8` 分**（上限 `+5.0` 分）<br>• HR 在线 (`BOSS在线 == True`) **`+2.0` 分** | 优先推荐福利完善、正在积极招人的大中型规范企业 |
 
 ---
 
-## 7. 模块五：六维统计计算、人岗双向深度匹配评估与可视化看板模块
+### 5.3 作息制度三级状态机与 Excel 归档导出
 
-### 7.1 设计思路 (Design Philosophy)
-1. **「Python 确定性统计 + Gemini 深度语义推理」混合架构**：
-   - 大语言模型直接对几百条岗位做算术统计容易产生幻觉（如算错百分比或中位数）；
-   - 因此，全量样本的**六大维度基础图表数据与统计指标**（行业占比、薪资分桶、平均起薪/上限/中位数、13薪+占比、Top 15 技能频次、经验与学历分布、公司规模与融资分布、作息制度与福利频次）**100% 由 Python [`compute_six_dimension_stats`](file:///Users/yafan/boss-zhipin-crawler/core/gemini_analyzer.py#L87-L241) 精确计算**；
-   - 计算出的精确统计字典 + Stage 2 抓取的 **Top N（3-20）完整 JD** + **候选人真实简历画像 (`resume_profile`)** 一并注入 **Gemini 3.8 Flash / 3.1 Pro**，由模型生成专家级六维文字洞察、整体市场匹配度评分 (`0-100`) 以及对每个候选岗位的逐一打分点评。
-2. **人岗双向契合度评估（Resume-Aware Match Evaluation）**：
-   当用户上传了简历时，评估不再仅仅是“市场岗位是否符合搜索词”，而是升级为**「市场供给 ↔ 用户求职诉求 ↔ 候选人真实履历资历」三角契合度诊断**，在 `match_reason` 中直接指出候选人的哪段经历、哪项业绩与目标岗位 JD 高度吻合，以及哪些短板需要在面试中重点准备。
-3. **UI 自定义 Top 3-20 双向同步与零 XSS 安全渲染**：
-   用户在顶部配置栏或榜单右上角修改 `Top 候选岗 (3-20)` 时，已加载看板会**毫秒级动态切片重绘**对应数量的候选岗位卡片；发起新采集时则将 `top_detail_count` 透传至后端。前端所有 DOM 节点均使用 `document.createElement` + `textContent` 构建，严禁 `innerHTML`，彻底杜绝第三方招聘页面数据引发的 DOM XSS 攻击。
+- **作息制度识别状态机 (`detect_weekend_policy`)**：
+  联合扫描列表页 `福利待遇` 标签与详情页 `完整职责描述 (postDescription)`：
+  1. 命中 `["双休", "做五休二", "周末双休", "五天八小时", "5天8小时", "周六日休"]` $\rightarrow$ **`"周末双休"`**；
+  2. 命中 `["大小周", "大小休", "隔周双休", "单双休"]` $\rightarrow$ **`"大小周/单双休"`**；
+  3. 命中 `["月休6天", "月休8天", "月休4天", "排班", "轮休", "调休", "做六休一", "单休"]` $\rightarrow$ **`"排班轮休/单休"`**；
+  4. 均未命中 $\rightarrow$ **`"未明确注明"`**。
+- **17 列格式化 Excel 自动导出 (`export_jobs_to_excel`)**：
+  每次采集完成后自动按初筛匹配分降序排列，使用 `openpyxl` 导出带冻结首行、品牌青色表头与自适应列宽的 `.xlsx` 文件至 `output/` 目录。
 
-### 7.2 设计细节 (Design Details)
-
-#### 六大统计与可视化维度设计矩阵
-
-| 维度编号与名称 | Python 统计指标 ([`compute_six_dimension_stats`](file:///Users/yafan/boss-zhipin-crawler/core/gemini_analyzer.py#L87-L241)) | 前端 ECharts 图表形态 ([`static/app.js`](file:///Users/yafan/boss-zhipin-crawler/static/app.js#L218-L391)) | Gemini 深度洞察重点 |
-| :--- | :--- | :--- | :--- |
-| **01 所属行业分布** | Top 10 行业频次 `distribution`、命中用户行业关键词岗位数与占比 `matched_keyword_ratio` | 环形饼图 (`pie`, `radius: ["40%", "68%"]`) | 主流招聘行业构成、目标行业占比及跨界机会 |
-| **02 薪资水平分布** | 7 档月薪分桶（`<8K` 至 `30K+`，按月薪中值 `(min+max)/2` 归档）、平均起薪 `avg_min_k`、平均上限 `avg_max_k`、中位数 `median_mid_k`、13薪+占比 `bonus_months_ratio`、期望底薪达标率 `meet_expected_ratio` | 顶部 4 枚 KPI 胶囊 + 圆角柱状图 (`bar`) | 薪资区间结构、底薪与绩效比例、与期望月薪及简历资历契合度 |
-| **03 核心技能要求** | 拆分全部岗位 `技能标签` 统计 Top 15 高频技能词频 | 水平条形排名图 (`bar`, 倒序排列 Top 12) | 显性高频技能标签 + 详情页完整 JD 中的隐性能力要求 |
-| **04 经验与学历门槛** | `experience_dist`（经验要求分布）+ `degree_dist`（学历要求分布） | 左右双环形对比饼图 (`center: ["28%", "44%"]` & `["74%", "44%"]`) | 主流工作年限与学历准入门槛、候选人资历竞争优势评估 |
-| **05 公司品牌知名度** | `scale_dist`（规模分布）、`stage_dist`（融资阶段分布）、自动识别 `500人以上` 或 `已上市` 的头部知名企业列表 `notable_companies` | 顶部知名品牌标签云 + 左右双环形饼图（规模 + 融资） | 招聘企业规模结构、头部连锁品牌特点与背书价值 |
-| **06 福利待遇与作息** | `weekend_dist`（周末双休 / 大小周 / 排班轮休 / 未注明）+ Top 12 高频福利词频 `top_welfare` | 左饼图（作息制度占比）+ 右水平条形图（Top 8 高频福利）同画布联动 | 五险一金、补贴福利及双休 vs 门店排班轮休的真实占比分析 |
-
-### 7.3 实现细节 (Implementation Details)
-
-#### (1) 综合匹配度评分体系与降级兜底（[`analyze_jobs_with_gemini`](file:///Users/yafan/boss-zhipin-crawler/core/gemini_analyzer.py#L379-L580) & [`build_fallback_analysis`](file:///Users/yafan/boss-zhipin-crawler/core/gemini_analyzer.py#L244-L376)）
-- **Gemini 深度评估输出 ([`GeminiAnalysisLLMOutput`](file:///Users/yafan/boss-zhipin-crawler/core/gemini_analyzer.py#L43-L85))**：
-  - `overall_match_score` (`0-100`)：由仪表盘 (`gauge`) 直观展示（`<60` 琥珀色预警，`60-80` BOSS 青色良性匹配，`>80` 翠绿色高度契合）；
-  - `match_verdict`：一句话核心定性结论；
-  - `match_strengths` / `match_risks` / `actionable_advice`：三栏式对照诊断卡片；
-  - `job_evaluations`：对 `0 .. len(top_candidates)-1` 的每一个 Top 候选岗位输出 `match_score`、`match_reason`、`highlights`（2~4 个亮点标签）与 `risks`（1~3 个风险提示），后端合并后按 `match_score` 降序重排并赋予 `#1 .. #N` 排名。
-- **统计兜底引擎 (`build_fallback_analysis`)**：
-  当未配置凭证或网络中断时，系统不会崩溃，而是自动基于 Python 六维统计结果合成可读的中文洞察报告，并利用初筛得分映射生成候选岗位推荐卡片。
-
-#### (2) SSE 异步流式推送与并发互斥锁（[`analyze_endpoint`](file:///Users/yafan/boss-zhipin-crawler/app.py#L232-L373)）
-- **单实例浏览器保护锁 (`CRAWL_LOCK = asyncio.Lock()`)**：防止多个请求同时操控同一个 Chrome CDP 实例导致页面冲突；
-- **线程安全异步桥接**：由于 Playwright Sync API 在后台 `threading.Thread` 中运行，工作线程通过 `loop.call_soon_threadsafe(queue.put_nowait, format_sse(event_type, payload))` 将 `progress`、`intent`、`result`、`error` 四类事件实时推入主事件循环的 `asyncio.Queue`，由 FastAPI `StreamingResponse` (`text/event-stream`) 毫秒级推送至浏览器。
-
-#### (3) 前端自定义 Top 3-20 双向同步与快照预加载（[`static/app.js`](file:///Users/yafan/boss-zhipin-crawler/static/app.js#L55-L86)）
-- **边界钳制函数 [`clampTopCount`](file:///Users/yafan/boss-zhipin-crawler/static/app.js#L57-L61)**：将任意输入值强制取整并限制在 `[3, 20]` 闭区间内（非法输入默认归为 `8`）；
-- **双向同步与动态切片函数 [`syncTopCountUI`](file:///Users/yafan/boss-zhipin-crawler/static/app.js#L63-L86)**：
-  监听顶部 `#top-count-input` 与榜单区 `#top-count-inline-input` 的 `input` 和 `change` 事件，同步更新两处输入框数值、动态修改榜单标题（`Top N 候选岗位深度匹配榜`）、仪表盘说明文字（`Top N`）及顶部元数据徽章，并从 `currentDashboardPayload.report.recommended_jobs` 中切片前 `N` 条立即调用 `renderRecommendedJobs(shownList)` 重绘卡片；
-- **首屏快照秒开 ([`loadInitialSnapshot`](file:///Users/yafan/boss-zhipin-crawler/static/app.js#L941-L966))**：
-  页面打开时自动请求 `GET /api/latest-snapshot`（读取 [latest_test_snapshot.json](file:///Users/yafan/boss-zhipin-crawler/output/latest_test_snapshot.json)），无需等待爬虫即可直接展示最新一次简历解析结果、5 条推荐 Query、六维 ECharts 图表及 Top 20 候选岗位池。
+<div style="page-break-after: always;"></div>
 
 ---
 
-## 8. 全链路接口契约与安全编码规范汇总
+<a id="page-6-stage-5-六维统计人岗匹配评估与三层评测体系"></a>
 
-### 8.1 后端 REST & SSE 接口一览（[app.py](file:///Users/yafan/boss-zhipin-crawler/app.py)）
+## 【第 6 页 / 共 6 页】Stage 5：六维统计计算、人岗双向评估与三层评测体系 (`core/gemini_analyzer.py` & `resume_eval_benchmark/`)
 
-| HTTP 方法与路径 | 请求参数 / 请求体 | 响应类型 | 功能说明 |
-| :--- | :--- | :--- | :--- |
-| `GET /` | 无 | `text/html` (`no-store`) | 返回单页应用主页 [static/index.html](file:///Users/yafan/boss-zhipin-crawler/static/index.html) |
-| `GET /api/status` | 无 | `application/json` | 返回后端 AI 凭证就绪布尔值与支持的四大 Gemini 模型列表（不暴露任何密钥） |
-| `GET /api/latest-snapshot` | 无 | `application/json` | 返回最近一次简历解析与六维分析快照（含 Top 20 候选岗位池） |
-| `POST /api/resume/parse-profile` | JSON (`filename`, `content_base64`, `model`) 或 `multipart/form-data` | `application/json` | **【Stage 1 独立服务】** 执行五层安全校验与 Gemini 多模态简历深度理解 (`temp=0.1`)，即刻返回标准化脱敏画像 `profile` |
-| `POST /api/resume/generate-queries` | [`GenerateQueriesRequest`](file:///Users/yafan/boss-zhipin-crawler/app.py#L131-L157) (`profile`, `target_city`, `salary_floor`, `welfare_prefs`, `custom_focus`, `model`) | `application/json` | **【Stage 2 独立服务】** 基于结构化画像（及用户微调偏好）注入 BOSS直聘 词库锚点，调用 Gemini (`temp=0.35`) 秒级生成 5 条求职 Query（无需重传简历） |
-| `POST /api/resume/parse` | JSON (`filename`, `content_base64`, `model`) 或 `multipart/form-data` | `application/json` | **【组合兼容接口】** 内部串联执行 Stage 1 + Stage 2，返回完整 `profile` + `recommended_queries` |
-| `POST /api/analyze` | [`AnalyzeRequest`](file:///Users/yafan/boss-zhipin-crawler/app.py#L110-L124) (`query`, `model`, `max_batches`, `top_detail_count: 3..20`, `resume_profile`) | `text/event-stream` (SSE) | 实时流式执行：意图解析 -> 两阶段爬虫采集 -> Gemini 六维分析与人岗匹配评估 |
-| `GET /api/download/{filename}` | 路径参数 `filename` (仅限 `.xlsx`) | `application/vnd.openxmlformats...` | 严格校验路径边界 (`resolve()` 前缀比对) 后安全下载导出的 Excel 岗位明细表 |
+> **上一阶段**：[第 5 页：Stage 4 两阶段反爬采集与初筛](#page-5-stage-4-boss直聘两阶段反爬采集与初筛打分) ｜ **返回总览**：[第 1 页：全局设计逻辑与架构总览](#page-1-全局设计逻辑与架构总览)
 
-### 8.2 安全与质量保障清单
-- **零前端密钥暴露**：移除所有前端 API Key 输入框与 `localStorage` 存储，密钥完全收敛至服务端；
-- **零 DOM XSS 漏洞**：前端 [static/app.js](file:///Users/yafan/boss-zhipin-crawler/static/app.js) 100% 采用 `document.createElement`、`textContent`、`replaceChildren` 渲染数据，并对岗位详情跳转链接强制校验 `job_url.startsWith("https://www.zhipin.com/")` 及添加 `rel="noopener noreferrer"`；
-- **零任意文件读写/路径穿越**：上传简历纯内存解析不落盘；Excel 下载接口 [`download_excel`](file:///Users/yafan/boss-zhipin-crawler/app.py#L383-L399) 使用 `os.path.basename` + `.endswith(".xlsx")` + `Path.resolve()` 目录前缀强校验。
+### 6.1 Python 六维确定性统计 + Gemini 人岗双向深度评估 (`core/gemini_analyzer.py`)
+
+Stage 5 采用**「Python 算术统计零误差 + Gemini 语义推理深洞察」**的分工架构：
+
+| 维度编号 | 维度名称 | Python 确定性统计函数 (`compute_six_dimension_stats`) | 前端 ECharts 图表形态 (`static/app.js`) | Gemini 结合简历画像的深度分析重点 |
+| :--- | :--- | :--- | :--- | :--- |
+| **维度 01** | **所属行业分布** | Top 10 行业频次 `distribution` + 命中目标行业词占比 `matched_keyword_ratio` | 环形饼图 (`pie`) | 盘点主流招聘行业构成、跨界机会及与候选人过往行业背景契合度 |
+| **维度 02** | **薪资水平分布** | 7 档月薪分桶（`<8K` ~ `30K+`）、平均起薪 `avg_min_k`、平均上限 `avg_max_k`、中位数 `median_mid_k`、13薪+占比、期望底薪达标率 `meet_expected_ratio` | 4 枚 KPI 胶囊 + 圆角柱状图 (`bar`) | 评估候选人期望月薪在当前市场的真实分位值，拆解底薪与绩效提成结构 |
+| **维度 03** | **核心技能要求** | 拆分全部岗位技能标签统计 Top 15 高频词频 | 水平条形排名图 (`bar`) | 对比市场 Top 12 硬技能 + Top N 完整 JD 隐性要求与候选人 `core_skills` 的重合与缺口 |
+| **维度 04** | **经验与学历门槛** | `experience_dist`（经验分布）+ `degree_dist`（学历分布） | 左右双环形对比饼图 (`pie`) | 评估候选人真实学历与工作年限在目标市场中的竞争身位 |
+| **维度 05** | **公司品牌与规模** | `scale_dist`、`stage_dist` + 自动提炼 `500人以上`/`已上市` 知名企业列表 `notable_companies` | 知名品牌标签云 + 双环形饼图 | 点名盘点在招头部连锁/上市企业，区分品牌直招与代招机构 |
+| **维度 06** | **福利待遇与作息** | `weekend_dist`（双休/大小周/排班/未注明）+ Top 12 高频福利词频 `top_welfare` | 左作息饼图 + 右福利水平条形图 | 结合详情页完整 JD 核查真实双休占比、五险一金与年终奖兑现度 |
+
+- **人岗双向契合度评分 (`analyze_jobs_with_gemini`)**：
+  当用户在 Stage 1 上传过简历时，后端将脱敏后的 `resume_profile` 注入 Stage 5 Prompt，使模型输出的 `overall_match_score` (`0-100`)、三栏诊断（核心优势 / 潜在风险 / 行动建议）以及 **Top 3~20 候选岗位逐一测评卡片 (`job_evaluations`)** 均直接引用候选人的真实年限、技能与量化业绩进行定制化点评。
+
+---
+
+### 6.2 In-House 三层自动化评测工作台 (`resume_eval_benchmark/`)
+
+为持续度量并保障各阶段质量，系统内置了完整的 **三层评测基准与前端可视化评测面板 (`#eval-workspace-section`)**：
+
+```mermaid
+flowchart LR
+    L1["🧪 Layer 1: 阶段一简历画像评测\n9份合格简历 (QUAL-01~09) + 9份异常样本 (DISQ-01~09)\nLLM-as-a-Judge 9字段评分 · 零幻觉 · 零PII泄露"]
+    L2["🎯 Layer 2: 阶段二策略 Query 评测\n5大策略覆盖率 · 四要素语法完备率\n下游 intent_parser 100% 可解析率"]
+    L3["🔗 Layer 3: 端到端全链路健康度\n城市一致性 · 薪资底线达标率\n双休核验准确率 · 人岗评分区分度"]
+
+    L1 ==> L2 ==> L3
+
+    classDef l1Node fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,color:#1e3a8a
+    classDef l2Node fill:#f0fdf4,stroke:#10b981,stroke-width:2px,color:#065f46
+    classDef l3Node fill:#faf5ff,stroke:#8b5cf6,stroke-width:2px,color:#4c1d95
+
+    class L1 l1Node
+    class L2 l2Node
+    class L3 l3Node
+```
+
+1. **黄金基准数据集（Golden Benchmark Dataset）**：
+   - **合格简历集 (`qualified_manifest.json`)**：包含 `QUAL-01` ~ `QUAL-09` 共 9 份跨格式真实简历（4 份 PDF、2 份 DOCX、2 份 JPG 视觉简历、1 份 Markdown 简历，其中 `QUAL-04.pdf` 与 `QUAL-09.md` 为同一候选人跨格式一致性对照样本），每份均标注了 9 个字段的 Ground Truth 与 `raw_pii_tokens` 隐私红线词。
+   - **不合格防御集 (`disqualified_manifest.json`)**：包含 `DISQ-01` ~ `DISQ-09` 共 9 份异常样本，覆盖 5 大安全与语义拒识维度（`UNSUPPORTED_EXTENSION`、`FILE_TOO_LARGE`、`EMPTY_FILE`、`INVALID_MAGIC_BYTES`、`NOT_A_RESUME`、`PROMPT_INJECTION_DETECTED`）。
+2. **原子级 LLM-as-a-Judge 评分引擎 (`llm_judge_evaluator.py`)**：
+   - 对合格简历的 9 个输出字段逐一与 `ground_truth` 及 `raw_resume_text` 对比，输出 `0~10` 分（支持 `gemini` 裁判模式与 `offline_heuristic` 确定性离线裁判模式），并严格核查 `entity_and_number_match`（学校/公司/量化指标无篡改）与 `zero_hallucination`（零无中生有）。
+3. **前端一键触发与历史归档看板（`/api/eval/overview` & `/api/eval/run`）**：
+   - 支持在 Web 界面直接切换查看 Stage 1 / Stage 2 / E2E 三层评测报告、雷达图、格式分桶得分、9×9 字段热力矩阵与 9 类不合格样本拦截明细表。
