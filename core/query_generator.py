@@ -24,11 +24,12 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from core.gemini_client import create_interaction_with_fallback
-from core.intent_parser import CITY_CODE_MAP
+from core.intent_parser import CITY_CODE_MAP, resolve_boss_city
 from core.resume_parser import (
     CandidateProfileSchema,
     _normalize_city_list,
     _normalize_salary_floor,
+    apply_boss_target_city_to_profile,
     mask_sensitive_pii,
     sanitize_and_normalize_profile,
 )
@@ -88,10 +89,18 @@ class RecommendedQueryItem(BaseModel):
             "'跨界拓展'、'高薪突破'、'细分垂直深耕'、'头部名企/大厂'、'复合技能溢价'、'高成长潜力岗'、'稳健保底优选'"
         )
     )
+    target_city: str = Field(
+        default="",
+        description="与 BOSS直聘 1:1 映射的目标城市标准名（由用户在 UI 选择并经 Stage 1 传入，如 '深圳'、'武汉'、'上海'）",
+    )
+    target_city_code: str = Field(
+        default="",
+        description="对应的 BOSS直聘 官方城市编码（如 '101280600'）",
+    )
     query_text: str = Field(
         description=(
             "预生成的自然语言求职查询句，必须写成流畅的一句话自然语言，严格包含【目标行业 + 单一标准核心岗位名称 + 月薪底线】三要素，"
-            "严禁包含具体城市名称（BOSS直聘先定位城市再搜索），也不要包含双休/五险一金等福利词；"
+            "严禁包含具体城市名称（BOSS直聘先定位城市再搜索，城市已独立放在 target_city 字段），也不要包含双休/五险一金等福利词；"
             "例如：'连锁服装零售行业的区域运营经理岗位，月薪至少1.2w' 或 '互联网新媒体行业的新媒体运营岗位，月薪至少0.8w'"
         )
     )
@@ -134,8 +143,10 @@ def _strip_city_and_welfare_from_query(raw_query: str) -> str:
 def _sanitize_queries_list(
     queries: List[RecommendedQueryItem],
     max_count: int = DEFAULT_QUERY_COUNT,
+    target_city: str = "深圳",
+    target_city_code: str = "101280600",
 ) -> List[Dict[str, str]]:
-    """对阶段二生成的推荐 Query 列表进行脱敏、去城市与福利词、去重与数量规整"""
+    """对阶段二生成的推荐 Query 列表进行脱敏、去城市与福利词、确定性绑定 BOSS直聘 城市编码、去重与数量规整"""
     cleaned_queries: List[Dict[str, str]] = []
     seen_texts = set()
     for item in queries or []:
@@ -146,6 +157,8 @@ def _sanitize_queries_list(
         cleaned_queries.append(
             {
                 "strategy_tag": mask_sensitive_pii((item.strategy_tag or "智能推荐").strip()),
+                "target_city": target_city,
+                "target_city_code": target_city_code,
                 "query_text": q_text,
                 "match_reason": mask_sensitive_pii((item.match_reason or "").strip()),
             }
@@ -250,54 +263,81 @@ def build_queries_from_profile_fallback(
     steady_salary = f"{max(0.4, round(base_val * 0.9, 1))}w"
     safe_salary = f"{max(0.4, round(base_val * 0.85, 1))}w"
 
+    resolved_city, resolved_city_code = resolve_boss_city(
+        str(
+            profile_dict.get("target_city")
+            or (profile_dict.get("target_cities") or ["深圳"])[0]
+        ),
+        strict=False,
+    )
     fallback_templates = [
         {
             "strategy_tag": "精准对口",
+            "target_city": resolved_city,
+            "target_city_code": resolved_city_code,
             "query_text": f"{primary_ind}行业的{anchors[0]}岗位，月薪至少{salary_floor}",
             "match_reason": f"高度契合您【{years_desc}】的履历背景与【{skills_desc}】核心能力，行业与岗位对口度最高。",
         },
         {
             "strategy_tag": "晋升冲刺",
+            "target_city": resolved_city,
+            "target_city_code": resolved_city_code,
             "query_text": f"{primary_ind}行业的{anchors[1]}岗位，月薪至少{up_salary_20}",
             "match_reason": f"依托您在过往经历中的项目统筹与量化业绩亮点，在【{primary_ind}】赛道向上冲刺高一职级的【{anchors[1]}】，争取 {up_salary_20}+ 薪酬包。",
         },
         {
             "strategy_tag": "核心行业优选",
+            "target_city": resolved_city,
+            "target_city_code": resolved_city_code,
             "query_text": f"{secondary_ind}行业的{anchors[2]}岗位，月薪至少{steady_salary}",
             "match_reason": f"聚焦您熟悉的【{secondary_ind}】成熟赛道标准岗位，兼顾业务契合度与稳健薪酬回报。",
         },
         {
             "strategy_tag": "跨界拓展",
+            "target_city": resolved_city,
+            "target_city_code": resolved_city_code,
             "query_text": f"{cross_ind}行业的{anchors[3]}岗位，月薪至少{salary_floor}",
             "match_reason": f"发挥您在【{skills_desc}】上的跨行业可迁移能力，切入高景气度的【{cross_ind}】相邻赛道。",
         },
         {
             "strategy_tag": "高薪突破",
+            "target_city": resolved_city,
+            "target_city_code": resolved_city_code,
             "query_text": f"{primary_ind}行业的{anchors[4]}岗位，月薪至少{up_salary_35}",
             "match_reason": "面向高绩效回报的核心业务骨干岗位，充分释放您的核心技术与业务增长经验。",
         },
         {
             "strategy_tag": "细分垂直深耕",
+            "target_city": resolved_city,
+            "target_city_code": resolved_city_code,
             "query_text": f"{primary_ind}细分领域的{anchors[5]}岗位，月薪至少{salary_floor}",
             "match_reason": f"紧密围绕您熟悉的【{primary_ind}】垂直场景与【{skills_desc}】专项技能深耕，凸显专业壁垒。",
         },
         {
             "strategy_tag": "头部名企/大厂",
+            "target_city": resolved_city,
+            "target_city_code": resolved_city_code,
             "query_text": f"大型{primary_ind}企业的{anchors[6]}岗位，月薪至少{up_salary_15}",
             "match_reason": f"结合您的【{edu_desc}】背景与规范化项目经历，重点锁定行业头部知名企业的标准编制岗位。",
         },
         {
             "strategy_tag": "复合技能溢价",
+            "target_city": resolved_city,
+            "target_city_code": resolved_city_code,
             "query_text": f"{secondary_ind}行业的{anchors[7]}岗位，月薪至少{up_salary_15}",
             "match_reason": f"融合【{skills_desc}】等多维复合能力，在交叉型岗位上获取更高的薪酬溢价空间。",
         },
         {
             "strategy_tag": "高成长潜力岗",
+            "target_city": resolved_city,
+            "target_city_code": resolved_city_code,
             "query_text": f"新兴{cross_ind}行业的{anchors[8]}岗位，月薪至少{salary_floor}",
             "match_reason": "瞄准处于快速扩张期的新兴业务板块，兼具合理的起薪保障与清晰的职业晋升通道。",
         },
         {
             "strategy_tag": "稳健保底优选",
+            "target_city": resolved_city,
+            "target_city_code": resolved_city_code,
             "query_text": f"{primary_ind}行业的{anchors[9]}岗位，月薪至少{safe_salary}",
             "match_reason": "在最对口的主流行业适当放宽起薪门槛，换取极高的简历初筛通过率与面试邀约率。",
         },
@@ -343,10 +383,18 @@ def generate_queries_from_profile_with_gemini(
     )
     effective_profile = sanitize_and_normalize_profile(prof_obj)
 
-    # 应用用户在 UI 或接口层传入的实时微调覆盖项
-    if target_city and target_city.strip():
-        overridden_cities = _normalize_city_list(re.split(r"[/,，、\s]+", target_city.strip()))
-        effective_profile["target_cities"] = overridden_cities
+    # 确定性解析并 1:1 映射 BOSS直聘 意向城市：优先取调用方/UI 显式传入的 target_city，其次取 Stage 1 JSON 中的 target_city / target_cities
+    explicit_city_input = (target_city or "").strip() or str(profile.get("target_city") or "").strip()
+    if explicit_city_input:
+        effective_profile = apply_boss_target_city_to_profile(
+            effective_profile,
+            target_city=explicit_city_input,
+        )
+    else:
+        effective_profile = apply_boss_target_city_to_profile(effective_profile, target_city=None)
+
+    resolved_city = effective_profile["target_city"]
+    resolved_city_code = effective_profile["target_city_code"]
 
     if salary_floor and salary_floor.strip():
         effective_profile["inferred_salary_floor"] = _normalize_salary_floor(salary_floor.strip())
@@ -421,6 +469,8 @@ def generate_queries_from_profile_with_gemini(
         cleaned_queries = _sanitize_queries_list(
             parsed_out.recommended_queries,
             max_count=effective_query_count,
+            target_city=resolved_city,
+            target_city_code=resolved_city_code,
         )
         # 若模型返回的条数不足 effective_query_count，则用 fallback 补齐至 effective_query_count 条
         if len(cleaned_queries) < effective_query_count:
@@ -440,6 +490,9 @@ def generate_queries_from_profile_with_gemini(
             "model_used": model_name,
             "temperature_used": temperature,
             "query_count": len(cleaned_queries),
+            "target_city": resolved_city,
+            "target_city_code": resolved_city_code,
+            "target_cities": effective_profile["target_cities"],
             "profile": effective_profile,
             "recommended_queries": cleaned_queries,
         }
@@ -453,6 +506,9 @@ def generate_queries_from_profile_with_gemini(
             "model_used": f"{model_name} (Query-Fallback)",
             "temperature_used": temperature,
             "query_count": len(fallback_queries),
+            "target_city": resolved_city,
+            "target_city_code": resolved_city_code,
+            "target_cities": effective_profile["target_cities"],
             "profile": effective_profile,
             "recommended_queries": fallback_queries,
         }

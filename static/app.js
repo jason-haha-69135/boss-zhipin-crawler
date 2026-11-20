@@ -39,6 +39,7 @@
 
   // Step 0: 简历上传与智能 Query 推荐 DOM 引用
   const resumeDropzone = document.getElementById("resume-dropzone");
+  const resumeTargetCitySelect = document.getElementById("resume-target-city-select");
   const resumeFileInput = document.getElementById("resume-file-input");
   const resumeUploadBtn = document.getElementById("resume-upload-btn");
   const resumeClearBtn = document.getElementById("resume-clear-btn");
@@ -54,6 +55,60 @@
   const profileSalaryOverride = document.getElementById("profile-salary-override");
   const profileFocusOverride = document.getElementById("profile-focus-override");
   const regenerateQueriesBtn = document.getElementById("regenerate-queries-btn");
+
+  // BOSS直聘 1:1 官方城市映射表 (city_name -> city_code)
+  const bossCitiesMap = new Map();
+
+  function populateBossCitySelectors(citiesList) {
+    const list = Array.isArray(citiesList) ? citiesList : [];
+    bossCitiesMap.clear();
+    list.forEach((c) => {
+      if (c && c.name && c.code) {
+        bossCitiesMap.set(c.name, c.code);
+      }
+    });
+
+    [resumeTargetCitySelect, profileCityOverride].forEach((sel, idx) => {
+      if (!sel) return;
+      const prevVal = sel.value;
+      const placeholderOpt = document.createElement("option");
+      placeholderOpt.value = "";
+      placeholderOpt.textContent = idx === 0 ? "请先选择意向城市" : "请选择城市";
+      const opts = [placeholderOpt];
+      list.forEach((c) => {
+        if (!c || !c.name) return;
+        const opt = document.createElement("option");
+        opt.value = c.name;
+        opt.textContent = c.name;
+        opts.push(opt);
+      });
+      sel.replaceChildren(...opts);
+      if (prevVal && bossCitiesMap.has(prevVal)) {
+        sel.value = prevVal;
+      }
+    });
+  }
+
+  function syncTargetCitySelectors(cityName) {
+    const cleanCity = (cityName || "").trim().replace(/市$/, "");
+    if (!cleanCity || !bossCitiesMap.has(cleanCity)) return;
+    if (resumeTargetCitySelect) resumeTargetCitySelect.value = cleanCity;
+    if (profileCityOverride) profileCityOverride.value = cleanCity;
+  }
+
+  function ensureTargetCitySelectedForUpload() {
+    const selectedCity = resumeTargetCitySelect ? resumeTargetCitySelect.value.trim() : "";
+    if (!selectedCity) {
+      showError("上传简历前，请先选择与 BOSS直聘 对应的「意向城市」。");
+      if (resumeTargetCitySelect) {
+        resumeTargetCitySelect.focus();
+        resumeTargetCitySelect.classList.add("input-attention");
+        setTimeout(() => resumeTargetCitySelect.classList.remove("input-attention"), 1800);
+      }
+      return "";
+    }
+    return selectedCity;
+  }
 
   // 当前会话已解析的脱敏简历画像（用于透传给 /api/analyze 进行人岗契合度深度诊断）
   let currentResumeProfile = null;
@@ -670,9 +725,12 @@
     renderStringList(resumeHighlightsList, prof.experience_highlights);
 
     if (populateOverrideInputs) {
-      if (profileCityOverride) {
-        const cities = Array.isArray(prof.target_cities) ? prof.target_cities : [];
-        profileCityOverride.value = cities[0] || "深圳";
+      const resolvedCity =
+        prof.target_city ||
+        (Array.isArray(prof.target_cities) && prof.target_cities[0]) ||
+        (resumeTargetCitySelect ? resumeTargetCitySelect.value : "");
+      if (resolvedCity) {
+        syncTargetCitySelectors(resolvedCity);
       }
       if (profileSalaryOverride) {
         profileSalaryOverride.value = prof.inferred_salary_floor || "1.2w";
@@ -709,11 +767,22 @@
       tagSpan.className = getStrategyTagClass(item.strategy_tag);
       tagSpan.textContent = item.strategy_tag || `推荐方案 ${idx + 1}`;
 
+      const leftGroup = document.createElement("div");
+      leftGroup.className = "resume-query-card-badges";
+      leftGroup.appendChild(tagSpan);
+
+      if (item.target_city) {
+        const citySpan = document.createElement("span");
+        citySpan.className = "resume-city-pill";
+        citySpan.textContent = item.target_city;
+        leftGroup.appendChild(citySpan);
+      }
+
       const hintSpan = document.createElement("span");
       hintSpan.className = "use-query-hint";
       hintSpan.textContent = idx === 0 ? "✓ 已填入搜索框" : "点击选用此 Query";
 
-      topRow.appendChild(tagSpan);
+      topRow.appendChild(leftGroup);
       topRow.appendChild(hintSpan);
 
       const queryTextDiv = document.createElement("div");
@@ -815,6 +884,9 @@
     if (!file) return;
     showError("");
 
+    const selectedCity = ensureTargetCitySelectedForUpload();
+    if (!selectedCity) return;
+
     const maxBytes = 10 * 1024 * 1024;
     if (file.size > maxBytes) {
       showError("上传的简历文件超过 10 MB 上限，请选择小于 10 MB 的简历文件。");
@@ -823,18 +895,19 @@
 
     resumeUploadBtn.disabled = true;
     resumeUploadBtn.textContent = "Stage 1 解析画像中...";
-    resumeStatusTitle.textContent = `正在执行 Stage 1（简历深度理解）：${file.name}`;
+    resumeStatusTitle.textContent = `正在执行 Stage 1（简历深度理解 · 意向城市：${selectedCity}）：${file.name}`;
     resumeStatusDesc.textContent = "正在通过 Gemini 多模态提取您的核心工作年限、技能标签与量化业绩亮点...";
 
     try {
       const dataUrl = await readFileAsDataUrl(file);
-      // 阶段一：独立调用 /api/resume/parse-profile，极速返回并渲染候选人画像卡片
+      // 阶段一：独立调用 /api/resume/parse-profile，携带用户选择的 BOSS直聘 意向城市
       const stage1Resp = await fetch("/api/resume/parse-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           filename: file.name,
           content_base64: dataUrl,
+          target_city: selectedCity,
           model: modelSelect.value,
         }),
       });
@@ -845,13 +918,14 @@
       }
 
       currentResumeFilename = stage1Data.filename || file.name;
+      currentResumeProfile = stage1Data.profile;
       resumeStatusTitle.textContent = `已解析简历画像：${currentResumeFilename}`;
-      resumeStatusDesc.textContent = "Stage 1 简历画像已就绪！正在调用 Stage 2 服务为您量身生成 5 条求职 Query...";
+      resumeStatusDesc.textContent = `Stage 1 简历画像已就绪（意向城市：${stage1Data.target_city || selectedCity}）！正在调用 Stage 2 服务生成 10 条求职 Query...`;
 
       // 先行将 Stage 1 简历画像渲染上屏（渐进式呈现）
       renderResumeProfileStage(stage1Data.profile, true);
 
-      // 阶段二：独立调用 /api/resume/generate-queries，基于结构化画像生成 5 条求职 Query
+      // 阶段二：将带有意向城市的 Stage 1 JSON 传递给 Stage 2 生成 10 条求职 Query
       resumeUploadBtn.textContent = "Stage 2 生成 Query 中...";
       await requestGenerateQueriesFromProfile(stage1Data.profile, currentResumeFilename);
     } catch (err) {
@@ -891,6 +965,11 @@
     updateProgress(2, "正在发起分析请求...", false);
 
     const topDetailCount = syncTopCountUI(topCountInput ? topCountInput.value : 8, true);
+    const activeTargetCity =
+      (profileCityOverride && profileCityOverride.value.trim()) ||
+      (resumeTargetCitySelect && resumeTargetCitySelect.value.trim()) ||
+      (currentResumeProfile && currentResumeProfile.target_city) ||
+      null;
 
     try {
       const response = await fetch("/api/analyze", {
@@ -901,6 +980,7 @@
           model: modelSelect.value,
           max_batches: Number(batchesSelect.value) || 10,
           top_detail_count: topDetailCount,
+          target_city: activeTargetCity,
           resume_profile: currentResumeProfile,
         }),
       });
@@ -959,9 +1039,35 @@
     }
   }
 
+  // 动态更改意向城市：实时更新 Stage 1 画像 JSON 中的城市并自动重新传递给 Stage 2（无需重传简历）
+  function handleDynamicCityChange(newCity) {
+    const cleanCity = (newCity || "").trim();
+    if (!cleanCity) return;
+    showError("");
+    syncTargetCitySelectors(cleanCity);
+    if (currentResumeProfile) {
+      currentResumeProfile = {
+        ...currentResumeProfile,
+        target_city: cleanCity,
+        target_city_code: bossCitiesMap.get(cleanCity) || "",
+        target_cities: [cleanCity],
+      };
+      renderResumeProfileStage(currentResumeProfile, false);
+      requestGenerateQueriesFromProfile(currentResumeProfile, currentResumeFilename);
+    }
+  }
+
+  [resumeTargetCitySelect, profileCityOverride].forEach((selEl) => {
+    if (!selEl) return;
+    selEl.addEventListener("change", () => {
+      handleDynamicCityChange(selEl.value);
+    });
+  });
+
   // 事件绑定
   if (resumeUploadBtn && resumeFileInput) {
     resumeUploadBtn.addEventListener("click", () => {
+      if (!ensureTargetCitySelectedForUpload()) return;
       resumeFileInput.click();
     });
     resumeFileInput.addEventListener("change", (e) => {
@@ -1147,6 +1253,18 @@
     return evalState.selectedStageId === "stage2_queries";
   }
 
+  function isStage3Active() {
+    return evalState.selectedStageId === "stage3_intent";
+  }
+
+  function isStage4Active() {
+    return evalState.selectedStageId === "stage4_ranking";
+  }
+
+  function isStage5Active() {
+    return evalState.selectedStageId === "stage5_analysis";
+  }
+
   function syncStageRunsState(stageId) {
     evalState.selectedStageId = stageId || "stage2_queries";
     const stageRuns =
@@ -1157,25 +1275,49 @@
       evalState.runs = stageRuns;
       evalState.activeRun = stageActive;
     }
+    const isBatchOnlyStage = isStage3Active() || isStage4Active() || isStage5Active();
     if (evalRunSingleBtn) {
-      evalRunSingleBtn.textContent = isStage2Active()
-        ? "实时运行此样本 (Stage 2 生成 10 条 Query + 核验)"
-        : "实时运行此样本 (Stage 1 提取 + LLM-Judge 核对)";
+      evalRunSingleBtn.textContent = isStage5Active()
+        ? "Stage 5 为 6 场景六维深度分析基准评测（请查看视图 A）"
+        : isStage4Active()
+          ? "Stage 4 为 6 场景 96 岗位离线基准评测（请查看视图 A）"
+          : isStage3Active()
+            ? "Stage 3 为全局 18 条 URL 基准评测（请查看视图 A）"
+            : isStage2Active()
+              ? "实时运行此样本 (Stage 2 生成 10 条 Query + 核验)"
+              : "实时运行此样本 (Stage 1 提取 + LLM-Judge 核对)";
+      evalRunSingleBtn.disabled = isBatchOnlyStage;
     }
     if (evalRunBatchBtn) {
-      evalRunBatchBtn.textContent = isStage2Active()
-        ? "运行新批次 Stage 2 Query 生成评测"
-        : "运行新批次 LLM-Judge 评测";
+      evalRunBatchBtn.textContent = isStage5Active()
+        ? "运行新批次 Stage 5 六维分析评测"
+        : isStage4Active()
+          ? "运行新批次 Stage 4 粗排与降权评测"
+          : isStage3Active()
+            ? "运行新批次 Stage 3 URL 解析评测"
+            : isStage2Active()
+              ? "运行新批次 Stage 2 Query 生成评测"
+              : "运行新批次 LLM-Judge 评测";
     }
     if (evalViewBtnAggregated) {
-      evalViewBtnAggregated.textContent = isStage2Active()
-        ? "视图 A · Stage 2 全局 Query 聚合看板 (90 条 Query)"
-        : "视图 A · 全局聚合看板 (Aggregated View)";
+      evalViewBtnAggregated.textContent = isStage5Active()
+        ? "视图 A · Stage 5 六维诊断与人岗匹配看板 (6 场景)"
+        : isStage4Active()
+          ? "视图 A · Stage 4 离线粗排与降权看板 (6 场景 / 96 岗位)"
+          : isStage3Active()
+            ? "视图 A · Stage 3 意图解析与 BOSS URL 聚合看板 (18 条抽样)"
+            : isStage2Active()
+              ? "视图 A · Stage 2 全局 Query 聚合看板 (90 条 Query)"
+              : "视图 A · 全局聚合看板 (Aggregated View)";
     }
     if (evalViewBtnSingle) {
+      evalViewBtnSingle.classList.toggle("hidden", isBatchOnlyStage);
       evalViewBtnSingle.textContent = isStage2Active()
         ? "视图 B · 单简历 10 条 Query 拆解视图 (Single-Use View)"
         : "视图 B · 单样本原子核对工作台 (Single-Use View)";
+    }
+    if (isBatchOnlyStage && evalState.viewMode === "single") {
+      switchEvalSubView("aggregated");
     }
   }
 
@@ -1284,9 +1426,15 @@
       const dimsLabel = document.createElement("span");
       dimsLabel.style.fontSize = "11.5px";
       dimsLabel.style.fontWeight = "700";
-      dimsLabel.textContent = isStage2Active()
-        ? "10 大策略维度 (strategy_tags): "
-        : "原子核对维度 (atomic_checks): ";
+      dimsLabel.textContent = isStage5Active()
+        ? "Stage 5 四维评审指标 (Argon LLM-as-a-Judge): "
+        : isStage4Active()
+          ? "Stage 4 四维评审指标 (NDCG@8 + Argon Judge): "
+          : isStage3Active()
+            ? "Stage 3 四维评审指标 (Argon LLM-as-a-Judge): "
+            : isStage2Active()
+              ? "10 大策略维度 (strategy_tags): "
+              : "原子核对维度 (atomic_checks): ";
       dimsWrap.appendChild(dimsLabel);
 
       (Array.isArray(activeStageObj.atomic_dimensions)
@@ -1310,8 +1458,24 @@
     const options = runs.map((r) => {
       const opt = document.createElement("option");
       opt.value = r.run_id;
-      if (r.stage_id === "stage2_queries" || String(r.run_id || "").startsWith("run_stage2_")) {
-        opt.textContent = `${r.created_at} | Stage 2 Query (${r.extract_model}) | 样本:${r.qualified_total} | 均分:${Number(
+      if (r.stage_id === "stage5_analysis" || String(r.run_id || "").startsWith("run_stage5_")) {
+        const jModel = r.judge_model || "gemini-4-argon";
+        opt.textContent = `${r.created_at} | Stage 5 (Analyzer:${r.extract_model} / Judge:${jModel}) | 场景:${r.sample_count || r.qualified_total} | 均分:${Number(
+          r.mean_score_10 || r.qualified_mean_score_10 || 0
+        ).toFixed(2)}/10`;
+      } else if (r.stage_id === "stage4_ranking" || String(r.run_id || "").startsWith("run_stage4_")) {
+        const jModel = r.judge_model || "gemini-4-argon";
+        opt.textContent = `${r.created_at} | Stage 4 (Ranker v2 / Judge:${jModel}) | 场景:${r.sample_count || r.qualified_total} | 均分:${Number(
+          r.mean_score_10 || r.qualified_mean_score_10 || 0
+        ).toFixed(2)}/10`;
+      } else if (r.stage_id === "stage3_intent" || String(r.run_id || "").startsWith("run_stage3_")) {
+        const jModel = r.judge_model || "gemini-4-argon";
+        opt.textContent = `${r.created_at} | Stage 3 (Parser:${r.extract_model} / Judge:${jModel}) | 用例:${r.sample_count || r.qualified_total} | 均分:${Number(
+          r.mean_score_10 || r.qualified_mean_score_10 || 0
+        ).toFixed(2)}/10`;
+      } else if (r.stage_id === "stage2_queries" || String(r.run_id || "").startsWith("run_stage2_")) {
+        const jModel = r.judge_model || "gemini-4-argon";
+        opt.textContent = `${r.created_at} | Stage 2 (Gen:${r.extract_model} / Judge:${jModel}) | 样本:${r.qualified_total} | 均分:${Number(
           r.qualified_mean_score_10 || 0
         ).toFixed(2)}/10`;
       } else {
@@ -1335,7 +1499,140 @@
     const agg = (runData && runData.aggregated_metrics) || {};
 
     let kpiDefs = [];
-    if (isStage2Active()) {
+    if (isStage5Active()) {
+      const totalScen = Number(runData && runData.total_scenarios) || 6;
+      const meanScore10 = Number(runData && runData.mean_score_10) || 0;
+      const schemaRate = Number(runData && runData.schema_complete_rate) || 0;
+      const covRate = Number(runData && runData.top_k_coverage_rate) || 0;
+      const zeroBias = Number(runData && runData.zero_domain_bias_rate) || 0;
+      const groundRate = Number(runData && runData.stat_grounding_rate) || 0;
+      const anaLat = Number(runData && runData.mean_analysis_latency_s) || 0;
+      const jdgLat = Number(runData && runData.mean_judge_latency_s) || 0;
+      const extModel = (runData && runData.extract_model) || "gemini-3.8-flash";
+      const jdgModel = (runData && runData.judge_model) || "gemini-4-argon";
+
+      kpiDefs = [
+        {
+          title: "Stage 5 综合得分 (Argon Judge)",
+          mainVal: `${meanScore10.toFixed(2)} / 10`,
+          badge: `Analyzer: ${extModel}`,
+          desc: `由 ${jdgModel} (temp=0.0) 对 ${totalScen} 组跨行业六维报告进行事实忠实度与人岗诊断评审`,
+        },
+        {
+          title: "六维 Schema 完整 & Top-8 覆盖率",
+          mainVal: `${(Math.min(schemaRate, covRate) * 100).toFixed(1)}%`,
+          badge: `Schema ${(schemaRate * 100).toFixed(0)}% · Top-8 ${(covRate * 100).toFixed(0)}%`,
+          desc: "6 维洞察、整体评估与全部 Top-8 候选岗位 1:1 评分且分值合法 (0~100)",
+        },
+        {
+          title: "零领域硬编码污染率",
+          mainVal: `${(zeroBias * 100).toFixed(1)}%`,
+          badge: "0 服装/督导串台",
+          desc: "核验非零售岗位报告中零出现历史遗留的「门店巡检/商品陈列/服装督导」话术",
+        },
+        {
+          title: "统计与目标实体溯源率",
+          mainVal: `${(groundRate * 100).toFixed(1)}%`,
+          badge: "合规池统计隔离",
+          desc: "基于 Stage 4 合规池统计口径，精准引用目标城市、岗位与真实市场数据",
+        },
+        {
+          title: "Stage 5 平均生成耗时",
+          mainVal: `${anaLat.toFixed(2)}s`,
+          badge: `Argon 裁判 ${jdgLat.toFixed(2)}s`,
+          desc: `${extModel} (temp=0.2) 单次生成全量六维洞察 + Top-8 逐岗点评的平均延迟`,
+        },
+      ];
+    } else if (isStage4Active()) {
+      const totalScen = Number(runData && runData.total_scenarios) || 6;
+      const totalJobs = Number(runData && runData.total_jobs) || 96;
+      const meanScore10 = Number(runData && runData.mean_score_10) || 0;
+      const ndcg8 = Number(runData && runData.mean_ndcg_at_8) || 0;
+      const recall8 = Number(runData && runData.mean_recall_at_8) || 0;
+      const demoteRate = Number(runData && runData.demotion_accuracy_rate) || 0;
+      const salAcc = Number(runData && runData.salary_parse_accuracy) || 0;
+      const wkdAcc = Number(runData && runData.weekend_policy_accuracy) || 0;
+      const rankMs = Number(runData && runData.mean_rank_latency_ms) || 0;
+      const jdgModel = (runData && runData.judge_model) || "gemini-4-argon";
+
+      kpiDefs = [
+        {
+          title: "Stage 4 综合得分 (Argon Judge)",
+          mainVal: `${meanScore10.toFixed(2)} / 10`,
+          badge: `${totalScen} 场景 / ${totalJobs} 岗位`,
+          desc: `由 ${jdgModel} (temp=0.0) 对离线粗排 Top-8 相关性、排序阶梯与降权纯净度联合评分`,
+        },
+        {
+          title: "Top-8 排序质量 (NDCG@8)",
+          mainVal: `${ndcg8.toFixed(4)}`,
+          badge: `Recall@8 ${(recall8 * 100).toFixed(1)}%`,
+          desc: "衡量 Grade 3/2 高相关岗位（含同义标题）排入 Top-8 头部位置的信息检索质量",
+        },
+        {
+          title: "异地/低薪降权垫底准确率",
+          mainVal: `${(demoteRate * 100).toFixed(1)}%`,
+          badge: "全量保留 · 0 混入 Top-8",
+          desc: "异地与低于底薪岗位 100% 标记降权并沉底保留于全量池，严防挤占 Phase 2 详情名额",
+        },
+        {
+          title: "薪资解析 & 作息防误判准确率",
+          mainVal: `${(Math.min(salAcc, wkdAcc) * 100).toFixed(1)}%`,
+          badge: `薪资 ${(salAcc * 100).toFixed(0)}% · 作息 ${(wkdAcc * 100).toFixed(0)}%`,
+          desc: "专项校验 W/日薪换算以及「单双休/隔周双休/非双休」零误判为周末双休",
+        },
+        {
+          title: "离线粗排平均耗时",
+          mainVal: `${rankMs.toFixed(2)} ms`,
+          badge: "纯离线零依赖",
+          desc: "脱离浏览器 CDP 的纯内存打分与双层确定性排序延迟，支持独立 POST /api/jobs/rank",
+        },
+      ];
+    } else if (isStage3Active()) {
+      const totalCases = Number(runData && runData.total_cases) || 18;
+      const meanScore10 = Number(runData && runData.mean_score_10) || 0;
+      const urlExactRate = Number(runData && runData.url_exact_match_rate) || 0;
+      const urlValidRate = Number(runData && runData.url_valid_rate) || 0;
+      const cityRate = Number(runData && runData.city_match_rate) || 0;
+      const salaryRate = Number(runData && runData.salary_match_rate) || 0;
+      const pureRate = Number(runData && runData.query_pure_rate) || 0;
+      const parseLat = Number(runData && runData.mean_parse_latency_s) || 0;
+      const judgeLat = Number(runData && runData.mean_judge_latency_s) || 0;
+      const extModel = (runData && runData.extract_model) || "gemini-3.8-flash";
+      const jdgModel = (runData && runData.judge_model) || "gemini-4-argon";
+
+      kpiDefs = [
+        {
+          title: "Stage 3 综合得分 (Argon Judge)",
+          mainVal: `${meanScore10.toFixed(2)} / 10`,
+          badge: `Parser: ${extModel}`,
+          desc: `由 ${jdgModel} (temp=0.0) 对照人工审核通过的 ${totalCases} 条 Ground Truth URL 进行四维评审`,
+        },
+        {
+          title: "BOSS直聘 URL 精准一致率",
+          mainVal: `${(urlExactRate * 100).toFixed(1)}%`,
+          badge: `${Math.round(urlExactRate * totalCases)} / ${totalCases} 条完全一致`,
+          desc: "实际拼接的 BOSS直聘搜索 URL 参数（query/city/salary/extra）与人工批准真值完全一致比例",
+        },
+        {
+          title: "城市 1:1 & 薪资编码准确率",
+          mainVal: `${(Math.min(cityRate, salaryRate) * 100).toFixed(1)}%`,
+          badge: `城市 ${(cityRate * 100).toFixed(0)}% · 薪资 ${(salaryRate * 100).toFixed(0)}%`,
+          desc: "核验 48 城官方编码优先级防覆盖（target_city 透传）及小数薪资档位映射准确性",
+        },
+        {
+          title: "官方白名单 & 岗位词纯净率",
+          mainVal: `${(Math.min(urlValidRate, pureRate) * 100).toFixed(1)}%`,
+          badge: `白名单 ${(urlValidRate * 100).toFixed(0)}% · 纯净 ${(pureRate * 100).toFixed(0)}%`,
+          desc: "100% 校验 city/salary/exp/degree/scale/stage 官方白名单，杜绝城市/行业/岗位/斜杠污染",
+        },
+        {
+          title: "Stage 3 平均解析耗时",
+          mainVal: `${parseLat.toFixed(2)}s`,
+          badge: `Argon 裁判 ${judgeLat.toFixed(2)}s`,
+          desc: `单条 Query 经 ${extModel} (temp=0.1) 解析并拼接 BOSS直聘 URL 的平均端到端延迟`,
+        },
+      ];
+    } else if (isStage2Active()) {
       const qTotal = Number(agg.qualified_total) || 9;
       const totalQueries = Number(agg.total_queries_generated) || 90;
       const meanScore10 = Number(agg.qualified_mean_score_10) || 10;
@@ -1459,6 +1756,472 @@
 
   function renderEvalAggregatedCharts(runData) {
     const agg = (runData && runData.aggregated_metrics) || {};
+
+    if (isStage5Active()) {
+      if (evalChartA1Title) {
+        evalChartA1Title.textContent = "Stage 5 四维能力均分 (gemini-4-argon LLM-as-a-Judge, 0~10 分)";
+      }
+      if (evalChartA2Title) {
+        evalChartA2Title.textContent = "6 场景 Stage 5 Argon 评分 & 报告整体人岗匹配分 (/100)";
+      }
+      if (evalChartA3Title) {
+        evalChartA3Title.textContent = "Stage 5 确定性硬门禁达标率 & 单场景生成耗时 (s)";
+      }
+
+      const dimLabels = (runData && runData.dimension_labels) || {
+        jd_groundedness_score: "JD与统计事实忠实度",
+        profile_alignment_score: "人岗简历契合诊断",
+        risk_identification_score: "风险与作息陷阱识别",
+        advice_actionability_score: "求职建议可执行性",
+      };
+      const dimScores = (runData && runData.per_dimension_mean_scores_10) || {};
+      const scenarios = Array.isArray(runData && runData.scenario_evaluations)
+        ? runData.scenario_evaluations
+        : [];
+
+      // Chart A1: 4-Dimension Score Bar
+      const chartFields = getOrCreateChart("chart-eval-fields");
+      if (chartFields) {
+        const dKeys = Object.keys(dimLabels).reverse();
+        const dNames = dKeys.map((k) => dimLabels[k] || k);
+        const dVals = dKeys.map((k) => Number(dimScores[k] || 0));
+        chartFields.setOption(
+          {
+            tooltip: {
+              trigger: "axis",
+              axisPointer: { type: "shadow" },
+              formatter: (params) => {
+                const p = params && params[0];
+                return p ? `<b>${p.name}</b><br/>Argon 均分: <b>${Number(p.value).toFixed(2)} / 10.0</b>` : "";
+              },
+            },
+            grid: { top: 18, right: 48, bottom: 26, left: 145 },
+            xAxis: { type: "value", min: 0, max: 10, name: "得分" },
+            yAxis: {
+              type: "category",
+              data: dNames,
+              axisLabel: { fontSize: 11.5, fontWeight: 600 },
+            },
+            series: [
+              {
+                name: "Argon 评分 (0~10)",
+                type: "bar",
+                barWidth: "46%",
+                data: dVals.map((v) => ({
+                  value: v,
+                  itemStyle: { color: getScoreBarColor(v), borderRadius: [0, 6, 6, 0] },
+                })),
+                label: {
+                  show: true,
+                  position: "right",
+                  formatter: (p) => `${Number(p.value).toFixed(2)}`,
+                  fontWeight: "bold",
+                  fontSize: 11.5,
+                },
+              },
+            ],
+          },
+          true
+        );
+      }
+
+      // Chart A2: Per-Scenario Argon Score & Report Overall Match Score
+      const chartFormats = getOrCreateChart("chart-eval-formats");
+      if (chartFormats) {
+        const sLabels = scenarios.map(
+          (s) => `${s.scenario_id.replace("S5-", "")}\n${(s.intent && s.intent.city_name) || ""}`
+        );
+        const argonVals = scenarios.map((s) => Number(s.overall_score_10 || 0));
+        const matchVals = scenarios.map((s) => Number(s.report_overall_match_score || 0));
+        chartFormats.setOption(
+          {
+            tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+            legend: { bottom: 0, textStyle: { fontSize: 11 } },
+            grid: { top: 24, right: 44, bottom: 42, left: 42 },
+            xAxis: {
+              type: "category",
+              data: sLabels,
+              axisLabel: { fontSize: 10.5, fontWeight: 600 },
+            },
+            yAxis: [
+              { type: "value", name: "Argon分", min: 0, max: 10 },
+              { type: "value", name: "匹配分(/100)", min: 0, max: 100 },
+            ],
+            series: [
+              {
+                name: "Argon 评测分 (/10)",
+                type: "bar",
+                yAxisIndex: 0,
+                data: argonVals.map((v) => ({
+                  value: v,
+                  itemStyle: { color: getScoreBarColor(v), borderRadius: [4, 4, 0, 0] },
+                })),
+                label: { show: true, position: "top", formatter: "{c}", fontSize: 10 },
+              },
+              {
+                name: "报告人岗匹配分 (/100)",
+                type: "line",
+                yAxisIndex: 1,
+                data: matchVals,
+                itemStyle: { color: "#0284c7" },
+                label: { show: true, position: "top", formatter: "{c}分", fontSize: 10 },
+              },
+            ],
+          },
+          true
+        );
+      }
+
+      // Chart A3: Hard Gate Pass Rates
+      const chartRuns = getOrCreateChart("chart-eval-runs");
+      if (chartRuns) {
+        const gateNames = ["六维Schema完整", "Top-8全覆盖", "零领域污染", "统计事实溯源"];
+        const gateVals = [
+          Number(((runData && runData.schema_complete_rate) || 0) * 100),
+          Number(((runData && runData.top_k_coverage_rate) || 0) * 100),
+          Number(((runData && runData.zero_domain_bias_rate) || 0) * 100),
+          Number(((runData && runData.stat_grounding_rate) || 0) * 100),
+        ];
+        chartRuns.setOption(
+          {
+            tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+            grid: { top: 20, right: 32, bottom: 32, left: 48 },
+            xAxis: {
+              type: "category",
+              data: gateNames,
+              axisLabel: { fontSize: 10.5, fontWeight: 600, interval: 0 },
+            },
+            yAxis: { type: "value", name: "达标率 (%)", min: 0, max: 100 },
+            series: [
+              {
+                name: "硬门禁达标率 (%)",
+                type: "bar",
+                barWidth: "46%",
+                data: gateVals.map((v) => ({
+                  value: Number(v.toFixed(1)),
+                  itemStyle: { color: v >= 99.9 ? "#10b981" : "#f59e0b", borderRadius: [5, 5, 0, 0] },
+                })),
+                label: { show: true, position: "top", formatter: "{c}%", fontWeight: "bold", fontSize: 11 },
+              },
+            ],
+          },
+          true
+        );
+      }
+      return;
+    }
+
+    if (isStage4Active()) {
+      if (evalChartA1Title) {
+        evalChartA1Title.textContent = "Stage 4 四维能力均分 (gemini-4-argon LLM-as-a-Judge, 0~10 分)";
+      }
+      if (evalChartA2Title) {
+        evalChartA2Title.textContent = "6 场景 NDCG@8 / Recall@8 与 Argon 综合评分对比";
+      }
+      if (evalChartA3Title) {
+        evalChartA3Title.textContent = "Stage 4 硬指标达标率 (降权垫底 / 薪资解析 / 作息防误判)";
+      }
+
+      const dimLabels = (runData && runData.dimension_labels) || {
+        top_k_relevance_score: "Top-8 候选相关性",
+        ranking_order_score: "排序阶梯与 NDCG",
+        demotion_cleanliness_score: "异地/低薪/作息拦截纯净度",
+        explainability_score: "分项打分可解释性",
+      };
+      const dimScores = (runData && runData.per_dimension_mean_scores_10) || {};
+      const scenarios = Array.isArray(runData && runData.scenario_evaluations)
+        ? runData.scenario_evaluations
+        : [];
+
+      // Chart A1: 4-Dimension Score Bar
+      const chartFields = getOrCreateChart("chart-eval-fields");
+      if (chartFields) {
+        const dKeys = Object.keys(dimLabels).reverse();
+        const dNames = dKeys.map((k) => dimLabels[k] || k);
+        const dVals = dKeys.map((k) => Number(dimScores[k] || 0));
+        chartFields.setOption(
+          {
+            tooltip: {
+              trigger: "axis",
+              axisPointer: { type: "shadow" },
+              formatter: (params) => {
+                const p = params && params[0];
+                return p ? `<b>${p.name}</b><br/>Argon 均分: <b>${Number(p.value).toFixed(2)} / 10.0</b>` : "";
+              },
+            },
+            grid: { top: 18, right: 48, bottom: 26, left: 150 },
+            xAxis: { type: "value", min: 0, max: 10, name: "得分" },
+            yAxis: {
+              type: "category",
+              data: dNames,
+              axisLabel: { fontSize: 11.5, fontWeight: 600 },
+            },
+            series: [
+              {
+                name: "Argon 评分 (0~10)",
+                type: "bar",
+                barWidth: "46%",
+                data: dVals.map((v) => ({
+                  value: v,
+                  itemStyle: { color: getScoreBarColor(v), borderRadius: [0, 6, 6, 0] },
+                })),
+                label: {
+                  show: true,
+                  position: "right",
+                  formatter: (p) => `${Number(p.value).toFixed(2)}`,
+                  fontWeight: "bold",
+                  fontSize: 11.5,
+                },
+              },
+            ],
+          },
+          true
+        );
+      }
+
+      // Chart A2: Per-Scenario NDCG@8, Recall@8, Argon Score
+      const chartFormats = getOrCreateChart("chart-eval-formats");
+      if (chartFormats) {
+        const sLabels = scenarios.map(
+          (s) => `${s.scenario_id.replace("S4-", "")}\n${(s.intent && s.intent.city_name) || ""}`
+        );
+        const ndcgVals = scenarios.map((s) =>
+          Number(((s.deterministic_metrics && s.deterministic_metrics.ndcg_at_8) || 0) * 100)
+        );
+        const recallVals = scenarios.map((s) =>
+          Number(((s.deterministic_metrics && s.deterministic_metrics.recall_at_8) || 0) * 100)
+        );
+        const argonVals = scenarios.map((s) => Number(s.overall_score_10 || 0));
+        chartFormats.setOption(
+          {
+            tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+            legend: { bottom: 0, textStyle: { fontSize: 11 } },
+            grid: { top: 24, right: 42, bottom: 42, left: 44 },
+            xAxis: {
+              type: "category",
+              data: sLabels,
+              axisLabel: { fontSize: 10.5, fontWeight: 600 },
+            },
+            yAxis: [
+              { type: "value", name: "百分比 (%)", min: 0, max: 100 },
+              { type: "value", name: "Argon分", min: 0, max: 10 },
+            ],
+            series: [
+              {
+                name: "NDCG@8 (%)",
+                type: "bar",
+                yAxisIndex: 0,
+                data: ndcgVals.map((v) => Number(v.toFixed(1))),
+                itemStyle: { color: "#00a6a7", borderRadius: [4, 4, 0, 0] },
+              },
+              {
+                name: "Recall@8 (%)",
+                type: "bar",
+                yAxisIndex: 0,
+                data: recallVals.map((v) => Number(v.toFixed(1))),
+                itemStyle: { color: "#38bdf8", borderRadius: [4, 4, 0, 0] },
+              },
+              {
+                name: "Argon 综合分 (/10)",
+                type: "line",
+                yAxisIndex: 1,
+                data: argonVals,
+                itemStyle: { color: "#f59e0b" },
+                label: { show: true, position: "top", formatter: "{c}", fontSize: 10 },
+              },
+            ],
+          },
+          true
+        );
+      }
+
+      // Chart A3: Hard Gates Pass Rates
+      const chartRuns = getOrCreateChart("chart-eval-runs");
+      if (chartRuns) {
+        const gateNames = ["异地/低薪降权垫底", "作息文字陷阱拦截", "薪资解析边界(6例)", "作息识别边界(6例)"];
+        const gateVals = [
+          Number(((runData && runData.demotion_accuracy_rate) || 0) * 100),
+          Number(((runData && runData.weekend_trap_clean_rate) || 0) * 100),
+          Number(((runData && runData.salary_parse_accuracy) || 0) * 100),
+          Number(((runData && runData.weekend_policy_accuracy) || 0) * 100),
+        ];
+        chartRuns.setOption(
+          {
+            tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+            grid: { top: 20, right: 32, bottom: 32, left: 48 },
+            xAxis: {
+              type: "category",
+              data: gateNames,
+              axisLabel: { fontSize: 10.5, fontWeight: 600, interval: 0 },
+            },
+            yAxis: { type: "value", name: "准确率 (%)", min: 0, max: 100 },
+            series: [
+              {
+                name: "硬门禁准确率 (%)",
+                type: "bar",
+                barWidth: "46%",
+                data: gateVals.map((v) => ({
+                  value: Number(v.toFixed(1)),
+                  itemStyle: { color: v >= 99.9 ? "#10b981" : "#f59e0b", borderRadius: [5, 5, 0, 0] },
+                })),
+                label: { show: true, position: "top", formatter: "{c}%", fontWeight: "bold", fontSize: 11 },
+              },
+            ],
+          },
+          true
+        );
+      }
+      return;
+    }
+
+    if (isStage3Active()) {
+      if (evalChartA1Title) {
+        evalChartA1Title.textContent = "Stage 3 四维能力评分分布 (gemini-4-argon LLM-as-a-Judge, 0~10 分)";
+      }
+      if (evalChartA2Title) {
+        evalChartA2Title.textContent = "9 份简历 Stage 3 意图解析均分 & BOSS URL 精准命中数";
+      }
+      if (evalChartA3Title) {
+        evalChartA3Title.textContent = "Stage 3 城市编码与薪资档位覆盖分布 (18 条抽样用例)";
+      }
+
+      const dimLabels = (runData && runData.dimension_labels) || {
+        url_and_hard_filter_score: "URL 与硬性筛选编码",
+        role_purification_score: "核心岗位词提纯",
+        industry_expansion_score: "行业近义词扩展",
+        soft_requirements_score: "软性偏好与底薪提取",
+      };
+      const dimScores = (runData && runData.per_dimension_mean_scores_10) || {};
+      const resumeSummary = Array.isArray(runData && runData.per_resume_summary)
+        ? runData.per_resume_summary
+        : [];
+      const cityDist = (runData && runData.city_distribution) || {};
+      const salaryDist = (runData && runData.salary_distribution) || {};
+
+      // Chart A1: 4-Dimension Score Bar
+      const chartFields = getOrCreateChart("chart-eval-fields");
+      if (chartFields) {
+        const dKeys = Object.keys(dimLabels).reverse();
+        const dNames = dKeys.map((k) => dimLabels[k] || k);
+        const dVals = dKeys.map((k) => Number(dimScores[k] || 0));
+        chartFields.setOption(
+          {
+            tooltip: {
+              trigger: "axis",
+              axisPointer: { type: "shadow" },
+              formatter: (params) => {
+                const p = params && params[0];
+                return p ? `<b>${p.name}</b><br/>Argon 均分: <b>${Number(p.value).toFixed(2)} / 10.0</b>` : "";
+              },
+            },
+            grid: { top: 18, right: 48, bottom: 26, left: 130 },
+            xAxis: { type: "value", min: 0, max: 10, name: "得分" },
+            yAxis: {
+              type: "category",
+              data: dNames,
+              axisLabel: { fontSize: 12, fontWeight: 600 },
+            },
+            series: [
+              {
+                name: "Argon 评分 (0~10)",
+                type: "bar",
+                barWidth: "46%",
+                data: dVals.map((v) => ({
+                  value: v,
+                  itemStyle: { color: getScoreBarColor(v), borderRadius: [0, 6, 6, 0] },
+                })),
+                label: {
+                  show: true,
+                  position: "right",
+                  formatter: (p) => `${Number(p.value).toFixed(2)}`,
+                  fontWeight: "bold",
+                  fontSize: 11.5,
+                },
+              },
+            ],
+          },
+          true
+        );
+      }
+
+      // Chart A2: Per-Resume Mean Score & URL Exact Match Count
+      const chartFormats = getOrCreateChart("chart-eval-formats");
+      if (chartFormats) {
+        const sIds = resumeSummary.map((r) => r.sample_id);
+        const sScores = resumeSummary.map((r) => Number(r.mean_score_10 || 0));
+        const sExact = resumeSummary.map((r) => Number(r.url_exact_count || 0));
+        chartFormats.setOption(
+          {
+            tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+            legend: { bottom: 0, textStyle: { fontSize: 11 } },
+            grid: { top: 24, right: 40, bottom: 38, left: 42 },
+            xAxis: {
+              type: "category",
+              data: sIds,
+              axisLabel: { fontSize: 10.5, fontWeight: 600, rotate: 20 },
+            },
+            yAxis: [
+              { type: "value", name: "Argon 均分", min: 0, max: 10 },
+              { type: "value", name: "URL命中数", min: 0, max: 2, interval: 1 },
+            ],
+            series: [
+              {
+                name: "Argon 综合均分 (0~10)",
+                type: "bar",
+                yAxisIndex: 0,
+                data: sScores.map((v) => ({
+                  value: v,
+                  itemStyle: { color: getScoreBarColor(v), borderRadius: [4, 4, 0, 0] },
+                })),
+                label: { show: true, position: "top", formatter: "{c}", fontSize: 10 },
+              },
+              {
+                name: "URL 精准命中数 (/2)",
+                type: "line",
+                yAxisIndex: 1,
+                data: sExact,
+                itemStyle: { color: "#0284c7" },
+                symbolSize: 7,
+              },
+            ],
+          },
+          true
+        );
+      }
+
+      // Chart A3: City & Salary Bracket Distribution
+      const chartRuns = getOrCreateChart("chart-eval-runs");
+      if (chartRuns) {
+        const cityPieData = Object.entries(cityDist).map(([name, value]) => ({ name, value }));
+        const salaryPieData = Object.entries(salaryDist).map(([name, value]) => ({ name, value }));
+        chartRuns.setOption(
+          {
+            tooltip: { trigger: "item", formatter: "{a}<br/>{b}: <b>{c} 条</b> ({d}%)" },
+            legend: { bottom: 0, textStyle: { fontSize: 10.5 } },
+            series: [
+              {
+                name: "目标城市分布",
+                type: "pie",
+                radius: ["28%", "48%"],
+                center: ["28%", "45%"],
+                label: { show: true, formatter: "{b}\n{c}条", fontSize: 10.5 },
+                data: cityPieData,
+              },
+              {
+                name: "薪资档位分布",
+                type: "pie",
+                radius: ["28%", "48%"],
+                center: ["72%", "45%"],
+                label: { show: true, formatter: "{b}\n{c}条", fontSize: 10.5 },
+                data: salaryPieData,
+              },
+            ],
+          },
+          true
+        );
+      }
+      return;
+    }
 
     if (isStage2Active()) {
       if (evalChartA1Title) {
@@ -1794,29 +2557,61 @@
 
   function renderTableHeadersForStage() {
     if (evalSamplesTableHead) {
-      const cols = isStage2Active()
+      const cols = isStage5Active()
         ? [
-            "样本 ID",
-            "候选人头衔 & 基准底薪",
-            "所属行业赛道",
-            "Query 质量均分",
-            "三要素完整率",
-            "无城市 & 无福利",
-            "薪资梯度 & 岗位多样性",
-            "代表性搜索 Query 预览 (点击行查看全部 10 条)",
-            "操作",
+            "场景 ID",
+            "求职意图 (合规池均薪)",
+            "硬门禁校验",
+            "整体匹配分 & 定性结论",
+            "Top-3 推荐岗位与评分",
+            "Argon 评分",
+            "Argon 裁判评语",
           ]
-        : [
-            "样本 ID",
-            "简历文件 & 格式",
-            "所属行业赛道",
-            "综合均分 (0~10)",
-            "数字/实体一致率",
-            "幻觉检测",
-            "PII 脱敏门禁",
-            "9 字段得分速览 (悬停查看字段)",
-            "操作",
-          ];
+        : isStage4Active()
+          ? [
+              "场景 ID",
+              "求职意图 (城市 · 岗位 · 底薪)",
+              "NDCG@8 & Recall@8",
+              "降权垫底 & 陷阱拦截",
+              "Top-3 头部岗位预览 (含 Grade)",
+              "底部降权岗位 (全量保留)",
+              "Argon 评分",
+              "Argon 裁判评语",
+            ]
+          : isStage3Active()
+            ? [
+                "用例 ID",
+                "输入 Query (+意向城市)",
+                "Ground Truth BOSS直聘 URL",
+                "Stage 3 实际生成 URL (gemini-3.8-flash)",
+                "硬门禁校验",
+                "行业近义词 (Stage 4)",
+                "Argon 评分",
+                "Argon 裁判评语",
+              ]
+            : isStage2Active()
+              ? [
+                  "样本 ID",
+                  "候选人头衔 & 基准底薪",
+                  "所属行业赛道",
+                  "Query 质量均分",
+                  "三要素完整率",
+                  "无城市 & 无福利",
+                  "薪资梯度 & 岗位多样性",
+                  "代表性搜索 Query 预览 (点击行查看全部 10 条)",
+                  "操作",
+                ]
+              : [
+                  "样本 ID",
+                  "简历文件 & 格式",
+                  "所属行业赛道",
+                  "综合均分 (0~10)",
+                  "数字/实体一致率",
+                  "幻觉检测",
+                  "PII 脱敏门禁",
+                  "9 字段得分速览 (悬停查看字段)",
+                  "操作",
+                ];
       const tr = document.createElement("tr");
       cols.forEach((c) => {
         const th = document.createElement("th");
@@ -1826,18 +2621,409 @@
       evalSamplesTableHead.replaceChildren(tr);
     }
     if (evalMatrixTitle) {
-      evalMatrixTitle.textContent = isStage2Active()
-        ? "合格简历样本集 Stage 2 搜索 Query 矩阵 (9 份简历 × 10 条 Query = 90 条)"
-        : "合格简历样本集 9 字段原子核对矩阵 (点击任意行进入单样本精细核对视图)";
+      evalMatrixTitle.textContent = isStage5Active()
+        ? "Stage 5 六维分析与人岗匹配深度诊断 6 场景评测矩阵 (gemini-3.8-flash · Argon 裁判)"
+        : isStage4Active()
+          ? "Stage 4 离线岗位粗排与异地/低薪垫底降权 6 场景对比矩阵 (96 岗位 · Argon 裁判)"
+          : isStage3Active()
+            ? "Stage 3 意图解析与 BOSS直聘 URL 逐条对比矩阵 (Ground Truth vs gemini-3.8-flash · Argon 裁判)"
+            : isStage2Active()
+              ? "合格简历样本集 Stage 2 搜索 Query 矩阵 (9 份简历 × 10 条 Query = 90 条)"
+              : "合格简历样本集 9 字段原子核对矩阵 (点击任意行进入单样本精细核对视图)";
     }
     if (evalDisqDetailsCard) {
-      evalDisqDetailsCard.classList.toggle("hidden", isStage2Active());
+      evalDisqDetailsCard.classList.toggle(
+        "hidden",
+        isStage2Active() || isStage3Active() || isStage4Active() || isStage5Active()
+      );
     }
   }
 
   function renderEvalSamplesMatrixTable(runData) {
     if (!evalSamplesTableBody) return;
     renderTableHeadersForStage();
+
+    if (isStage5Active()) {
+      const scenarios = Array.isArray(runData && runData.scenario_evaluations)
+        ? runData.scenario_evaluations
+        : [];
+      if (scenarios.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 7;
+        td.style.textAlign = "center";
+        td.style.color = "#64748b";
+        td.style.padding = "20px";
+        td.textContent = "暂无 Stage 5 评测记录。";
+        tr.appendChild(td);
+        evalSamplesTableBody.replaceChildren(tr);
+        return;
+      }
+
+      const rows = scenarios.map((sc) => {
+        const tr = document.createElement("tr");
+        tr.className = "eval-matrix-row";
+        const it = sc.intent || {};
+        const ss = sc.stats_summary || {};
+        const dc = sc.deterministic_checks || {};
+        const top3 = Array.isArray(sc.top_3_recommended) ? sc.top_3_recommended : [];
+
+        // 1. Scenario ID
+        const tdId = document.createElement("td");
+        const idStrong = document.createElement("strong");
+        idStrong.textContent = sc.scenario_id || "";
+        const subSrc = document.createElement("div");
+        subSrc.style.fontSize = "11px";
+        subSrc.style.color = "#64748b";
+        subSrc.textContent = sc.source_sample_id || "";
+        tdId.appendChild(idStrong);
+        tdId.appendChild(subSrc);
+
+        // 2. Intent & Compliant Pool Stats
+        const tdIntent = document.createElement("td");
+        tdIntent.style.fontSize = "12px";
+        const qDiv = document.createElement("div");
+        qDiv.style.fontWeight = "600";
+        qDiv.textContent = `${it.city_name || ""} · ${it.query || ""}`;
+        const stDiv = document.createElement("div");
+        stDiv.style.fontSize = "11px";
+        stDiv.style.color = "#0284c7";
+        stDiv.textContent = `合规池 ${ss.compliant_jobs_count || 0}/${ss.total_jobs || 16} · 均薪 ${ss.avg_min_k || 0}-${ss.avg_max_k || 0}K`;
+        tdIntent.appendChild(qDiv);
+        tdIntent.appendChild(stDiv);
+
+        // 3. Hard gates
+        const tdGates = document.createElement("td");
+        const allOk =
+          dc.schema_complete_ok && dc.top_k_coverage_ok && dc.zero_domain_bias_ok && dc.stat_grounding_ok;
+        const badge = document.createElement("span");
+        badge.className = allOk ? "eval-flag-badge flag-pass" : "eval-flag-badge flag-warn";
+        badge.textContent = allOk ? "✓ 全部门禁通过" : "⚠ 部分门禁告警";
+        const gSub = document.createElement("div");
+        gSub.style.fontSize = "11px";
+        gSub.style.color = "#64748b";
+        gSub.style.marginTop = "4px";
+        gSub.textContent = `6维:${dc.schema_complete_ok ? "✓" : "✗"} 覆:${dc.top_k_coverage_ok ? "✓" : "✗"} 零偏:${dc.zero_domain_bias_ok ? "✓" : "✗"}`;
+        tdGates.appendChild(badge);
+        tdGates.appendChild(gSub);
+
+        // 4. Overall match score & verdict
+        const tdVerdict = document.createElement("td");
+        tdVerdict.style.fontSize = "11.5px";
+        const mStrong = document.createElement("strong");
+        mStrong.style.color = "#0f766e";
+        mStrong.textContent = `综合匹配 ${sc.report_overall_match_score || 0}/100`;
+        const vDiv = document.createElement("div");
+        vDiv.style.color = "#334155";
+        vDiv.style.marginTop = "3px";
+        vDiv.textContent = sc.report_verdict || "—";
+        tdVerdict.appendChild(mStrong);
+        tdVerdict.appendChild(vDiv);
+
+        // 5. Top-3 recommended jobs
+        const tdTop = document.createElement("td");
+        tdTop.style.fontSize = "11.5px";
+        top3.forEach((j) => {
+          const line = document.createElement("div");
+          line.style.marginBottom = "3px";
+          line.textContent = `#${j.rank} ${j.job_name} (${j.company_name} · ${j.salary_desc} · ${j.match_score}分)`;
+          tdTop.appendChild(line);
+        });
+
+        // 6. Argon Score
+        const tdScore = document.createElement("td");
+        const scVal = Number(sc.overall_score_10 || 0);
+        const scStrong = document.createElement("strong");
+        scStrong.style.color = getScoreBarColor(scVal);
+        scStrong.textContent = `${scVal.toFixed(2)} / 10`;
+        const latDiv = document.createElement("div");
+        latDiv.style.fontSize = "11px";
+        latDiv.style.color = "#64748b";
+        latDiv.textContent = `${Number(sc.analysis_latency_s || 0).toFixed(1)}s`;
+        tdScore.appendChild(scStrong);
+        tdScore.appendChild(latDiv);
+
+        // 7. Argon Comment
+        const tdComment = document.createElement("td");
+        tdComment.style.fontSize = "11.5px";
+        tdComment.style.color = "#334155";
+        tdComment.textContent = sc.diagnosis_comment || "—";
+
+        tr.appendChild(tdId);
+        tr.appendChild(tdIntent);
+        tr.appendChild(tdGates);
+        tr.appendChild(tdVerdict);
+        tr.appendChild(tdTop);
+        tr.appendChild(tdScore);
+        tr.appendChild(tdComment);
+        return tr;
+      });
+      evalSamplesTableBody.replaceChildren(...rows);
+      return;
+    }
+
+    if (isStage4Active()) {
+      const scenarios = Array.isArray(runData && runData.scenario_evaluations)
+        ? runData.scenario_evaluations
+        : [];
+      if (scenarios.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 8;
+        td.style.textAlign = "center";
+        td.style.color = "#64748b";
+        td.style.padding = "20px";
+        td.textContent = "暂无 Stage 4 评测记录。";
+        tr.appendChild(td);
+        evalSamplesTableBody.replaceChildren(tr);
+        return;
+      }
+
+      const rows = scenarios.map((sc) => {
+        const tr = document.createElement("tr");
+        tr.className = "eval-matrix-row";
+        const it = sc.intent || {};
+        const dm = sc.deterministic_metrics || {};
+        const topCands = Array.isArray(sc.top_candidates) ? sc.top_candidates : [];
+        const demoted = Array.isArray(sc.demoted_jobs) ? sc.demoted_jobs : [];
+
+        // 1. Scenario ID
+        const tdId = document.createElement("td");
+        const idStrong = document.createElement("strong");
+        idStrong.textContent = sc.scenario_id || "";
+        const subSrc = document.createElement("div");
+        subSrc.style.fontSize = "11px";
+        subSrc.style.color = "#64748b";
+        subSrc.textContent = sc.source_stage3_case_id || "";
+        tdId.appendChild(idStrong);
+        tdId.appendChild(subSrc);
+
+        // 2. Intent summary
+        const tdIntent = document.createElement("td");
+        tdIntent.style.fontSize = "12px";
+        const qDiv = document.createElement("div");
+        qDiv.style.fontWeight = "600";
+        qDiv.textContent = `${it.city_name || ""} · ${it.query || ""}`;
+        const metaDiv = document.createElement("div");
+        metaDiv.style.fontSize = "11px";
+        metaDiv.style.color = "#0284c7";
+        metaDiv.textContent = `底薪 >=${it.min_salary_k || 0}K${it.require_double_weekend ? " · 要求双休" : ""}`;
+        tdIntent.appendChild(qDiv);
+        tdIntent.appendChild(metaDiv);
+
+        // 3. NDCG@8 & Recall@8
+        const tdIr = document.createElement("td");
+        const ndcgDiv = document.createElement("div");
+        ndcgDiv.style.fontWeight = "700";
+        ndcgDiv.style.color = Number(dm.ndcg_at_8 || 0) >= 0.95 ? "#059669" : "#d97706";
+        ndcgDiv.textContent = `NDCG@8: ${Number(dm.ndcg_at_8 || 0).toFixed(4)}`;
+        const recDiv = document.createElement("div");
+        recDiv.style.fontSize = "11px";
+        recDiv.style.color = "#475569";
+        recDiv.textContent = `Recall@8: ${(Number(dm.recall_at_8 || 0) * 100).toFixed(1)}% (${dm.relevant_in_top_8 || 0}/${dm.relevant_total || 8})`;
+        tdIr.appendChild(ndcgDiv);
+        tdIr.appendChild(recDiv);
+
+        // 4. Demotion & weekend trap check
+        const tdDem = document.createElement("td");
+        const badge = document.createElement("span");
+        badge.className = dm.demotion_clean_ok ? "eval-flag-badge flag-pass" : "eval-flag-badge flag-fail";
+        badge.textContent = dm.demotion_clean_ok ? "✓ 降权 100% 精准" : "✗ 降权异常";
+        const trapDiv = document.createElement("div");
+        trapDiv.style.fontSize = "11px";
+        trapDiv.style.color = "#64748b";
+        trapDiv.style.marginTop = "4px";
+        trapDiv.textContent = `Top8含降权: ${dm.top_k_zero_demoted ? "0" : "有"} · 作息陷阱:${dm.weekend_trap_clean_ok ? "✓" : "✗"}`;
+        tdDem.appendChild(badge);
+        tdDem.appendChild(trapDiv);
+
+        // 5. Top-3 preview
+        const tdTop = document.createElement("td");
+        tdTop.style.fontSize = "11.5px";
+        topCands.slice(0, 3).forEach((j) => {
+          const line = document.createElement("div");
+          line.style.marginBottom = "3px";
+          line.textContent = `#${j.rank} [G${j.ground_truth_grade}] ${j["岗位名称"]} (${j["薪资范围"]} · ${j["初筛得分"]}分)`;
+          tdTop.appendChild(line);
+        });
+
+        // 6. Demoted preview
+        const tdBot = document.createElement("td");
+        tdBot.style.fontSize = "11px";
+        tdBot.style.color = "#64748b";
+        demoted.forEach((j) => {
+          const line = document.createElement("div");
+          line.style.marginBottom = "2px";
+          const reason = Array.isArray(j.demotion_reasons) ? j.demotion_reasons[0] : j.trap_type;
+          line.textContent = `${j.job_id}: ${reason || "降权"} (${j["初筛得分"]}分)`;
+          tdBot.appendChild(line);
+        });
+
+        // 7. Argon Score
+        const tdScore = document.createElement("td");
+        const scVal = Number(sc.overall_score_10 || 0);
+        const scStrong = document.createElement("strong");
+        scStrong.style.color = getScoreBarColor(scVal);
+        scStrong.textContent = `${scVal.toFixed(2)} / 10`;
+        const latDiv = document.createElement("div");
+        latDiv.style.fontSize = "11px";
+        latDiv.style.color = "#64748b";
+        latDiv.textContent = `${Number(sc.rank_latency_ms || 0).toFixed(2)}ms`;
+        tdScore.appendChild(scStrong);
+        tdScore.appendChild(latDiv);
+
+        // 8. Argon Comment
+        const tdComment = document.createElement("td");
+        tdComment.style.fontSize = "11.5px";
+        tdComment.style.color = "#334155";
+        tdComment.textContent = sc.diagnosis_comment || "—";
+
+        tr.appendChild(tdId);
+        tr.appendChild(tdIntent);
+        tr.appendChild(tdIr);
+        tr.appendChild(tdDem);
+        tr.appendChild(tdTop);
+        tr.appendChild(tdBot);
+        tr.appendChild(tdScore);
+        tr.appendChild(tdComment);
+        return tr;
+      });
+      evalSamplesTableBody.replaceChildren(...rows);
+      return;
+    }
+
+    if (isStage3Active()) {
+      const cases = Array.isArray(runData && runData.case_evaluations)
+        ? runData.case_evaluations
+        : [];
+      if (cases.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 8;
+        td.style.textAlign = "center";
+        td.style.color = "#64748b";
+        td.style.padding = "20px";
+        td.textContent = "暂无 Stage 3 评测记录。";
+        tr.appendChild(td);
+        evalSamplesTableBody.replaceChildren(tr);
+        return;
+      }
+
+      const rows = cases.map((c) => {
+        const tr = document.createElement("tr");
+        tr.className = "eval-matrix-row";
+        const gt = c.ground_truth || {};
+        const act = c.actual_intent || {};
+        const dc = c.deterministic_checks || {};
+
+        // 1. Case ID + strategy
+        const tdId = document.createElement("td");
+        const idStrong = document.createElement("strong");
+        idStrong.textContent = c.case_id || "";
+        const stSub = document.createElement("div");
+        stSub.style.fontSize = "11px";
+        stSub.style.color = "#64748b";
+        stSub.textContent = c.strategy_tag || "";
+        tdId.appendChild(idStrong);
+        tdId.appendChild(stSub);
+
+        // 2. Input Query + City
+        const tdIn = document.createElement("td");
+        tdIn.style.fontSize = "12px";
+        const inQ = document.createElement("div");
+        inQ.textContent = c.input_query || "";
+        const inCity = document.createElement("div");
+        inCity.style.fontSize = "11px";
+        inCity.style.color = "#0284c7";
+        inCity.textContent = `意向城市: ${c.input_target_city || "—"}`;
+        tdIn.appendChild(inQ);
+        tdIn.appendChild(inCity);
+
+        // 3. Ground Truth URL
+        const tdGtUrl = document.createElement("td");
+        tdGtUrl.style.fontSize = "11.5px";
+        tdGtUrl.style.wordBreak = "break-all";
+        const gtA = document.createElement("a");
+        gtA.href = gt.expected_boss_url || "#";
+        gtA.target = "_blank";
+        gtA.rel = "noopener noreferrer";
+        gtA.style.color = "#0f766e";
+        gtA.textContent = (c.expected_boss_url_decoded || gt.expected_boss_url || "").replace(
+          "https://www.zhipin.com/web/geek/jobs?",
+          "jobs?"
+        );
+        tdGtUrl.appendChild(gtA);
+
+        // 4. Actual URL
+        const tdActUrl = document.createElement("td");
+        tdActUrl.style.fontSize = "11.5px";
+        tdActUrl.style.wordBreak = "break-all";
+        const actA = document.createElement("a");
+        actA.href = c.actual_boss_url || "#";
+        actA.target = "_blank";
+        actA.rel = "noopener noreferrer";
+        actA.style.color = dc.url_exact_match_ok ? "#059669" : "#d97706";
+        actA.style.fontWeight = "600";
+        actA.textContent = (c.actual_boss_url_decoded || c.actual_boss_url || "").replace(
+          "https://www.zhipin.com/web/geek/jobs?",
+          "jobs?"
+        );
+        tdActUrl.appendChild(actA);
+
+        // 5. Hard gates
+        const tdGates = document.createElement("td");
+        const exactBadge = document.createElement("span");
+        exactBadge.className = dc.url_exact_match_ok
+          ? "eval-flag-badge flag-pass"
+          : "eval-flag-badge flag-warn";
+        exactBadge.textContent = dc.url_exact_match_ok ? "✓ URL一致" : "~ Query微调";
+        const metaDiv = document.createElement("div");
+        metaDiv.style.fontSize = "11px";
+        metaDiv.style.color = "#64748b";
+        metaDiv.style.marginTop = "4px";
+        metaDiv.textContent = `城:${dc.city_match_ok ? "✓" : "✗"} 薪:${dc.salary_match_ok ? "✓" : "✗"} 纯:${dc.query_pure_ok ? "✓" : "✗"}`;
+        tdGates.appendChild(exactBadge);
+        tdGates.appendChild(metaDiv);
+
+        // 6. Industry keywords
+        const tdKw = document.createElement("td");
+        tdKw.style.fontSize = "11.5px";
+        tdKw.style.color = "#334155";
+        const kws = Array.isArray(act.industry_keywords) ? act.industry_keywords : [];
+        tdKw.textContent = kws.slice(0, 6).join(" / ") || "—";
+
+        // 7. Argon Score
+        const tdScore = document.createElement("td");
+        const sc = Number(c.overall_score_10 || 0);
+        const scStrong = document.createElement("strong");
+        scStrong.style.color = getScoreBarColor(sc);
+        scStrong.textContent = `${sc.toFixed(2)} / 10`;
+        const latDiv = document.createElement("div");
+        latDiv.style.fontSize = "11px";
+        latDiv.style.color = "#64748b";
+        latDiv.textContent = `${Number(c.parse_latency_s || 0).toFixed(1)}s`;
+        tdScore.appendChild(scStrong);
+        tdScore.appendChild(latDiv);
+
+        // 8. Argon Comment
+        const tdComment = document.createElement("td");
+        tdComment.style.fontSize = "11.5px";
+        tdComment.style.color = "#334155";
+        tdComment.textContent = c.diagnosis_comment || "—";
+
+        tr.appendChild(tdId);
+        tr.appendChild(tdIn);
+        tr.appendChild(tdGtUrl);
+        tr.appendChild(tdActUrl);
+        tr.appendChild(tdGates);
+        tr.appendChild(tdKw);
+        tr.appendChild(tdScore);
+        tr.appendChild(tdComment);
+        return tr;
+      });
+      evalSamplesTableBody.replaceChildren(...rows);
+      return;
+    }
 
     const samples = Array.isArray(runData && runData.sample_evaluations)
       ? runData.sample_evaluations
@@ -2529,7 +3715,9 @@
       commentBox.className = "eval-single-comment-box";
       commentBox.textContent = evalRecord
         ? isStage2Active()
-          ? `Stage 2 Query 生成诊断 (Gemini 3.8 Flash, temp=0.4)：${
+          ? `Stage 2 Query 生成与评测诊断 (生成: ${
+              evalRecord.model_used || "gemini-3.8-flash"
+            }, temp=0.4 | 评测 Judge: ${evalRecord.judge_model || "gemini-4-argon"})：${
               evalRecord.overall_comment || ""
             }`
           : `LLM-as-a-Judge 综合诊断 (${evalRecord.judge_model || "gemini-4-argon"})：${
@@ -2866,7 +4054,7 @@
         : "正在实时提取与原子核对...";
       showEvalStatus(
         isS2
-          ? `正在对样本 ${sampleId} 执行实时 Stage 2 搜索策略生成 (${extractModel}, temp=0.4, 10条)，请稍候约 5~10 秒...`
+          ? `正在对样本 ${sampleId} 执行实时 Stage 2 搜索策略生成 (${extractModel}, temp=0.4, 10条) + LLM-as-a-Judge 核验 (${judgeModel})，请稍候...`
           : `正在对样本 ${sampleId} 执行实时 Stage 1 多模态提取 (${extractModel}) + LLM-as-a-Judge 9 字段原子核对 (${judgeModel})，请稍候约 15~30 秒...`,
         false
       );
@@ -2876,9 +4064,8 @@
         const payload = isS2
           ? {
               sample_id: sampleId,
-              model_name: extractModel,
-              temperature: 0.4,
-              query_count: 10,
+              extract_model: extractModel,
+              judge_model: judgeModel,
               run_id: activeRunId,
             }
           : {
@@ -2935,7 +4122,7 @@
       evalRunBatchBtn.textContent = "正在运行批量评测...";
       showEvalStatus(
         isS2
-          ? `正在运行新批次 Stage 2 搜索 Query 批量评测（样本数上限: ${limitVal} | 模型: ${extractModel}, temp=0.4），请稍候...`
+          ? `正在运行新批次 Stage 2 搜索 Query 批量评测（样本数上限: ${limitVal} | 生成模型: ${extractModel}, temp=0.4 | 评测模型: ${judgeModel}），请稍候...`
           : `正在运行新批次 LLM-as-a-Judge 评测（格式: ${extVal || "全部"} | 样本数上限: ${limitVal} | 模型: ${extractModel}），请稍候...`,
         false
       );
@@ -2946,9 +4133,8 @@
           ? {
               limit: limitVal,
               live_gemini: true,
-              model_name: extractModel,
-              temperature: 0.4,
-              query_count: 10,
+              extract_model: extractModel,
+              judge_model: judgeModel,
             }
           : {
               extensions: extVal ? [extVal] : null,
@@ -3004,8 +4190,22 @@
     window.localStorage.removeItem("boss_agent_gemini_proxy");
   } catch (_) {}
 
-  // 页面初始化：自动加载最近一次简历解析与六维人岗匹配实测快照
+  // 页面初始化：先加载 BOSS直聘 1:1 城市列表，再加载最近一次简历解析与六维人岗匹配实测快照
+  async function loadBossCityOptions() {
+    try {
+      const resp = await fetch("/api/status");
+      if (!resp.ok) return;
+      const statusData = await resp.json();
+      if (statusData && Array.isArray(statusData.boss_cities)) {
+        populateBossCitySelectors(statusData.boss_cities);
+      }
+    } catch (_) {
+      // 忽略状态加载异常
+    }
+  }
+
   async function loadInitialSnapshot() {
+    await loadBossCityOptions();
     try {
       const resp = await fetch("/api/latest-snapshot");
       if (!resp.ok) return;

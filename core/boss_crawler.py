@@ -24,7 +24,7 @@ ProgressCallback = Callable[[int, str], None]
 
 def parse_salary_bounds(salary_desc: str) -> Tuple[int, int, int]:
     """
-    从薪资字符串（如 '12-18K·13薪', '10-15K', '200-300元/天'）解析出:
+    从薪资字符串（如 '12-18K·13薪', '1.5-2.5W·14薪', '200-300元/天', '10K'）解析出:
     (最低月薪K, 最高月薪K, 计薪月数)
     """
     if not salary_desc:
@@ -35,28 +35,79 @@ def parse_salary_bounds(salary_desc: str) -> Tuple[int, int, int]:
     if m_match:
         months = int(m_match.group(1))
 
-    k_match = re.search(r"(\d+)\s*-\s*(\d+)\s*[kK]", salary_desc)
+    # 1. K 区间（如 12-18K、8.5-12K）
+    k_match = re.search(r"(\d+(?:\.\d+)?)\s*[-~至]\s*(\d+(?:\.\d+)?)\s*[kK千]", salary_desc)
     if k_match:
-        return (int(k_match.group(1)), int(k_match.group(2)), months)
+        return (int(round(float(k_match.group(1)))), int(round(float(k_match.group(2)))), months)
 
-    single_k = re.search(r"(\d+)\s*[kK]", salary_desc)
+    # 2. W/万 区间（如 1.5-2.5W、1.2-2万）
+    w_match = re.search(r"(\d+(?:\.\d+)?)\s*[-~至]\s*(\d+(?:\.\d+)?)\s*[wW万]", salary_desc)
+    if w_match:
+        return (
+            int(round(float(w_match.group(1)) * 10)),
+            int(round(float(w_match.group(2)) * 10)),
+            months,
+        )
+
+    # 3. 日薪区间或单值（如 200-300元/天，按 21.75 个法定工作日换算为月薪 K）
+    day_range = re.search(r"(\d+(?:\.\d+)?)\s*[-~至]\s*(\d+(?:\.\d+)?)\s*元\s*/?\s*天", salary_desc)
+    if day_range:
+        low_k = max(1, int(round(float(day_range.group(1)) * 21.75 / 1000.0)))
+        high_k = max(low_k, int(round(float(day_range.group(2)) * 21.75 / 1000.0)))
+        return (low_k, high_k, months)
+
+    day_single = re.search(r"(\d+(?:\.\d+)?)\s*元\s*/?\s*天", salary_desc)
+    if day_single:
+        val_k = max(1, int(round(float(day_single.group(1)) * 21.75 / 1000.0)))
+        return (val_k, val_k, months)
+
+    # 4. 单值 K / W
+    single_k = re.search(r"(\d+(?:\.\d+)?)\s*[kK千]", salary_desc)
     if single_k:
-        val = int(single_k.group(1))
+        val = int(round(float(single_k.group(1))))
+        return (val, val, months)
+
+    single_w = re.search(r"(\d+(?:\.\d+)?)\s*[wW万]", salary_desc)
+    if single_w:
+        val = int(round(float(single_w.group(1)) * 10))
         return (val, val, months)
 
     return (0, 0, months)
 
 
 def detect_weekend_policy(text: str) -> str:
-    """从福利标签或完整 JD 文本中识别作息/周末制度"""
+    """从福利标签或完整 JD 文本中识别作息/周末制度（否定/单休/大小周严格优先于双休，杜绝误判）"""
     if not text:
         return "未注明"
-    if any(k in text for k in ["双休", "做五休二", "周末双休", "五天八小时", "5天8小时", "周六日休"]):
-        return "周末双休"
-    if any(k in text for k in ["大小周", "大小休", "隔周双休", "单双休"]):
-        return "大小周/单双休"
-    if any(k in text for k in ["月休6天", "月休8天", "月休4天", "排班", "轮休", "调休", "做六休一", "单休"]):
+
+    # 1. 否定双休 / 明确单休 / 排班轮休（最高优先级）
+    if any(
+        k in text
+        for k in [
+            "非双休",
+            "不双休",
+            "不是双休",
+            "无双休",
+            "单休",
+            "做六休一",
+            "月休4天",
+            "月休6天",
+            "月休8天",
+            "排班",
+            "轮休",
+            "调休",
+        ]
+    ):
         return "排班轮休/单休"
+
+    # 2. 大小周 / 单双休 / 隔周双休（次优先级，必须在“双休”之前判定）
+    if any(k in text for k in ["大小周", "大小休", "隔周双休", "单双休", "双单休"]):
+        return "大小周/单双休"
+
+    # 3. 明确周末双休
+    if any(k in text for k in ["周末双休", "双休", "做五休二", "五天八小时", "5天8小时", "周六日休"]):
+        return "周末双休"
+
     return "未明确注明"
 
 
@@ -107,62 +158,222 @@ def parse_api_job_item(item: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def score_candidate_for_detail(job: Dict[str, Any], intent: ParsedSearchIntent) -> float:
-    """
-    在 Stage 1 结束后对所有采集到的岗位进行初筛打分，选出最值得拉取详情页完整 JD 的 Top 8 候选岗位
-    """
-    score = 50.0
-    job_name = job.get("岗位名称", "")
-    industry = job.get("所属行业", "")
-    company = job.get("公司名称", "")
-    skills = job.get("技能标签", "")
-    welfare = job.get("福利待遇", "")
-    full_meta = f"{job_name} {industry} {company} {skills} {welfare}"
+def _extract_role_tokens(text: str) -> List[str]:
+    """从岗位名称中提取英文/数字技术词与中文 2-gram 词元，用于同义标题模糊匹配。"""
+    cleaned = (text or "").strip().lower()
+    if not cleaned:
+        return []
+    tokens: List[str] = []
+    # 英文/数字词元（如 java, ui, bd, it, saas, python）
+    for tok in re.findall(r"[a-z0-9+#]{2,}", cleaned):
+        if tok not in tokens:
+            tokens.append(tok)
+    # 中文 2-gram（去除泛化后缀“岗位/职位”）
+    zh_only = re.sub(r"[^\u4e00-\u9fa5]", "", cleaned)
+    zh_only = re.sub(r"(岗位|职位|工作)$", "", zh_only)
+    for i in range(max(0, len(zh_only) - 1)):
+        bg = zh_only[i : i + 2]
+        if bg not in tokens:
+            tokens.append(bg)
+    return tokens
 
-    # 1. 核心岗位词匹配
-    if intent.query and intent.query in job_name:
-        score += 18.0
+
+def _compute_title_score(query: str, job_name: str) -> float:
+    """计算岗位标题与核心目标岗位词的相关性得分（精确包含 20 分，词元模糊匹配最高 16 分）。"""
+    q = (query or "").strip().lower()
+    jn = (job_name or "").strip().lower()
+    if not q or not jn:
+        return 0.0
+    if q in jn:
+        return 20.0
+    q_tokens = _extract_role_tokens(q)
+    if not q_tokens:
+        return 0.0
+    matched = sum(1 for tok in q_tokens if tok in jn)
+    if matched == 0:
+        return 0.0
+    ratio = matched / len(q_tokens)
+    return round(min(16.0, 6.0 + ratio * 10.0), 1)
+
+
+def _compute_skill_score(
+    resume_profile: Optional[Dict[str, Any]],
+    full_meta: str,
+) -> float:
+    """计算候选人简历 core_skills 与岗位元信息/JD 的重合加分（最高 10 分）。"""
+    if not isinstance(resume_profile, dict) or not full_meta:
+        return 0.0
+    skills = resume_profile.get("core_skills")
+    if not isinstance(skills, list) or not skills:
+        return 0.0
+    meta_low = full_meta.lower()
+    matched = 0
+    for sk in skills:
+        s = str(sk or "").strip().lower()
+        if not s:
+            continue
+        if s in meta_low:
+            matched += 1
+            continue
+        # 若技能项包含括号/斜杠，拆出核心词元再匹配
+        sub_tokens = [t for t in re.split(r"[/、,，()\s]+", s) if len(t) >= 2]
+        if any(t in meta_low for t in sub_tokens):
+            matched += 1
+    return round(min(10.0, matched * 2.5), 1)
+
+
+def score_candidate_for_detail(
+    job: Dict[str, Any],
+    intent: ParsedSearchIntent,
+    resume_profile: Optional[Dict[str, Any]] = None,
+) -> float:
+    """
+    对候选岗位进行可解释初筛打分，并标注异地/低薪降权标志（保留全量池，但强制降权垫底）。
+    """
+    base_score = 50.0
+    job_name = str(job.get("岗位名称", ""))
+    industry = str(job.get("所属行业", ""))
+    company = str(job.get("公司名称", ""))
+    skills = str(job.get("技能标签", ""))
+    welfare = str(job.get("福利待遇", ""))
+    full_jd = str(job.get("完整JD", ""))
+    location = str(job.get("工作地点", ""))
+    full_meta = f"{job_name} {industry} {company} {skills} {welfare} {full_jd}"
+
+    # 1. 核心岗位词匹配（精确包含 + 词元模糊匹配）
+    title_score = _compute_title_score(intent.query, job_name)
 
     # 2. 行业关键词匹配
+    industry_score = 0.0
     if intent.industry_keywords:
-        matched_ind = [kw for kw in intent.industry_keywords if kw in full_meta]
+        meta_low = full_meta.lower()
+        matched_ind = [kw for kw in intent.industry_keywords if kw and kw.lower() in meta_low]
         if matched_ind:
-            score += min(25.0, 12.0 + len(matched_ind) * 4.0)
+            industry_score = min(24.0, 12.0 + len(matched_ind) * 4.0)
         else:
-            score -= 10.0
+            industry_score = -10.0
 
-    # 3. 薪资匹配
-    min_k = job.get("最低月薪K", 0)
-    max_k = job.get("最高月薪K", 0)
+    # 3. 薪资匹配与低薪降权判定
+    min_k = int(job.get("最低月薪K", 0) or 0)
+    max_k = int(job.get("最高月薪K", 0) or 0)
+    if min_k == 0 and max_k == 0 and job.get("薪资范围"):
+        min_k, max_k, months = parse_salary_bounds(str(job.get("薪资范围", "")))
+        job["最低月薪K"] = min_k
+        job["最高月薪K"] = max_k
+        job["计薪月数"] = months
+
+    is_below_salary_floor = bool(intent.min_salary_k > 0 and max_k > 0 and max_k < intent.min_salary_k)
+    salary_score = 0.0
     if intent.min_salary_k > 0 and max_k > 0:
         if min_k >= intent.min_salary_k:
-            score += 12.0
+            salary_score = 12.0
         elif max_k >= intent.min_salary_k:
-            score += 5.0
+            salary_score = 5.0
         else:
-            score -= 15.0
+            salary_score = -25.0
 
-    # 4. 双休偏好
+    # 4. 异地降权判定
+    target_city = (intent.city_name or "").strip().replace("市", "")
+    is_city_mismatch = bool(
+        target_city and target_city != "全国" and location and target_city not in location
+    )
+
+    # 5. 双休偏好
+    weekend_score = 0.0
+    weekend_policy = job.get("作息制度") or detect_weekend_policy(f"{welfare} {full_jd}")
+    job["作息制度"] = weekend_policy
     if intent.require_double_weekend:
-        if job.get("作息制度") == "周末双休":
-            score += 15.0
-        elif job.get("作息制度") in ("大小周/单双休", "排班轮休/单休"):
-            score -= 8.0
+        if weekend_policy == "周末双休":
+            weekend_score = 15.0
+        elif weekend_policy == "大小周/单双休":
+            weekend_score = -6.0
+        elif weekend_policy == "排班轮休/单休":
+            weekend_score = -12.0
 
-    # 5. 公司规模与福利完善度加分
-    scale = job.get("公司规模", "")
+    # 6. 简历技能重合加分
+    skill_score = _compute_skill_score(resume_profile, full_meta)
+
+    # 7. 公司规模、福利与活跃度加分
+    company_bonus = 0.0
+    scale = str(job.get("公司规模", ""))
     if any(s in scale for s in ["500-999人", "1000-9999人", "10000人以上"]):
-        score += 6.0
+        company_bonus += 6.0
     elif "100-499人" in scale:
-        score += 3.0
-
+        company_bonus += 3.0
     if welfare:
-        score += min(5.0, len(welfare.split(",")) * 0.8)
-
+        company_bonus += min(5.0, len([w for w in welfare.split(",") if w.strip()]) * 0.8)
     if job.get("BOSS在线"):
-        score += 2.0
+        company_bonus += 2.0
+    company_bonus = round(company_bonus, 1)
 
-    return round(score, 1)
+    # 8. 异地 / 低薪强制降权罚分（保留在全量池但垫底）
+    demotion_penalty = 0.0
+    demotion_reasons: List[str] = []
+    if is_city_mismatch:
+        demotion_penalty -= 40.0
+        demotion_reasons.append(f"异地岗位({location} ≠ {target_city})")
+    if is_below_salary_floor:
+        demotion_penalty -= 30.0
+        demotion_reasons.append(f"最高薪资({max_k}K)低于底薪({intent.min_salary_k}K)")
+    is_demoted = is_city_mismatch or is_below_salary_floor
+
+    total = round(
+        base_score
+        + title_score
+        + industry_score
+        + salary_score
+        + weekend_score
+        + skill_score
+        + company_bonus
+        + demotion_penalty,
+        1,
+    )
+
+    job["is_city_mismatch"] = is_city_mismatch
+    job["is_below_salary_floor"] = is_below_salary_floor
+    job["is_demoted"] = is_demoted
+    job["demotion_reasons"] = demotion_reasons
+    job["score_breakdown"] = {
+        "base": base_score,
+        "title_score": title_score,
+        "industry_score": industry_score,
+        "salary_score": salary_score,
+        "weekend_score": weekend_score,
+        "skill_score": skill_score,
+        "company_bonus": company_bonus,
+        "demotion_penalty": demotion_penalty,
+    }
+    return total
+
+
+def rank_and_filter_jobs(
+    jobs: List[Dict[str, Any]],
+    intent: ParsedSearchIntent,
+    top_k: int = 8,
+    resume_profile: Optional[Dict[str, Any]] = None,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """
+    【纯离线 Stage 4 过滤与粗排引擎】
+    - 保留全部候选岗位（不删除异地/低薪岗，确保全量 Excel 完整）；
+    - 采用两层确定性排序：(0 if not is_demoted else 1, -初筛得分)，
+      确保所有合规岗位严格排在异地/低薪降权岗位之前；
+    - 返回 (ranked_jobs, top_candidates)。
+    """
+    for job in jobs:
+        job["初筛得分"] = score_candidate_for_detail(
+            job, intent, resume_profile=resume_profile
+        )
+
+    ranked_jobs = sorted(
+        jobs,
+        key=lambda x: (
+            0 if not x.get("is_demoted", False) else 1,
+            -float(x.get("初筛得分", 0.0)),
+        ),
+    )
+    eff_k = max(1, int(top_k or 8))
+    top_candidates = ranked_jobs[:eff_k]
+    return ranked_jobs, top_candidates
 
 
 def export_jobs_to_excel(jobs: List[Dict[str, Any]], output_filename: str) -> Path:
@@ -227,6 +438,7 @@ def crawl_boss_two_stage(
     top_detail_count: int = 8,
     cdp_url: str = "http://127.0.0.1:9222",
     progress_cb: Optional[ProgressCallback] = None,
+    resume_profile: Optional[Dict[str, Any]] = None,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], str]:
     """
     执行两阶段 BOSS直聘采集任务：
@@ -356,16 +568,13 @@ def crawl_boss_two_stage(
                     except Exception:
                         break
 
-            # ==================== Stage 2: Top 8 候选岗位详情页定向补全 ====================
-            for job in collected_jobs:
-                job["初筛得分"] = score_candidate_for_detail(job, intent)
-
-            ranked_jobs = sorted(
+            # ==================== Stage 2: Top K 候选岗位详情页定向补全 ====================
+            ranked_jobs, top_candidates = rank_and_filter_jobs(
                 collected_jobs,
-                key=lambda x: x.get("初筛得分", 0.0),
-                reverse=True,
+                intent,
+                top_k=top_detail_count,
+                resume_profile=resume_profile,
             )
-            top_candidates = ranked_jobs[:top_detail_count]
 
             if top_candidates:
                 notify(
@@ -411,12 +620,23 @@ def crawl_boss_two_stage(
                         # 用完整 JD 再次更新作息制度识别
                         combined_text = f"{cand.get('福利待遇', '')} {post_desc}"
                         cand["作息制度"] = detect_weekend_policy(combined_text)
-                        # 重新计算初筛得分（因为完整 JD 可能包含“周末双休”或行业关键词）
-                        cand["初筛得分"] = score_candidate_for_detail(cand, intent)
+                        # 重新计算初筛得分（因为完整 JD 可能包含“周末双休”/“单休”或技能关键词）
+                        cand["初筛得分"] = score_candidate_for_detail(
+                            cand, intent, resume_profile=resume_profile
+                        )
                 except Exception as exc:
                     print(f"[Crawler] 获取岗位详情异常 ({cand.get('岗位名称')}): {exc}")
 
                 time.sleep(random.uniform(0.9, 1.4))
+
+            # Phase 2 详情补全后按最新得分与降权状态重排 Top-K，确保暴露单休/低匹配的岗位降序排列
+            top_candidates = sorted(
+                top_candidates,
+                key=lambda x: (
+                    0 if not x.get("is_demoted", False) else 1,
+                    -float(x.get("初筛得分", 0.0)),
+                ),
+            )
 
         finally:
             try:
@@ -424,14 +644,14 @@ def crawl_boss_two_stage(
             except Exception:
                 pass
 
-    # 导出 Excel
+    # 导出 Excel（按粗排 + 合规优先排序后导出，降权岗位保留在底部）
     excel_filename = ""
-    if collected_jobs:
+    if ranked_jobs:
         notify(76, "正在生成并导出 Excel 岗位数据表...")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         safe_query = re.sub(r"[^\w\u4e00-\u9fa5-]+", "_", intent.query)
         raw_filename = f"boss_{intent.city_name}_{safe_query}_{timestamp}.xlsx"
-        excel_path = export_jobs_to_excel(collected_jobs, raw_filename)
+        excel_path = export_jobs_to_excel(ranked_jobs, raw_filename)
         excel_filename = excel_path.name
 
-    return collected_jobs, top_candidates, excel_filename
+    return ranked_jobs, top_candidates, excel_filename

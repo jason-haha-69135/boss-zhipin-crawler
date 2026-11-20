@@ -1,0 +1,1874 @@
+{
+  "run_id": "run_stage4_ranking_20261120_135511",
+  "stage_id": "stage4_ranking",
+  "created_at": "2026-11-20 13:55:11",
+  "evaluation_mode": "llm_as_a_judge_stage4_ndcg_and_demotion",
+  "extract_model": "deterministic_ranker_v2",
+  "judge_model": "gemini-4-argon",
+  "source_manifest": "eval/dataset/stage4/stage4_ranking_manifest.json",
+  "total_scenarios": 6,
+  "total_jobs": 96,
+  "top_k": 8,
+  "mean_score_10": 9.58,
+  "mean_ndcg_at_8": 0.9754,
+  "mean_recall_at_8": 0.8958,
+  "demotion_accuracy_rate": 1.0,
+  "weekend_trap_clean_rate": 1.0,
+  "salary_parse_accuracy": 1.0,
+  "weekend_policy_accuracy": 1.0,
+  "mean_rank_latency_ms": 0.49,
+  "mean_judge_latency_s": 17.12,
+  "dimension_labels": {
+    "top_k_relevance_score": "Top-8 候选相关性",
+    "ranking_order_score": "排序阶梯与 NDCG",
+    "demotion_cleanliness_score": "异地/低薪/作息拦截纯净度",
+    "explainability_score": "分项打分可解释性"
+  },
+  "per_dimension_mean_scores_10": {
+    "top_k_relevance_score": 9.22,
+    "ranking_order_score": 9.8,
+    "demotion_cleanliness_score": 9.8,
+    "explainability_score": 9.6
+  },
+  "boundary_evaluation": {
+    "salary_parse_accuracy": 1.0,
+    "weekend_policy_accuracy": 1.0,
+    "salary_cases": [
+      {
+        "id": "SAL-01",
+        "input": "12-18K·13薪",
+        "expected": [
+          12,
+          18,
+          13
+        ],
+        "actual": [
+          12,
+          18,
+          13
+        ],
+        "passed": true
+      },
+      {
+        "id": "SAL-02",
+        "input": "1.5-2.5W·14薪",
+        "expected": [
+          15,
+          25,
+          14
+        ],
+        "actual": [
+          15,
+          25,
+          14
+        ],
+        "passed": true
+      },
+      {
+        "id": "SAL-03",
+        "input": "200-300元/天",
+        "expected": [
+          4,
+          7,
+          12
+        ],
+        "actual": [
+          4,
+          7,
+          12
+        ],
+        "passed": true
+      },
+      {
+        "id": "SAL-04",
+        "input": "15K",
+        "expected": [
+          15,
+          15,
+          12
+        ],
+        "actual": [
+          15,
+          15,
+          12
+        ],
+        "passed": true
+      },
+      {
+        "id": "SAL-05",
+        "input": "1.2万",
+        "expected": [
+          12,
+          12,
+          12
+        ],
+        "actual": [
+          12,
+          12,
+          12
+        ],
+        "passed": true
+      },
+      {
+        "id": "SAL-06",
+        "input": "面议",
+        "expected": [
+          0,
+          0,
+          12
+        ],
+        "actual": [
+          0,
+          0,
+          12
+        ],
+        "passed": true
+      }
+    ],
+    "weekend_cases": [
+      {
+        "id": "WKD-01",
+        "input": "提供单双休、五险一金",
+        "expected": "大小周/单双休",
+        "actual": "大小周/单双休",
+        "passed": true
+      },
+      {
+        "id": "WKD-02",
+        "input": "隔周双休，弹性打卡",
+        "expected": "大小周/单双休",
+        "actual": "大小周/单双休",
+        "passed": true
+      },
+      {
+        "id": "WKD-03",
+        "input": "非双休，介意勿投",
+        "expected": "排班轮休/单休",
+        "actual": "排班轮休/单休",
+        "passed": true
+      },
+      {
+        "id": "WKD-04",
+        "input": "不双休，做六休一",
+        "expected": "排班轮休/单休",
+        "actual": "排班轮休/单休",
+        "passed": true
+      },
+      {
+        "id": "WKD-05",
+        "input": "周末双休，五险一金，带薪年假",
+        "expected": "周末双休",
+        "actual": "周末双休",
+        "passed": true
+      },
+      {
+        "id": "WKD-06",
+        "input": "五天八小时，法休齐全",
+        "expected": "周末双休",
+        "actual": "周末双休",
+        "passed": true
+      }
+    ]
+  },
+  "scenario_evaluations": [
+    {
+      "scenario_id": "S4-SCEN-01",
+      "source_stage3_case_id": "S3-QUAL-01-A",
+      "source_sample_id": "QUAL-01",
+      "industry_category": "互联网/新媒体运营",
+      "intent": {
+        "raw_query": "互联网新媒体行业的新媒体运营岗位，月薪至少0.7w",
+        "query": "新媒体运营",
+        "city_name": "上海",
+        "city_code": "101020100",
+        "salary_code": "404",
+        "salary_label": "5-10K",
+        "min_salary_k": 7,
+        "industry_keywords": [
+          "互联网",
+          "新媒体",
+          "MCN",
+          "文化传媒",
+          "社交网络",
+          "广告营销"
+        ],
+        "require_double_weekend": false,
+        "soft_requirements": [
+          "互联网新媒体行业",
+          "月薪至少7K"
+        ]
+      },
+      "total_jobs": 16,
+      "deterministic_metrics": {
+        "ndcg_at_8": 0.9091,
+        "recall_at_8": 0.625,
+        "relevant_in_top_8": 5,
+        "relevant_total": 8,
+        "expected_demoted_count": 4,
+        "actual_demoted_count": 4,
+        "demotion_clean_ok": true,
+        "top_k_zero_demoted": true,
+        "full_pool_preserved": true,
+        "weekend_trap_clean_ok": true
+      },
+      "judge_scores": {
+        "top_k_relevance_score": 7.2,
+        "ranking_order_score": 9.2,
+        "demotion_cleanliness_score": 10.0,
+        "explainability_score": 8.0
+      },
+      "overall_score_10": 8.58,
+      "diagnosis_comment": "前5名完美呈现Grade 3与Grade 2岗位，异地与低薪岗位100%精准降权；但因非目标行业（机械设备、生活服务）在industry_score上仍获得16分的高分，导致Recall@8偏低（0.625）且尾部混入3条Grade 1岗位，建议拉大目标行业与非目标行业的行业赋分差距。",
+      "rank_latency_ms": 1.38,
+      "judge_latency_s": 11.41,
+      "top_candidates": [
+        {
+          "rank": 1,
+          "job_id": "J02",
+          "岗位名称": "新媒体运营专员",
+          "薪资范围": "8-12K·13薪",
+          "工作地点": "上海·徐汇区·漕河泾",
+          "所属行业": "互联网",
+          "作息制度": "周末双休",
+          "初筛得分": 120.7,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 7.5,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 2,
+          "job_id": "J08",
+          "岗位名称": "新媒体运营（校园用户方向）",
+          "薪资范围": "8-13K·14薪",
+          "工作地点": "上海·杨浦区·五角场",
+          "所属行业": "社交网络",
+          "作息制度": "周末双休",
+          "初筛得分": 120.7,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 7.5,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 3,
+          "job_id": "J06",
+          "岗位名称": "新媒体运营（双语方向）",
+          "薪资范围": "9-14K",
+          "工作地点": "上海·静安区·南京西路",
+          "所属行业": "广告营销",
+          "作息制度": "周末双休",
+          "初筛得分": 117.7,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 7.5,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 4,
+          "job_id": "J15",
+          "岗位名称": "新媒体运营主管",
+          "薪资范围": "8-12K·13薪",
+          "工作地点": "上海·黄浦区·人民广场",
+          "所属行业": "新媒体",
+          "作息制度": "周末双休",
+          "初筛得分": 116.7,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 7.5,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 5,
+          "job_id": "J09",
+          "岗位名称": "新媒体运营（短视频与私域）",
+          "薪资范围": "7-12K",
+          "工作地点": "上海·闵行区·虹桥",
+          "所属行业": "MCN",
+          "作息制度": "未明确注明",
+          "初筛得分": 112.4,
+          "ground_truth_grade": 2,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 5.0,
+            "company_bonus": 5.4,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 6,
+          "job_id": "J10",
+          "岗位名称": "新媒体运营专员",
+          "薪资范围": "8-12K",
+          "工作地点": "上海·松江区·九亭",
+          "所属行业": "新媒体",
+          "作息制度": "排班轮休/单休",
+          "初筛得分": 111.2,
+          "ground_truth_grade": 1,
+          "trap_type": "weekend_trap",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 5.0,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 7,
+          "job_id": "J04",
+          "岗位名称": "新媒体运营专员",
+          "薪资范围": "8-11K",
+          "工作地点": "上海·嘉定区·安亭",
+          "所属行业": "机械设备/机电/重工",
+          "作息制度": "周末双休",
+          "初筛得分": 107.2,
+          "ground_truth_grade": 1,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 0.0,
+            "company_bonus": 9.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 8,
+          "job_id": "J14",
+          "岗位名称": "新媒体内容与活动运营",
+          "薪资范围": "7-10K",
+          "工作地点": "上海·虹口区·四川北路",
+          "所属行业": "生活服务",
+          "作息制度": "大小周/单双休",
+          "初筛得分": 102.4,
+          "ground_truth_grade": 1,
+          "trap_type": "weekend_trap",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 13.5,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 2.5,
+            "company_bonus": 8.4,
+            "demotion_penalty": 0.0
+          }
+        }
+      ],
+      "demoted_jobs": [
+        {
+          "job_id": "J12",
+          "岗位名称": "新媒体运营",
+          "薪资范围": "9-13K",
+          "工作地点": "苏州·工业园区·湖西",
+          "trap_type": "off_city",
+          "demotion_reasons": [
+            "异地岗位(苏州·工业园区·湖西 ≠ 上海)"
+          ],
+          "初筛得分": 78.7
+        },
+        {
+          "job_id": "J03",
+          "岗位名称": "资深新媒体运营",
+          "薪资范围": "12-18K·14薪",
+          "工作地点": "杭州·余杭区·未来科技城",
+          "trap_type": "off_city",
+          "demotion_reasons": [
+            "异地岗位(杭州·余杭区·未来科技城 ≠ 上海)"
+          ],
+          "初筛得分": 77.4
+        },
+        {
+          "job_id": "J05",
+          "岗位名称": "新媒体运营助理",
+          "薪资范围": "4-6K",
+          "工作地点": "上海·宝山区·大场",
+          "trap_type": "low_salary",
+          "demotion_reasons": [
+            "最高薪资(6K)低于底薪(7K)"
+          ],
+          "初筛得分": 39.1
+        },
+        {
+          "job_id": "J13",
+          "岗位名称": "新媒体文案运营",
+          "薪资范围": "5-6K",
+          "工作地点": "上海·奉贤区·南桥",
+          "trap_type": "low_salary",
+          "demotion_reasons": [
+            "最高薪资(6K)低于底薪(7K)"
+          ],
+          "初筛得分": 34.6
+        }
+      ]
+    },
+    {
+      "scenario_id": "S4-SCEN-02",
+      "source_stage3_case_id": "S3-QUAL-02-B",
+      "source_sample_id": "QUAL-02",
+      "industry_category": "互联网广告/电子商务",
+      "intent": {
+        "raw_query": "数字营销与广告技术行业的大客户销售经理岗位，月薪至少1.2w，要求周末双休",
+        "query": "大客户销售经理",
+        "city_name": "北京",
+        "city_code": "101010100",
+        "salary_code": "405",
+        "salary_label": "10-20K",
+        "min_salary_k": 12,
+        "industry_keywords": [
+          "数字营销",
+          "广告技术",
+          "广告营销",
+          "互联网广告",
+          "营销服务"
+        ],
+        "require_double_weekend": true,
+        "soft_requirements": [
+          "行业偏好：数字营销与广告技术",
+          "最低月薪：12K",
+          "周末双休"
+        ]
+      },
+      "total_jobs": 16,
+      "deterministic_metrics": {
+        "ndcg_at_8": 0.9715,
+        "recall_at_8": 0.875,
+        "relevant_in_top_8": 7,
+        "relevant_total": 8,
+        "expected_demoted_count": 4,
+        "actual_demoted_count": 4,
+        "demotion_clean_ok": true,
+        "top_k_zero_demoted": true,
+        "full_pool_preserved": true,
+        "weekend_trap_clean_ok": true
+      },
+      "judge_scores": {
+        "top_k_relevance_score": 9.1,
+        "ranking_order_score": 9.8,
+        "demotion_cleanliness_score": 9.6,
+        "explainability_score": 9.8
+      },
+      "overall_score_10": 9.51,
+      "diagnosis_comment": "Top-8 排序阶梯非常清晰（前4名均为Grade 3，5-7名为Grade 2同义词岗位，NDCG@8达0.9715），异地与低薪岗位100%被准确降权拦截；第8名混入1条大小周岗位（Grade 1），虽已正确扣除作息分（-6.0）未误判为双休，但若能进一步加大非双休惩罚以召回漏掉的第8个高相关岗位将更为完美。",
+      "rank_latency_ms": 0.28,
+      "judge_latency_s": 48.32,
+      "top_candidates": [
+        {
+          "rank": 1,
+          "job_id": "J06",
+          "岗位名称": "数字营销大客户销售经理",
+          "薪资范围": "14-24K·13薪",
+          "工作地点": "北京·朝阳区·大望路",
+          "所属行业": "数字营销",
+          "作息制度": "周末双休",
+          "初筛得分": 134.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 2,
+          "job_id": "J01",
+          "岗位名称": "大客户销售经理（互联网广告）",
+          "薪资范围": "15-25K·14薪",
+          "工作地点": "北京·朝阳区·望京",
+          "所属行业": "广告营销",
+          "作息制度": "周末双休",
+          "初筛得分": 132.7,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 7.5,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 3,
+          "job_id": "J13",
+          "岗位名称": "大客户销售经理（互联网广告）",
+          "薪资范围": "13-22K·13薪",
+          "工作地点": "北京·朝阳区·CBD",
+          "所属行业": "互联网广告",
+          "作息制度": "周末双休",
+          "初筛得分": 131.7,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 7.5,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 4,
+          "job_id": "J10",
+          "岗位名称": "大客户销售经理（广告技术SaaS）",
+          "薪资范围": "15-28K·14薪",
+          "工作地点": "北京·海淀区·五道口",
+          "所属行业": "广告技术",
+          "作息制度": "周末双休",
+          "初筛得分": 131.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 5,
+          "job_id": "J07",
+          "岗位名称": "商业化广告客户代表（KA方向）",
+          "薪资范围": "12-19K·14薪",
+          "工作地点": "北京·海淀区·西二旗",
+          "所属行业": "广告技术",
+          "作息制度": "周末双休",
+          "初筛得分": 116.1,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 7.7,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 5.0,
+            "company_bonus": 10.4,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 6,
+          "job_id": "J03",
+          "岗位名称": "KA商务拓展总监/高级经理",
+          "薪资范围": "15-22K·13薪",
+          "工作地点": "北京·海淀区·中关村",
+          "所属行业": "互联网广告",
+          "作息制度": "周末双休",
+          "初筛得分": 113.6,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 7.7,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 7.5,
+            "company_bonus": 5.4,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 7,
+          "job_id": "J11",
+          "岗位名称": "品牌营销BD经理（大客户）",
+          "薪资范围": "11-18K·13薪",
+          "工作地点": "北京·朝阳区·酒仙桥",
+          "所属行业": "营销服务",
+          "作息制度": "周末双休",
+          "初筛得分": 109.4,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 11.0,
+            "industry_score": 16.0,
+            "salary_score": 5.0,
+            "weekend_score": 15.0,
+            "skill_score": 5.0,
+            "company_bonus": 7.4,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 8,
+          "job_id": "J09",
+          "岗位名称": "广告大客户销售经理",
+          "薪资范围": "12-20K",
+          "工作地点": "北京·朝阳区·三里屯",
+          "所属行业": "营销服务",
+          "作息制度": "大小周/单双休",
+          "初筛得分": 104.4,
+          "ground_truth_grade": 1,
+          "trap_type": "weekend_trap",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": -6.0,
+            "skill_score": 5.0,
+            "company_bonus": 7.4,
+            "demotion_penalty": 0.0
+          }
+        }
+      ],
+      "demoted_jobs": [
+        {
+          "job_id": "J15",
+          "岗位名称": "数字营销大客户销售经理",
+          "薪资范围": "16-28K·14薪",
+          "工作地点": "杭州·余杭区·未来科技城",
+          "trap_type": "off_city",
+          "demotion_reasons": [
+            "异地岗位(杭州·余杭区·未来科技城 ≠ 北京)"
+          ],
+          "初筛得分": 93.4
+        },
+        {
+          "job_id": "J02",
+          "岗位名称": "大客户销售经理",
+          "薪资范围": "18-30K·15薪",
+          "工作地点": "上海·静安区·南京西路",
+          "trap_type": "off_city",
+          "demotion_reasons": [
+            "异地岗位(上海·静安区·南京西路 ≠ 北京)"
+          ],
+          "初筛得分": 90.9
+        },
+        {
+          "job_id": "J05",
+          "岗位名称": "大客户销售经理",
+          "薪资范围": "7-11K",
+          "工作地点": "北京·朝阳区·国贸",
+          "trap_type": "low_salary",
+          "demotion_reasons": [
+            "最高薪资(11K)低于底薪(12K)"
+          ],
+          "初筛得分": 53.4
+        },
+        {
+          "job_id": "J12",
+          "岗位名称": "大客户销售经理",
+          "薪资范围": "6-10K",
+          "工作地点": "北京·通州区·九棵树",
+          "trap_type": "low_salary",
+          "demotion_reasons": [
+            "最高薪资(10K)低于底薪(12K)"
+          ],
+          "初筛得分": 52.6
+        }
+      ]
+    },
+    {
+      "scenario_id": "S4-SCEN-03",
+      "source_stage3_case_id": "S3-QUAL-03-B",
+      "source_sample_id": "QUAL-03",
+      "industry_category": "互联网/艺术与视觉设计",
+      "intent": {
+        "raw_query": "人工智能与大数据行业的交互设计师岗位，月薪至少0.8w，要求周末双休",
+        "query": "交互设计师",
+        "city_name": "上海",
+        "city_code": "101020100",
+        "salary_code": "404",
+        "salary_label": "5-10K",
+        "min_salary_k": 8,
+        "industry_keywords": [
+          "人工智能",
+          "AI",
+          "大数据",
+          "数据服务",
+          "互联网",
+          "软件服务"
+        ],
+        "require_double_weekend": true,
+        "soft_requirements": [
+          "人工智能与大数据行业",
+          "月薪至少8K",
+          "周末双休"
+        ]
+      },
+      "total_jobs": 16,
+      "deterministic_metrics": {
+        "ndcg_at_8": 1.0,
+        "recall_at_8": 1.0,
+        "relevant_in_top_8": 8,
+        "relevant_total": 8,
+        "expected_demoted_count": 4,
+        "actual_demoted_count": 4,
+        "demotion_clean_ok": true,
+        "top_k_zero_demoted": true,
+        "full_pool_preserved": true,
+        "weekend_trap_clean_ok": true
+      },
+      "judge_scores": {
+        "top_k_relevance_score": 10.0,
+        "ranking_order_score": 10.0,
+        "demotion_cleanliness_score": 10.0,
+        "explainability_score": 10.0
+      },
+      "overall_score_10": 10.0,
+      "diagnosis_comment": "Top-8 候选岗位完美契合上海、AI/大数据相关行业、月薪≥8K及周末双休的求职意图，Recall@8 与 NDCG@8 均达满分 1.0。Grade 3 岗位稳居前四，同义词岗位与边界薪资（7-10K）的 Grade 2 岗位合理紧随其后，且异地与低薪陷阱被 100% 精准识别并降权兜底，分项归因清晰无误。",
+      "rank_latency_ms": 0.29,
+      "judge_latency_s": 9.31,
+      "top_candidates": [
+        {
+          "rank": 1,
+          "job_id": "J02",
+          "岗位名称": "交互设计师",
+          "薪资范围": "15-22K·14薪",
+          "工作地点": "上海·浦东新区·张江",
+          "所属行业": "人工智能",
+          "作息制度": "周末双休",
+          "初筛得分": 135.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 2,
+          "job_id": "J06",
+          "岗位名称": "资深交互设计师",
+          "薪资范围": "18-28K·15薪",
+          "工作地点": "上海·长宁区·中山公园",
+          "所属行业": "互联网",
+          "作息制度": "周末双休",
+          "初筛得分": 134.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 3,
+          "job_id": "J10",
+          "岗位名称": "交互设计师（数据服务）",
+          "薪资范围": "12-18K·13薪",
+          "工作地点": "上海·闵行区·虹桥",
+          "所属行业": "数据服务",
+          "作息制度": "周末双休",
+          "初筛得分": 132.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 9.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 4,
+          "job_id": "J14",
+          "岗位名称": "交互设计师（AI应用）",
+          "薪资范围": "14-20K·13薪",
+          "工作地点": "上海·徐汇区·西岸智慧谷",
+          "所属行业": "AI",
+          "作息制度": "周末双休",
+          "初筛得分": 131.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 5,
+          "job_id": "J08",
+          "岗位名称": "UE设计师（大数据平台）",
+          "薪资范围": "13-20K·14薪",
+          "工作地点": "上海·杨浦区·五角场",
+          "所属行业": "数据服务",
+          "作息制度": "周末双休",
+          "初筛得分": 126.2,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 11.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 6,
+          "job_id": "J12",
+          "岗位名称": "UI/UX交互设计师",
+          "薪资范围": "7-10K",
+          "工作地点": "上海·浦东新区·世纪公园",
+          "所属行业": "软件服务",
+          "作息制度": "周末双休",
+          "初筛得分": 124.2,
+          "ground_truth_grade": 2,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 5.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 7,
+          "job_id": "J03",
+          "岗位名称": "UX体验设计师",
+          "薪资范围": "12-18K·13薪",
+          "工作地点": "上海·徐汇区·漕河泾",
+          "所属行业": "大数据",
+          "作息制度": "周末双休",
+          "初筛得分": 123.2,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 11.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 9.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 8,
+          "job_id": "J16",
+          "岗位名称": "产品交互体验师",
+          "薪资范围": "10-15K·13薪",
+          "工作地点": "上海·静安区·南京西路",
+          "所属行业": "互联网",
+          "作息制度": "周末双休",
+          "初筛得分": 122.7,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 8.5,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        }
+      ],
+      "demoted_jobs": [
+        {
+          "job_id": "J13",
+          "岗位名称": "交互设计师",
+          "薪资范围": "16-24K·14薪",
+          "工作地点": "苏州·工业园区·独墅湖",
+          "trap_type": "off_city",
+          "demotion_reasons": [
+            "异地岗位(苏州·工业园区·独墅湖 ≠ 上海)"
+          ],
+          "初筛得分": 94.2
+        },
+        {
+          "job_id": "J01",
+          "岗位名称": "高级交互设计师（AI大模型）",
+          "薪资范围": "20-35K·15薪",
+          "工作地点": "杭州·余杭区·未来科技城",
+          "trap_type": "off_city",
+          "demotion_reasons": [
+            "异地岗位(杭州·余杭区·未来科技城 ≠ 上海)"
+          ],
+          "初筛得分": 93.2
+        },
+        {
+          "job_id": "J11",
+          "岗位名称": "助理交互设计师",
+          "薪资范围": "4-6K",
+          "工作地点": "上海·宝山区·大场",
+          "trap_type": "low_salary",
+          "demotion_reasons": [
+            "最高薪资(6K)低于底薪(8K)"
+          ],
+          "初筛得分": 59.6
+        },
+        {
+          "job_id": "J05",
+          "岗位名称": "初级交互设计师",
+          "薪资范围": "5-7K",
+          "工作地点": "上海·静安区·市北高新",
+          "trap_type": "low_salary",
+          "demotion_reasons": [
+            "最高薪资(7K)低于底薪(8K)"
+          ],
+          "初筛得分": 32.4
+        }
+      ]
+    },
+    {
+      "scenario_id": "S4-SCEN-04",
+      "source_stage3_case_id": "S3-QUAL-04-A",
+      "source_sample_id": "QUAL-04",
+      "industry_category": "互联网/后端研发",
+      "intent": {
+        "raw_query": "互联网软件行业的Java开发工程师岗位，月薪至少1w，要求周末双休",
+        "query": "Java开发工程师",
+        "city_name": "广州",
+        "city_code": "101280100",
+        "salary_code": "405",
+        "salary_label": "10-20K",
+        "min_salary_k": 10,
+        "industry_keywords": [
+          "互联网",
+          "计算机软件",
+          "软件开发",
+          "信息技术",
+          "IT服务"
+        ],
+        "require_double_weekend": true,
+        "soft_requirements": [
+          "互联网软件行业",
+          "月薪至少10K",
+          "周末双休"
+        ]
+      },
+      "total_jobs": 16,
+      "deterministic_metrics": {
+        "ndcg_at_8": 1.0,
+        "recall_at_8": 1.0,
+        "relevant_in_top_8": 8,
+        "relevant_total": 8,
+        "expected_demoted_count": 4,
+        "actual_demoted_count": 4,
+        "demotion_clean_ok": true,
+        "top_k_zero_demoted": true,
+        "full_pool_preserved": true,
+        "weekend_trap_clean_ok": true
+      },
+      "judge_scores": {
+        "top_k_relevance_score": 10.0,
+        "ranking_order_score": 10.0,
+        "demotion_cleanliness_score": 10.0,
+        "explainability_score": 10.0
+      },
+      "overall_score_10": 10.0,
+      "diagnosis_comment": "Top-8 岗位完美契合求职者的广州Java开发、互联网/软件行业、10K+底薪及周末双休诉求（Recall@8=1.0, NDCG@8=1.0），且成功兼容了同义岗位名称与临界薪资（如J12的9-14K）；深圳/佛山异地及最高薪资低于10K的硬伤岗位被100%精准降权置底，分项得分与降权原因清晰可解释。",
+      "rank_latency_ms": 0.35,
+      "judge_latency_s": 15.85,
+      "top_candidates": [
+        {
+          "rank": 1,
+          "job_id": "J06",
+          "岗位名称": "高级Java开发工程师",
+          "薪资范围": "15-25K·13薪",
+          "工作地点": "广州·番禺区·万博",
+          "所属行业": "互联网",
+          "作息制度": "周末双休",
+          "初筛得分": 134.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 2,
+          "job_id": "J02",
+          "岗位名称": "Java开发工程师",
+          "薪资范围": "14-22K·14薪",
+          "工作地点": "广州·海珠区·琶洲",
+          "所属行业": "互联网",
+          "作息制度": "周末双休",
+          "初筛得分": 131.7,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 7.5,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 3,
+          "job_id": "J09",
+          "岗位名称": "Java开发工程师",
+          "薪资范围": "12-18K·13薪",
+          "工作地点": "广州·天河区·智慧城",
+          "所属行业": "软件开发",
+          "作息制度": "周末双休",
+          "初筛得分": 131.7,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 7.5,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 4,
+          "job_id": "J14",
+          "岗位名称": "Java开发工程师",
+          "薪资范围": "1.2-1.8W·14薪",
+          "工作地点": "广州·海珠区·新港东",
+          "所属行业": "计算机软件",
+          "作息制度": "周末双休",
+          "初筛得分": 128.7,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 7.5,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 5,
+          "job_id": "J07",
+          "岗位名称": "服务端开发工程师(SpringCloud方向)",
+          "薪资范围": "11-17K·13薪",
+          "工作地点": "广州·黄埔区·科学城",
+          "所属行业": "信息技术",
+          "作息制度": "周末双休",
+          "初筛得分": 125.7,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 14.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 7.5,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 6,
+          "job_id": "J12",
+          "岗位名称": "中级Java开发工程师",
+          "薪资范围": "9-14K·13薪",
+          "工作地点": "广州·天河区·体育西路",
+          "所属行业": "IT服务",
+          "作息制度": "周末双休",
+          "初筛得分": 124.7,
+          "ground_truth_grade": 2,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 5.0,
+            "weekend_score": 15.0,
+            "skill_score": 7.5,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 7,
+          "job_id": "J03",
+          "岗位名称": "后端研发工程师(J2EE/微服务)",
+          "薪资范围": "12-18K·13薪",
+          "工作地点": "广州·天河区·科韵路",
+          "所属行业": "互联网",
+          "作息制度": "周末双休",
+          "初筛得分": 121.2,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 12.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 5.0,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 8,
+          "job_id": "J16",
+          "岗位名称": "Java后台工程师",
+          "薪资范围": "10-16K·13薪",
+          "工作地点": "广州·天河区·五山",
+          "所属行业": "软件开发",
+          "作息制度": "周末双休",
+          "初筛得分": 120.7,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 12.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 7.5,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        }
+      ],
+      "demoted_jobs": [
+        {
+          "job_id": "J01",
+          "岗位名称": "Java开发工程师",
+          "薪资范围": "18-25K·15薪",
+          "工作地点": "深圳·南山区·科技园",
+          "trap_type": "off_city",
+          "demotion_reasons": [
+            "异地岗位(深圳·南山区·科技园 ≠ 广州)"
+          ],
+          "初筛得分": 94.2
+        },
+        {
+          "job_id": "J11",
+          "岗位名称": "Java开发工程师",
+          "薪资范围": "13-20K·13薪",
+          "工作地点": "佛山·南海区·千灯湖",
+          "trap_type": "off_city",
+          "demotion_reasons": [
+            "异地岗位(佛山·南海区·千灯湖 ≠ 广州)"
+          ],
+          "初筛得分": 91.2
+        },
+        {
+          "job_id": "J13",
+          "岗位名称": "Java开发工程师",
+          "薪资范围": "7-9K",
+          "工作地点": "广州·番禺区·市桥",
+          "trap_type": "low_salary",
+          "demotion_reasons": [
+            "最高薪资(9K)低于底薪(10K)"
+          ],
+          "初筛得分": 55.9
+        },
+        {
+          "job_id": "J05",
+          "岗位名称": "Java开发工程师",
+          "薪资范围": "6-8K",
+          "工作地点": "广州·天河区·棠下",
+          "trap_type": "low_salary",
+          "demotion_reasons": [
+            "最高薪资(8K)低于底薪(10K)"
+          ],
+          "初筛得分": 55.4
+        }
+      ]
+    },
+    {
+      "scenario_id": "S4-SCEN-05",
+      "source_stage3_case_id": "S3-QUAL-05-B",
+      "source_sample_id": "QUAL-05",
+      "industry_category": "教育培训/国际贸易与行政管理",
+      "intent": {
+        "raw_query": "跨境电商出海行业的海外商务经理岗位，月薪至少1.1w",
+        "query": "海外商务经理",
+        "city_name": "武汉",
+        "city_code": "101200100",
+        "salary_code": "405",
+        "salary_label": "10-20K",
+        "min_salary_k": 11,
+        "industry_keywords": [
+          "跨境电商",
+          "出海",
+          "电子商务",
+          "国际贸易",
+          "进出口",
+          "海外业务"
+        ],
+        "require_double_weekend": false,
+        "soft_requirements": [
+          "跨境电商出海行业",
+          "月薪至少11K"
+        ]
+      },
+      "total_jobs": 16,
+      "deterministic_metrics": {
+        "ndcg_at_8": 1.0,
+        "recall_at_8": 1.0,
+        "relevant_in_top_8": 8,
+        "relevant_total": 8,
+        "expected_demoted_count": 4,
+        "actual_demoted_count": 4,
+        "demotion_clean_ok": true,
+        "top_k_zero_demoted": true,
+        "full_pool_preserved": true,
+        "weekend_trap_clean_ok": true
+      },
+      "judge_scores": {
+        "top_k_relevance_score": 10.0,
+        "ranking_order_score": 10.0,
+        "demotion_cleanliness_score": 10.0,
+        "explainability_score": 9.8
+      },
+      "overall_score_10": 9.98,
+      "diagnosis_comment": "Top-8 完美召回全部目标岗位（Recall@8=1.0, NDCG@8=1.0），Grade 3 与 Grade 2 排序阶梯分明；异地（深圳/杭州）及最高薪资不达标（<11K）的 4 个陷阱岗位被 100% 精准识别并降权兜底，得分拆解与降权原因清晰可解释。",
+      "rank_latency_ms": 0.37,
+      "judge_latency_s": 7.94,
+      "top_candidates": [
+        {
+          "rank": 1,
+          "job_id": "J14",
+          "岗位名称": "海外商务经理",
+          "薪资范围": "13-20K·14薪",
+          "工作地点": "武汉·江汉区·泛海CBD",
+          "所属行业": "跨境电商",
+          "作息制度": "周末双休",
+          "初筛得分": 123.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 10.0,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 2,
+          "job_id": "J06",
+          "岗位名称": "资深海外商务经理",
+          "薪资范围": "14-22K·13薪",
+          "工作地点": "武汉·东湖新技术开发区·关山大道",
+          "所属行业": "互联网/海外业务",
+          "作息制度": "周末双休",
+          "初筛得分": 120.7,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 7.5,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 3,
+          "job_id": "J01",
+          "岗位名称": "海外商务经理",
+          "薪资范围": "12-18K·14薪",
+          "工作地点": "武汉·东湖新技术开发区·光谷软件园",
+          "所属行业": "跨境电商",
+          "作息制度": "周末双休",
+          "初筛得分": 115.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 5.0,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 4,
+          "job_id": "J09",
+          "岗位名称": "海外商务经理",
+          "薪资范围": "11-16K·14薪",
+          "工作地点": "武汉·汉阳区·王家湾",
+          "所属行业": "国际贸易",
+          "作息制度": "周末双休",
+          "初筛得分": 111.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 5.0,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 5,
+          "job_id": "J03",
+          "岗位名称": "国际市场BD经理",
+          "薪资范围": "11-16K·13薪",
+          "工作地点": "武汉·武昌区·楚河汉街",
+          "所属行业": "电子商务",
+          "作息制度": "周末双休",
+          "初筛得分": 102.7,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 8.0,
+            "industry_score": 24.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 2.5,
+            "company_bonus": 6.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 6,
+          "job_id": "J15",
+          "岗位名称": "跨境战略合作经理",
+          "薪资范围": "12-17K·13薪",
+          "工作地点": "武汉·武昌区·徐东",
+          "所属行业": "进出口",
+          "作息制度": "周末双休",
+          "初筛得分": 101.2,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 8.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 0.0,
+            "skill_score": 5.0,
+            "company_bonus": 6.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 7,
+          "job_id": "J11",
+          "岗位名称": "海外商务合作经理",
+          "薪资范围": "9-14K·13薪",
+          "工作地点": "武汉·东湖新技术开发区·金融港",
+          "所属行业": "电子商务",
+          "作息制度": "周末双休",
+          "初筛得分": 100.7,
+          "ground_truth_grade": 2,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 14.0,
+            "industry_score": 16.0,
+            "salary_score": 5.0,
+            "weekend_score": 0.0,
+            "skill_score": 7.5,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 8,
+          "job_id": "J07",
+          "岗位名称": "出海渠道拓展主管",
+          "薪资范围": "10-15K·13薪",
+          "工作地点": "武汉·江岸区·武汉天地",
+          "所属行业": "跨境电商",
+          "作息制度": "周末双休",
+          "初筛得分": 88.2,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 0.0,
+            "industry_score": 20.0,
+            "salary_score": 5.0,
+            "weekend_score": 0.0,
+            "skill_score": 5.0,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        }
+      ],
+      "demoted_jobs": [
+        {
+          "job_id": "J02",
+          "岗位名称": "海外商务经理（欧美市场）",
+          "薪资范围": "15-25K·15薪",
+          "工作地点": "深圳·南山区·科技园",
+          "trap_type": "off_city",
+          "demotion_reasons": [
+            "异地岗位(深圳·南山区·科技园 ≠ 武汉)"
+          ],
+          "初筛得分": 74.2
+        },
+        {
+          "job_id": "J12",
+          "岗位名称": "海外商务经理",
+          "薪资范围": "16-24K·14薪",
+          "工作地点": "杭州·滨江区·长河",
+          "trap_type": "off_city",
+          "demotion_reasons": [
+            "异地岗位(杭州·滨江区·长河 ≠ 武汉)"
+          ],
+          "初筛得分": 74.2
+        },
+        {
+          "job_id": "J04",
+          "岗位名称": "海外商务经理",
+          "薪资范围": "6-9K",
+          "工作地点": "武汉·江汉区·CBD",
+          "trap_type": "low_salary",
+          "demotion_reasons": [
+            "最高薪资(9K)低于底薪(11K)"
+          ],
+          "初筛得分": 41.9
+        },
+        {
+          "job_id": "J10",
+          "岗位名称": "外贸大客户商务代表",
+          "薪资范围": "7-10K",
+          "工作地点": "武汉·东西湖区·金银潭",
+          "trap_type": "low_salary",
+          "demotion_reasons": [
+            "最高薪资(10K)低于底薪(11K)"
+          ],
+          "初筛得分": 27.9
+        }
+      ]
+    },
+    {
+      "scenario_id": "S4-SCEN-06",
+      "source_stage3_case_id": "S3-QUAL-08-B",
+      "source_sample_id": "QUAL-08",
+      "industry_category": "互联网/项目管理与视觉设计",
+      "intent": {
+        "raw_query": "人工智能与大数据行业的研发项目经理岗位，月薪至少2.0w，要求周末双休",
+        "query": "研发项目经理",
+        "city_name": "北京",
+        "city_code": "101010100",
+        "salary_code": "406",
+        "salary_label": "20-50K",
+        "min_salary_k": 20,
+        "industry_keywords": [
+          "人工智能",
+          "AI",
+          "大数据",
+          "计算机软件",
+          "互联网"
+        ],
+        "require_double_weekend": true,
+        "soft_requirements": [
+          "人工智能与大数据行业",
+          "月薪至少2.0w",
+          "周末双休"
+        ]
+      },
+      "total_jobs": 16,
+      "deterministic_metrics": {
+        "ndcg_at_8": 0.9715,
+        "recall_at_8": 0.875,
+        "relevant_in_top_8": 7,
+        "relevant_total": 8,
+        "expected_demoted_count": 4,
+        "actual_demoted_count": 4,
+        "demotion_clean_ok": true,
+        "top_k_zero_demoted": true,
+        "full_pool_preserved": true,
+        "weekend_trap_clean_ok": true
+      },
+      "judge_scores": {
+        "top_k_relevance_score": 9.0,
+        "ranking_order_score": 9.8,
+        "demotion_cleanliness_score": 9.2,
+        "explainability_score": 10.0
+      },
+      "overall_score_10": 9.39,
+      "diagnosis_comment": "Top-7均为高度匹配的Grade 3/2优质岗位，排序阶梯完美（NDCG@8达0.9715），异地与低薪岗位100%被精准降权拦截；唯一小瑕疵是Rank 8混入了1条已扣分的单双休岗位（J16，weekend_score=-6.0），建议加大对违反周末双休软性要求岗位的惩罚力度以完全移出Top-8。",
+      "rank_latency_ms": 0.3,
+      "judge_latency_s": 9.92,
+      "top_candidates": [
+        {
+          "rank": 1,
+          "job_id": "J09",
+          "岗位名称": "AI研发项目经理",
+          "薪资范围": "24-36K·16薪",
+          "工作地点": "北京·海淀区·知春路",
+          "所属行业": "人工智能",
+          "作息制度": "周末双休",
+          "初筛得分": 138.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 2,
+          "job_id": "J01",
+          "岗位名称": "高级研发项目经理",
+          "薪资范围": "25-35K·15薪",
+          "工作地点": "北京·海淀区·中关村",
+          "所属行业": "人工智能",
+          "作息制度": "周末双休",
+          "初筛得分": 135.7,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 20.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 7.5,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 3,
+          "job_id": "J14",
+          "岗位名称": "研发项目经理",
+          "薪资范围": "22-32K·15薪",
+          "工作地点": "北京·海淀区·五道口",
+          "所属行业": "计算机软件",
+          "作息制度": "周末双休",
+          "初筛得分": 134.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 4,
+          "job_id": "J06",
+          "岗位名称": "软件研发项目经理",
+          "薪资范围": "20-28K·13薪",
+          "工作地点": "北京·海淀区·上地",
+          "所属行业": "大数据",
+          "作息制度": "周末双休",
+          "初筛得分": 131.2,
+          "ground_truth_grade": 3,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 8.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 5,
+          "job_id": "J08",
+          "岗位名称": "产研项目统筹专家",
+          "薪资范围": "22-30K·14薪",
+          "工作地点": "北京·朝阳区·酒仙桥",
+          "所属行业": "计算机软件",
+          "作息制度": "周末双休",
+          "初筛得分": 122.2,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 8.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 10.0,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 6,
+          "job_id": "J10",
+          "岗位名称": "研发项目经理（互联网平台）",
+          "薪资范围": "18-25K·13薪",
+          "工作地点": "北京·丰台区·科技园",
+          "所属行业": "互联网",
+          "作息制度": "周末双休",
+          "初筛得分": 120.9,
+          "ground_truth_grade": 2,
+          "trap_type": "none",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 5.0,
+            "weekend_score": 15.0,
+            "skill_score": 7.5,
+            "company_bonus": 7.4,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 7,
+          "job_id": "J11",
+          "岗位名称": "软件工程研发交付经理",
+          "薪资范围": "20-26K·13薪",
+          "工作地点": "北京·东城区·东直门",
+          "所属行业": "大数据",
+          "作息制度": "周末双休",
+          "初筛得分": 116.7,
+          "ground_truth_grade": 2,
+          "trap_type": "synonym_title",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 10.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": 15.0,
+            "skill_score": 7.5,
+            "company_bonus": 6.2,
+            "demotion_penalty": 0.0
+          }
+        },
+        {
+          "rank": 8,
+          "job_id": "J16",
+          "岗位名称": "互联网研发项目经理",
+          "薪资范围": "23-32K·13薪",
+          "工作地点": "北京·朝阳区·国贸",
+          "所属行业": "互联网",
+          "作息制度": "大小周/单双休",
+          "初筛得分": 110.7,
+          "ground_truth_grade": 1,
+          "trap_type": "weekend_trap",
+          "is_demoted": false,
+          "score_breakdown": {
+            "base": 50.0,
+            "title_score": 20.0,
+            "industry_score": 16.0,
+            "salary_score": 12.0,
+            "weekend_score": -6.0,
+            "skill_score": 7.5,
+            "company_bonus": 11.2,
+            "demotion_penalty": 0.0
+          }
+        }
+      ],
+      "demoted_jobs": [
+        {
+          "job_id": "J02",
+          "岗位名称": "研发项目经理（AI方向）",
+          "薪资范围": "28-40K·14薪",
+          "工作地点": "上海·浦东新区·张江",
+          "trap_type": "off_city",
+          "demotion_reasons": [
+            "异地岗位(上海·浦东新区·张江 ≠ 北京)"
+          ],
+          "初筛得分": 94.9
+        },
+        {
+          "job_id": "J15",
+          "岗位名称": "资深研发项目经理",
+          "薪资范围": "25-35K·14薪",
+          "工作地点": "深圳·南山区·科技园",
+          "trap_type": "off_city",
+          "demotion_reasons": [
+            "异地岗位(深圳·南山区·科技园 ≠ 北京)"
+          ],
+          "初筛得分": 91.7
+        },
+        {
+          "job_id": "J04",
+          "岗位名称": "研发项目经理",
+          "薪资范围": "12-18K",
+          "工作地点": "北京·海淀区·西二旗",
+          "trap_type": "low_salary",
+          "demotion_reasons": [
+            "最高薪资(18K)低于底薪(20K)"
+          ],
+          "初筛得分": 57.9
+        },
+        {
+          "job_id": "J12",
+          "岗位名称": "研发项目经理",
+          "薪资范围": "10-15K·13薪",
+          "工作地点": "北京·通州区·梨园",
+          "trap_type": "low_salary",
+          "demotion_reasons": [
+            "最高薪资(15K)低于底薪(20K)"
+          ],
+          "初筛得分": 55.1
+        }
+      ]
+    }
+  ]
+}

@@ -29,14 +29,26 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from core.boss_crawler import OUTPUT_DIR, crawl_boss_two_stage
-from core.gemini_analyzer import ALLOWED_MODELS, analyze_jobs_with_gemini
+from core.boss_crawler import OUTPUT_DIR, crawl_boss_two_stage, rank_and_filter_jobs
+from core.gemini_analyzer import (
+    ALLOWED_MODELS,
+    DEFAULT_STAGE5_ANALYSIS_MODEL,
+    DEFAULT_STAGE5_TEMPERATURE,
+    analyze_jobs_with_gemini,
+    compute_six_dimension_stats,
+)
 from core.gemini_client import (
     detect_local_proxy,
     has_vertex_auth_available,
     load_backend_api_key,
 )
-from core.intent_parser import parse_user_intent
+from core.intent_parser import (
+    DEFAULT_STAGE3_INTENT_MODEL,
+    DEFAULT_STAGE3_TEMPERATURE,
+    ParsedSearchIntent,
+    get_boss_city_options,
+    parse_user_intent,
+)
 # Stage 2 已独立解耦至 core.query_generator
 from core.query_generator import (
     DEFAULT_QUERY_COUNT,
@@ -49,7 +61,7 @@ from core.resume_parser import (
     extract_resume_profile_with_gemini,
     parse_resume_with_gemini,
 )
-from resume_eval_benchmark.eval_store import (
+from eval.eval_store import (
     BENCHMARK_DIR,
     STAGE_REGISTRY,
     list_eval_runs,
@@ -59,8 +71,8 @@ from resume_eval_benchmark.eval_store import (
     run_single_sample_stage2_live_eval,
     save_eval_run_archive,
 )
-from resume_eval_benchmark.evaluate_parser import run_dataset_verification
-from resume_eval_benchmark.evaluate_stage2_queries import run_stage2_dataset_evaluation
+from eval.stage1_eval.evaluate_stage1_parser import run_dataset_verification
+from eval.stage2_eval.evaluate_stage2_queries import run_stage2_dataset_evaluation
 
 STATIC_DIR = BASE_DIR / "static"
 
@@ -140,19 +152,48 @@ class AnalyzeRequest(BaseModel):
         le=20,
         description="用户在 UI 自定义的 Top 候选岗位深度抓取与评估数量（范围 3-20）",
     )
+    target_city: Optional[str] = Field(
+        default=None,
+        description="用户选择的 BOSS直聘 意向城市（透传给 Stage 3 意图解析器）",
+    )
     resume_profile: Optional[Dict[str, Any]] = Field(
         default=None,
         description="可选的候选人已解析简历画像（用于在六维分析中结合真实履历评估人岗契合度）",
     )
 
 
-def _extract_resume_from_multipart(content_type: str, body: bytes) -> Tuple[str, bytes, str]:
+class IntentParseRequest(BaseModel):
+    query: str = Field(..., min_length=2, max_length=300, description="自然语言或 Stage 2 推荐求职 Query")
+    target_city: Optional[str] = Field(default=None, description="可选的 BOSS直聘 意向城市")
+    resume_profile: Optional[Dict[str, Any]] = Field(default=None, description="可选的 Stage 1 简历画像")
+    model: str = Field(default=DEFAULT_STAGE3_INTENT_MODEL, description="Stage 3 意图解析模型")
+    temperature: float = Field(default=DEFAULT_STAGE3_TEMPERATURE, ge=0.0, le=1.0)
+
+
+class JobRankRequest(BaseModel):
+    intent: Dict[str, Any] = Field(..., description="Stage 3 输出的结构化 ParsedSearchIntent")
+    jobs: List[Dict[str, Any]] = Field(..., description="待排序的 BOSS直聘 结构化岗位列表")
+    top_k: int = Field(default=8, ge=1, le=50, description="返回 Top-K 候选岗位数量")
+    resume_profile: Optional[Dict[str, Any]] = Field(default=None, description="可选的 Stage 1 简历画像")
+
+
+class AnalysisEvaluateRequest(BaseModel):
+    intent: Dict[str, Any] = Field(..., description="Stage 3 输出的结构化 ParsedSearchIntent")
+    jobs: List[Dict[str, Any]] = Field(..., description="Stage 4 输出的全量岗位列表")
+    top_candidates: List[Dict[str, Any]] = Field(..., description="Stage 4 输出的 Top-K 候选岗位列表")
+    resume_profile: Optional[Dict[str, Any]] = Field(default=None, description="可选的 Stage 1 简历画像")
+    model: str = Field(default=DEFAULT_STAGE5_ANALYSIS_MODEL, description="Stage 5 分析模型")
+    temperature: float = Field(default=DEFAULT_STAGE5_TEMPERATURE, ge=0.0, le=1.0)
+
+
+def _extract_resume_from_multipart(content_type: str, body: bytes) -> Tuple[str, bytes, str, Optional[str]]:
     """使用 Python 标准库解析 multipart/form-data 请求体，无需外部 python-multipart 依赖"""
     raw_Mime = b"Content-Type: " + content_type.encode("utf-8") + b"\r\n\r\n" + body
     msg = BytesParser(policy=email_default_policy).parsebytes(raw_Mime)
     filename = ""
     file_bytes = b""
     model_name = "gemini-3.8-flash"
+    target_city: Optional[str] = None
 
     if msg.is_multipart():
         for part in msg.iter_parts():
@@ -166,7 +207,13 @@ def _extract_resume_from_multipart(content_type: str, body: bytes) -> Tuple[str,
                 payload = part.get_payload(decode=True)
                 if isinstance(payload, bytes):
                     model_name = payload.decode("utf-8", errors="ignore").strip() or model_name
-    return filename, file_bytes, model_name
+            elif 'name="target_city"' in cd:
+                payload = part.get_payload(decode=True)
+                if isinstance(payload, bytes):
+                    city_val = payload.decode("utf-8", errors="ignore").strip()
+                    if city_val:
+                        target_city = city_val
+    return filename, file_bytes, model_name, target_city
 
 
 def format_sse(event: str, data: Dict[str, Any]) -> str:
@@ -177,9 +224,10 @@ def format_sse(event: str, data: Dict[str, Any]) -> str:
 
 @app.get("/api/status")
 async def get_status() -> Dict[str, Any]:
-    """返回服务状态及后端凭证就绪状态（绝不向前端暴露任何密钥明文）"""
+    """返回服务状态、后端凭证就绪状态及 BOSS直聘 1:1 官方城市列表（绝不向前端暴露任何密钥明文）"""
     return {
         "ai_ready": has_vertex_auth_available(),
+        "boss_cities": get_boss_city_options(),
         "models": [
             {"id": "gemini-3.8-flash", "label": "Gemini 3.8 Flash"},
             {"id": "gemini-3.5-flash-lite", "label": "Gemini 3.5 Flash Light"},
@@ -187,6 +235,12 @@ async def get_status() -> Dict[str, Any]:
             {"id": "gemini-4-argon", "label": "Gemini 4 Argon"},
         ],
     }
+
+
+@app.get("/api/cities")
+async def get_boss_cities_endpoint() -> Dict[str, Any]:
+    """返回与 BOSS直聘 1:1 映射的官方城市编码列表"""
+    return {"boss_cities": get_boss_city_options()}
 
 
 @app.get("/api/latest-snapshot")
@@ -234,8 +288,8 @@ class GenerateQueriesRequest(BaseModel):
     filename: Optional[str] = Field(default=None, max_length=120, description="关联的简历文件名（用于更新快照）")
 
 
-async def _parse_resume_upload_request(request: Request) -> Tuple[str, bytes, str]:
-    """统一解析 multipart/form-data 或 JSON Base64 简历上传请求并执行体积校验"""
+async def _parse_resume_upload_request(request: Request) -> Tuple[str, bytes, str, Optional[str]]:
+    """统一解析 multipart/form-data 或 JSON Base64 简历上传请求（含用户选择的 BOSS直聘 意向城市）并执行体积校验"""
     content_length_hdr = request.headers.get("content-length")
     if content_length_hdr and content_length_hdr.isdigit():
         if int(content_length_hdr) > int(MAX_RESUME_BYTES * 1.5):
@@ -249,9 +303,10 @@ async def _parse_resume_upload_request(request: Request) -> Tuple[str, bytes, st
     filename = ""
     raw_bytes = b""
     requested_model = "gemini-3.8-flash"
+    target_city: Optional[str] = None
 
     if "multipart/form-data" in content_type.lower():
-        filename, raw_bytes, requested_model = _extract_resume_from_multipart(content_type, body)
+        filename, raw_bytes, requested_model, target_city = _extract_resume_from_multipart(content_type, body)
     else:
         try:
             payload = json.loads(body.decode("utf-8"))
@@ -261,6 +316,8 @@ async def _parse_resume_upload_request(request: Request) -> Tuple[str, bytes, st
         filename = str(payload.get("filename") or "").strip()
         b64_str = str(payload.get("content_base64") or "").strip()
         requested_model = str(payload.get("model") or "gemini-3.8-flash").strip()
+        raw_city = str(payload.get("target_city") or "").strip()
+        target_city = raw_city or None
         if "," in b64_str and b64_str.startswith("data:"):
             b64_str = b64_str.split(",", 1)[1]
         try:
@@ -269,18 +326,18 @@ async def _parse_resume_upload_request(request: Request) -> Tuple[str, bytes, st
             raise HTTPException(status_code=400, detail="简历文件 Base64 解码失败。") from exc
 
     selected_model = requested_model if requested_model in ALLOWED_MODELS else "gemini-3.8-flash"
-    return filename, raw_bytes, selected_model
+    return filename, raw_bytes, selected_model, target_city
 
 
 @app.post("/api/resume/parse-profile")
 async def parse_resume_profile_endpoint(request: Request) -> Dict[str, Any]:
     """
     【阶段一独立服务接口】仅执行多模态简历深度理解与结构化求职画像提取：
-    1. 校验文件大小 (<=10MB)、扩展名白名单与 Magic Bytes 文件头签名；
+    1. 校验用户选择的 BOSS直聘 意向城市（1:1 映射）、文件大小 (<=10MB)、扩展名白名单与 Magic Bytes；
     2. 调用 Gemini Interactions API (`temperature=0.1`) 提取结构化 `profile`；
-    3. 经 Python 确定性校准与 PII 二次脱敏后即刻返回画像（前端可先行渲染画像卡片）。
+    3. 经 Python 确定性校准与 PII 二次脱敏后，将意向城市 (`target_city` & `target_city_code`) 写入输出 JSON 返回。
     """
-    filename, raw_bytes, selected_model = await _parse_resume_upload_request(request)
+    filename, raw_bytes, selected_model, target_city = await _parse_resume_upload_request(request)
     saved_cfg = load_runtime_config()
     effective_api_key = load_backend_api_key(saved_cfg.get("api_key"))
     effective_proxy = saved_cfg.get("proxy_url", "").strip() or None
@@ -291,6 +348,7 @@ async def parse_resume_profile_endpoint(request: Request) -> Dict[str, Any]:
             filename=filename,
             raw_bytes=raw_bytes,
             model_name=selected_model,
+            target_city=target_city,
             api_key=effective_api_key,
             proxy_url=effective_proxy,
         )
@@ -307,7 +365,7 @@ async def generate_resume_queries_endpoint(req: GenerateQueriesRequest) -> Dict[
     【阶段二独立服务接口】基于结构化求职画像（及用户微调的目标城市/底薪/附加偏好）生成 10 条多策略求职 Query：
     1. 无需重复上传简历原文件，仅接收轻量级 `profile` JSON 与可选覆盖参数；
     2. 由 Python 注入 BOSS直聘 高频标准岗位词锚点，调用 `core/query_generator.py`（默认 `gemini-3.8-flash`, `temperature=0.4`）生成 10 条差异化自然语言 Query；
-    3. 同步更新本地最新快照并返回 `{ filename, model_used, temperature_used, query_count, profile, recommended_queries }`。
+    3. 同步更新本地最新快照并返回 `{ filename, model_used, target_city, target_city_code, target_cities, profile, recommended_queries }`。
     """
     selected_model = req.model if req.model in ALLOWED_MODELS else DEFAULT_STAGE2_QUERY_MODEL
     saved_cfg = load_runtime_config()
@@ -333,6 +391,9 @@ async def generate_resume_queries_endpoint(req: GenerateQueriesRequest) -> Dict[
         combined_record = {
             "filename": (req.filename or "").strip() or prev_fn,
             "model_used": stage2_result["model_used"],
+            "target_city": stage2_result["target_city"],
+            "target_city_code": stage2_result["target_city_code"],
+            "target_cities": stage2_result["target_cities"],
             "profile": stage2_result["profile"],
             "recommended_queries": stage2_result["recommended_queries"],
         }
@@ -349,7 +410,7 @@ async def parse_resume_endpoint(request: Request) -> Dict[str, Any]:
     """
     【向后兼容组合接口】一次性串联执行阶段一（画像提取）与阶段二（推荐 Query 生成）
     """
-    filename, raw_bytes, selected_model = await _parse_resume_upload_request(request)
+    filename, raw_bytes, selected_model, _target_city = await _parse_resume_upload_request(request)
     saved_cfg = load_runtime_config()
     effective_api_key = load_backend_api_key(saved_cfg.get("api_key"))
     effective_proxy = saved_cfg.get("proxy_url", "").strip() or None
@@ -365,6 +426,99 @@ async def parse_resume_endpoint(request: Request) -> Dict[str, Any]:
         )
         save_latest_snapshot(resume_parsed=result)
         return result
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve)) from ve
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/intent/parse")
+async def parse_intent_endpoint(req: IntentParseRequest) -> Dict[str, Any]:
+    """【Stage 3 独立接口】将自然语言或 Stage 2 Query 解析为 BOSS直聘结构化 URL 参数与软性条件"""
+    selected_model = (
+        req.model
+        if req.model in ALLOWED_MODELS and req.model != "gemini-3.5-flash-lite"
+        else DEFAULT_STAGE3_INTENT_MODEL
+    )
+    saved_cfg = load_runtime_config()
+    effective_api_key = load_backend_api_key(saved_cfg.get("api_key"))
+    effective_proxy = saved_cfg.get("proxy_url", "").strip() or None
+
+    try:
+        intent = await asyncio.to_thread(
+            parse_user_intent,
+            req.query,
+            target_city=req.target_city,
+            resume_profile=req.resume_profile,
+            model_name=selected_model,
+            temperature=req.temperature,
+            api_key=effective_api_key,
+            proxy_url=effective_proxy,
+        )
+        return {
+            "model_used": selected_model,
+            "intent": intent.model_dump(),
+            "boss_url": intent.build_boss_url(),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/jobs/rank")
+async def rank_jobs_endpoint(req: JobRankRequest) -> Dict[str, Any]:
+    """【Stage 4 独立离线接口】脱离浏览器 CDP 执行候选岗位初筛打分、异地/低薪垫底降权与 Top-K 排序"""
+    try:
+        intent = ParsedSearchIntent.model_validate(req.intent)
+        jobs_copy = [dict(j) for j in req.jobs]
+        ranked_jobs, top_candidates = rank_and_filter_jobs(
+            jobs=jobs_copy,
+            intent=intent,
+            top_k=req.top_k,
+            resume_profile=req.resume_profile,
+        )
+        demoted_count = sum(1 for j in ranked_jobs if j.get("is_demoted"))
+        return {
+            "total_jobs": len(ranked_jobs),
+            "demoted_count": demoted_count,
+            "top_k": len(top_candidates),
+            "top_candidates": top_candidates,
+            "ranked_jobs": ranked_jobs,
+        }
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve)) from ve
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/analysis/evaluate")
+async def evaluate_analysis_endpoint(req: AnalysisEvaluateRequest) -> Dict[str, Any]:
+    """【Stage 5 独立离线接口】脱离浏览器爬虫直接执行六维统计与 Gemini 人岗匹配深度分析"""
+    selected_model = (
+        req.model if req.model in ALLOWED_MODELS else DEFAULT_STAGE5_ANALYSIS_MODEL
+    )
+    saved_cfg = load_runtime_config()
+    effective_api_key = load_backend_api_key(saved_cfg.get("api_key"))
+    effective_proxy = saved_cfg.get("proxy_url", "").strip() or None
+
+    try:
+        intent = ParsedSearchIntent.model_validate(req.intent)
+        stats = compute_six_dimension_stats(req.jobs, req.top_candidates, intent)
+        report = await asyncio.to_thread(
+            analyze_jobs_with_gemini,
+            intent=intent,
+            jobs=req.jobs,
+            top_candidates=req.top_candidates,
+            model_name=selected_model,
+            temperature=req.temperature,
+            api_key=effective_api_key,
+            proxy_url=effective_proxy,
+            resume_profile=req.resume_profile,
+        )
+        return {
+            "model_used": selected_model,
+            "stats": stats,
+            "report": report,
+        }
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve)) from ve
     except Exception as exc:
@@ -409,6 +563,9 @@ async def analyze_endpoint(req: AnalyzeRequest) -> StreamingResponse:
                     )
                     intent = parse_user_intent(
                         req.query,
+                        target_city=req.target_city,
+                        resume_profile=req.resume_profile,
+                        model_name=DEFAULT_STAGE3_INTENT_MODEL,
                         api_key=effective_api_key,
                         proxy_url=effective_proxy,
                     )
@@ -437,6 +594,7 @@ async def analyze_endpoint(req: AnalyzeRequest) -> StreamingResponse:
                         max_batches=max_batches,
                         top_detail_count=top_detail_count,
                         progress_cb=on_crawl_progress,
+                        resume_profile=req.resume_profile,
                     )
 
                     if not jobs:
@@ -549,6 +707,9 @@ async def get_eval_overview(stage_id: str = "stage1_profile") -> Dict[str, Any]:
     """
     runs_s1 = await asyncio.to_thread(list_eval_runs, "stage1_profile")
     runs_s2 = await asyncio.to_thread(list_eval_runs, "stage2_queries")
+    runs_s3 = await asyncio.to_thread(list_eval_runs, "stage3_intent")
+    runs_s4 = await asyncio.to_thread(list_eval_runs, "stage4_ranking")
+    runs_s5 = await asyncio.to_thread(list_eval_runs, "stage5_analysis")
 
     active_s1: Dict[str, Any] = {}
     if runs_s1:
@@ -569,20 +730,69 @@ async def get_eval_overview(stage_id: str = "stage1_profile") -> Dict[str, Any]:
         except Exception:
             active_s2 = {}
 
+    active_s3: Dict[str, Any] = {}
+    if runs_s3:
+        try:
+            active_s3 = await asyncio.to_thread(load_eval_run_by_id, runs_s3[0]["run_id"], "stage3_intent")
+        except Exception:
+            active_s3 = {}
+    else:
+        try:
+            active_s3 = await asyncio.to_thread(load_eval_run_by_id, "latest", "stage3_intent")
+        except Exception:
+            active_s3 = {}
+
+    active_s4: Dict[str, Any] = {}
+    if runs_s4:
+        try:
+            active_s4 = await asyncio.to_thread(load_eval_run_by_id, runs_s4[0]["run_id"], "stage4_ranking")
+        except Exception:
+            active_s4 = {}
+    else:
+        try:
+            active_s4 = await asyncio.to_thread(load_eval_run_by_id, "latest", "stage4_ranking")
+        except Exception:
+            active_s4 = {}
+
+    active_s5: Dict[str, Any] = {}
+    if runs_s5:
+        try:
+            active_s5 = await asyncio.to_thread(load_eval_run_by_id, runs_s5[0]["run_id"], "stage5_analysis")
+        except Exception:
+            active_s5 = {}
+    else:
+        try:
+            active_s5 = await asyncio.to_thread(load_eval_run_by_id, "latest", "stage5_analysis")
+        except Exception:
+            active_s5 = {}
+
     catalog = await asyncio.to_thread(load_benchmark_catalog)
-    eff_stage = stage_id if stage_id in ("stage1_profile", "stage2_queries") else "stage1_profile"
+    eff_stage = (
+        stage_id
+        if stage_id
+        in ("stage1_profile", "stage2_queries", "stage3_intent", "stage4_ranking", "stage5_analysis")
+        else "stage1_profile"
+    )
+    runs_map = {
+        "stage1_profile": runs_s1,
+        "stage2_queries": runs_s2,
+        "stage3_intent": runs_s3,
+        "stage4_ranking": runs_s4,
+        "stage5_analysis": runs_s5,
+    }
+    active_map = {
+        "stage1_profile": active_s1,
+        "stage2_queries": active_s2,
+        "stage3_intent": active_s3,
+        "stage4_ranking": active_s4,
+        "stage5_analysis": active_s5,
+    }
     return {
         "stages": STAGE_REGISTRY,
-        "runs": runs_s2 if eff_stage == "stage2_queries" else runs_s1,
-        "active_run": active_s2 if eff_stage == "stage2_queries" else active_s1,
-        "runs_by_stage": {
-            "stage1_profile": runs_s1,
-            "stage2_queries": runs_s2,
-        },
-        "active_run_by_stage": {
-            "stage1_profile": active_s1,
-            "stage2_queries": active_s2,
-        },
+        "runs": runs_map[eff_stage],
+        "active_run": active_map[eff_stage],
+        "runs_by_stage": runs_map,
+        "active_run_by_stage": active_map,
         "catalog": catalog,
     }
 
@@ -703,14 +913,16 @@ async def run_stage2_single_sample_endpoint(req: EvalRunSingleRequest) -> Dict[s
     """
     【Stage 2 Single-Use 实时单样本评测接口】
     针对指定样本（如 QUAL-01 ~ QUAL-09），实时调用 `core.query_generator.generate_queries_from_profile_with_gemini`
-    生成 10 条求职 Query 并执行三要素与零城市/零福利核验。
+    生成 10 条求职 Query 并调用 `gemini-4-argon` 执行 LLM-as-a-Judge 与三要素/零城市核验。
     """
     selected_model = req.extract_model if req.extract_model in ALLOWED_MODELS else DEFAULT_STAGE2_QUERY_MODEL
+    selected_judge = req.judge_model if req.judge_model in ALLOWED_MODELS else "gemini-4-argon"
     try:
         res = await asyncio.to_thread(
             run_single_sample_stage2_live_eval,
             sample_id=req.sample_id.strip().upper(),
             model_name=selected_model,
+            judge_model=selected_judge,
             temperature=DEFAULT_STAGE2_TEMPERATURE,
             query_count=DEFAULT_QUERY_COUNT,
             run_id_to_update=req.run_id,
@@ -726,9 +938,10 @@ async def run_stage2_single_sample_endpoint(req: EvalRunSingleRequest) -> Dict[s
 async def run_stage2_batch_eval_endpoint(req: EvalRunBatchRequest) -> Dict[str, Any]:
     """
     【Stage 2 Batch 批量评测接口】
-    对合格简历数据集批量运行 Stage 2 多策略求职 Query 生成（10 条/样本）并归档。
+    对合格简历数据集批量运行 Stage 2 多策略求职 Query 生成（10 条/样本）与 `gemini-4-argon` 核验并归档。
     """
     selected_model = req.extract_model if req.extract_model in ALLOWED_MODELS else DEFAULT_STAGE2_QUERY_MODEL
+    selected_judge = req.judge_model if req.judge_model in ALLOWED_MODELS else "gemini-4-argon"
     sample_ids_set = (
         {s.strip().upper() for s in req.sample_ids if s and s.strip()}
         if req.sample_ids
@@ -739,6 +952,7 @@ async def run_stage2_batch_eval_endpoint(req: EvalRunBatchRequest) -> Dict[str, 
             run_stage2_dataset_evaluation,
             base_dir=BENCHMARK_DIR,
             model_name=selected_model,
+            judge_model=selected_judge,
             temperature=DEFAULT_STAGE2_TEMPERATURE,
             query_count=DEFAULT_QUERY_COUNT,
             sample_ids_filter=sample_ids_set,

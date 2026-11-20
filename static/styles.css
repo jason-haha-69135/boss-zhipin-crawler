@@ -1840,3 +1840,43 @@ body {
   height: 100%;
   border-radius: 999px;
 }
+
+/* Stage 1 & Stage 2 BOSS直聘 1:1 意向城市选择器与卡片城市标签 */
+.resume-city-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.resume-city-select {
+  min-width: 148px;
+  cursor: pointer;
+  background: #ffffff;
+}
+
+.resume-city-select.input-attention {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22);
+}
+
+.resume-query-card-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.resume-city-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}

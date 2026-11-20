@@ -6,6 +6,7 @@ Gemini 六维分析与匹配度评估器 (Gemini 6-Dimension Analyzer & Match Ev
 """
 
 from collections import Counter
+import os
 from statistics import median
 from typing import Any, Dict, List, Optional
 
@@ -14,9 +15,11 @@ from pydantic import BaseModel, Field
 from core.gemini_client import create_interaction_with_fallback
 from core.intent_parser import ParsedSearchIntent
 
+DEFAULT_STAGE5_ANALYSIS_MODEL = os.environ.get("STAGE5_ANALYSIS_MODEL", "gemini-3.8-flash")
+DEFAULT_STAGE5_TEMPERATURE = float(os.environ.get("STAGE5_TEMPERATURE", "0.2"))
+
 ALLOWED_MODELS = {
     "gemini-3.8-flash": "Gemini 3.8 Flash",
-    "gemini-3.5-flash-lite": "Gemini 3.5 Flash Light",
     "gemini-3.1-pro": "Gemini 3.1 Pro",
     "gemini-4-argon": "Gemini 4 Argon",
 }
@@ -26,17 +29,17 @@ class JobMatchEvaluationLLM(BaseModel):
     """Gemini 对单个 Top 候选岗位的匹配度评估"""
 
     job_index: int = Field(description="候选岗位编号 (0 ~ N-1)")
-    match_score: int = Field(description="该岗位与用户诉求的综合匹配度评分 (0-100)")
+    match_score: int = Field(ge=0, le=100, description="该岗位与用户诉求及简历画像的综合匹配度评分 (0-100)")
     match_reason: str = Field(
-        description="结合该岗位的行业、薪资、完整JD职责要求及双休/排班情况给出的具体匹配原因分析 (60-120字)"
+        description="结合该岗位的所属行业、薪资区间、完整JD职责要求、作息制度与候选人履历给出的具体匹配原因分析 (60-120字)"
     )
     highlights: List[str] = Field(
         default_factory=list,
-        description="该岗位的 2-4 个核心亮点标签（如'知名女装品牌'、'底薪达标'、'明确周末双休'、'五险一金齐全'）",
+        description="该岗位的 2-4 个核心亮点标签（如'头部上市企业'、'底薪稳超期望'、'明确周末双休'、'技术栈高度契合'）",
     )
     risks: List[str] = Field(
         default_factory=list,
-        description="需要注意的潜在风险或待向HR确认项（如'JD注明排班轮休非固定双休'、'需高频出差巡店'）",
+        description="需要注意的潜在风险或待向HR确认项（如'标注单双休/隔周双休非纯双休'、'薪资下限略低于预期'、'部分技能待补齐'）",
     )
 
 
@@ -44,43 +47,45 @@ class GeminiAnalysisLLMOutput(BaseModel):
     """Gemini 结构化输出的六维洞察与匹配度评估报告"""
 
     executive_summary: str = Field(
-        description="针对用户查询的整体招聘市场核心结论摘要 (100-180字)"
+        description="针对用户查询的整体招聘市场核心结论摘要 (100-180字)，必须引用真实统计数据"
     )
     industry_insight: str = Field(
-        description="【维度1：所属行业】深度总结：分析主流招聘行业构成、目标行业（如服装/零售）占比及跨行业机会"
+        description="【维度1：所属行业】深度总结：分析主流招聘行业构成、目标行业占比及跨行业机会"
     )
     salary_insight: str = Field(
-        description="【维度2：薪资水平】深度总结：分析薪资区间分布、平均底薪与绩效结构、年终多薪情况及与用户期望薪资的契合度"
+        description="【维度2：薪资水平】深度总结：分析薪资区间分布、平均起薪与上限、中位数、多薪情况及与用户期望薪资的契合度"
     )
     skills_insight: str = Field(
-        description="【维度3：技能要求】深度总结：提炼高频核心技能要求（如巡店督导、陈列管理、商品数据分析、团队培训等）及完整JD中的隐性能力要求"
+        description="【维度3：技能要求】深度总结：提炼高频核心技能要求及完整JD中的关键能力与项目经验要求"
     )
     experience_insight: str = Field(
         description="【维度4：经验与学历要求】深度总结：分析主流工作年限与学历门槛，评估准入难度"
     )
     brand_insight: str = Field(
-        description="【维度5：招聘公司品牌知名度】深度总结：分析招聘企业的规模结构、融资/上市阶段以及头部知名品牌企业特点"
+        description="【维度5：招聘公司品牌知名度】深度总结：分析招聘企业的规模结构、融资/上市阶段以及头部代表性企业特点"
     )
     welfare_insight: str = Field(
-        description="【维度6：福利待遇与作息】深度总结：分析五险一金、补贴福利及最关键的周末作息制度（双休 vs 大小周 vs 门店排班轮休）真实占比"
+        description="【维度6：福利待遇与作息】深度总结：分析五险一金、补贴福利及最关键的周末作息制度（周末双休 vs 大小周/单双休 vs 排班单休）真实占比"
     )
     overall_match_score: int = Field(
-        description="当前市场岗位与用户全部诉求（岗位+城市+行业+薪资+双休等）的综合匹配度评分 (0-100)"
+        ge=0,
+        le=100,
+        description="当前市场岗位与用户全部诉求（岗位+城市+行业+薪资+双休+个人履历等）的综合匹配度评分 (0-100)",
     )
     match_verdict: str = Field(
-        description="一句话匹配度定性结论（如：'岗位供给充足且薪资达标率高，但服装终端督导普遍采用排班轮休，纯周末双休岗位较为稀缺'）"
+        description="一句话匹配度定性结论，客观概括市场供给、薪资达标度与核心风险"
     )
     match_strengths: List[str] = Field(
-        description="市场匹配度高的 3-4 条有利因素及数据支撑"
+        description="市场匹配度高的 3-4 条有利因素及真实数据支撑"
     )
     match_risks: List[str] = Field(
         description="市场与用户诉求存在落差的 2-4 条风险点/难点及原因解释"
     )
     actionable_advice: List[str] = Field(
-        description="给用户的 3-4 条具体求职与面试沟通建议"
+        description="给用户的 3-4 条具体求职策略、简历优化与面试沟通建议"
     )
     job_evaluations: List[JobMatchEvaluationLLM] = Field(
-        description="对 Top 候选岗位的逐一匹配度评分与点评"
+        description="对全部 Top 候选岗位（0 ~ N-1）的逐一匹配度评分与点评"
     )
 
 
@@ -89,17 +94,21 @@ def compute_six_dimension_stats(
     top_candidates: List[Dict[str, Any]],
     intent: ParsedSearchIntent,
 ) -> Dict[str, Any]:
-    """在 Python 中对全部采集到的岗位进行精确统计，生成前端 ECharts 直接可用的数据结构"""
+    """在 Python 中对合规岗位池进行精确统计（隔离 Stage 4 降权的异地/低薪陷阱），生成前端 ECharts 直接可用的数据结构"""
     total = len(jobs)
+    compliant_jobs = [j for j in jobs if not j.get("is_demoted", False)]
+    demoted_count = total - len(compliant_jobs)
+    stat_pool = compliant_jobs if compliant_jobs else jobs
+    pool_size = len(stat_pool)
 
     # 1. 所属行业分布
     ind_counter: Counter[str] = Counter()
     matched_ind_count = 0
-    for j in jobs:
+    for j in stat_pool:
         ind = j.get("所属行业") or "未注明行业"
         ind_counter[ind] += 1
-        meta_text = f"{j.get('岗位名称', '')} {ind} {j.get('公司名称', '')} {j.get('技能标签', '')}"
-        if intent.industry_keywords and any(kw in meta_text for kw in intent.industry_keywords):
+        meta_text = f"{j.get('岗位名称', '')} {ind} {j.get('公司名称', '')} {j.get('技能标签', '')}".lower()
+        if intent.industry_keywords and any(kw.lower() in meta_text for kw in intent.industry_keywords if kw):
             matched_ind_count += 1
 
     industry_chart = [
@@ -122,7 +131,7 @@ def compute_six_dimension_stats(
     bonus_months_count = 0
     meet_salary_count = 0
 
-    for j in jobs:
+    for j in stat_pool:
         min_k = j.get("最低月薪K", 0)
         max_k = j.get("最高月薪K", 0)
         months = j.get("计薪月数", 12)
@@ -159,7 +168,7 @@ def compute_six_dimension_stats(
 
     # 3. 技能要求 Top 15
     skill_counter: Counter[str] = Counter()
-    for j in jobs:
+    for j in stat_pool:
         raw_skills = j.get("技能标签", "")
         for s in [x.strip() for x in raw_skills.split(",") if x.strip()]:
             skill_counter[s] += 1
@@ -168,7 +177,7 @@ def compute_six_dimension_stats(
     # 4. 经验与学历分布
     exp_counter: Counter[str] = Counter()
     deg_counter: Counter[str] = Counter()
-    for j in jobs:
+    for j in stat_pool:
         exp_counter[j.get("经验要求") or "经验不限"] += 1
         deg_counter[j.get("学历要求") or "学历不限"] += 1
 
@@ -179,7 +188,7 @@ def compute_six_dimension_stats(
     scale_counter: Counter[str] = Counter()
     stage_counter: Counter[str] = Counter()
     large_companies: List[str] = []
-    for j in jobs:
+    for j in stat_pool:
         sc = j.get("公司规模") or "规模未知"
         st = j.get("融资阶段") or "未注明"
         comp = j.get("公司名称") or ""
@@ -195,7 +204,7 @@ def compute_six_dimension_stats(
     # 6. 福利待遇与作息制度
     welfare_counter: Counter[str] = Counter()
     weekend_counter: Counter[str] = Counter()
-    for j in jobs:
+    for j in stat_pool:
         raw_w = j.get("福利待遇", "")
         for w in [x.strip() for x in raw_w.split(",") if x.strip()]:
             welfare_counter[w] += 1
@@ -206,11 +215,14 @@ def compute_six_dimension_stats(
 
     return {
         "total_jobs": total,
+        "compliant_jobs_count": len(compliant_jobs),
+        "demoted_jobs_count": demoted_count,
+        "stat_pool_size": pool_size,
         "top_detail_count": len(top_candidates),
         "industry": {
             "distribution": industry_chart,
             "matched_keyword_count": matched_ind_count,
-            "matched_keyword_ratio": round(matched_ind_count / max(1, total) * 100, 1),
+            "matched_keyword_ratio": round(matched_ind_count / max(1, pool_size) * 100, 1),
         },
         "salary": {
             "buckets": salary_chart,
@@ -218,9 +230,9 @@ def compute_six_dimension_stats(
             "avg_max_k": avg_max_k,
             "median_mid_k": median_mid_k,
             "bonus_months_count": bonus_months_count,
-            "bonus_months_ratio": round(bonus_months_count / max(1, total) * 100, 1),
+            "bonus_months_ratio": round(bonus_months_count / max(1, pool_size) * 100, 1),
             "meet_expected_count": meet_salary_count,
-            "meet_expected_ratio": round(meet_salary_count / max(1, total) * 100, 1),
+            "meet_expected_ratio": round(meet_salary_count / max(1, pool_size) * 100, 1),
         },
         "skills": {
             "top_skills": skills_chart,
@@ -300,27 +312,29 @@ def build_fallback_analysis(
                     cand.get("薪资范围") or "薪资达标",
                     cand.get("作息制度") or "福利齐全",
                 ],
-                "risks": ["建议开聊进一步确认具体周末排班与巡店出差频次"],
+                "risks": ["建议面试沟通时进一步核实具体工作作息、绩效考核指标与岗位职责边界"],
             }
         )
 
     notice_prefix = f"（注：{reason_msg}，以下为基于采集数据的自动统计总结）" if reason_msg else ""
+    pool_size = stats.get("stat_pool_size", total)
+    demoted_cnt = stats.get("demoted_jobs_count", 0)
     return {
         "executive_summary": (
-            f"{notice_prefix}本次在【{intent.city_name}】共采集到 {total} 个与“{intent.query}”相关的在招岗位，"
-            f"并对综合排名 Top {len(top_candidates)} 的岗位进行了详情页完整 JD 深度抓取。"
-            f"市场平均薪资区间为 {sal_info['avg_min_k']}K - {sal_info['avg_max_k']}K（中位数 {sal_info['median_mid_k']}K），"
+            f"{notice_prefix}本次在【{intent.city_name}】共采集到 {total} 个与“{intent.query}”相关的岗位"
+            f"（其中合规目标池 {pool_size} 条，异地/低薪降权 {demoted_cnt} 条），并对排名 Top {len(top_candidates)} 的岗位进行了深度分析。"
+            f"合规样本平均薪资区间为 {sal_info['avg_min_k']}K - {sal_info['avg_max_k']}K（中位数 {sal_info['median_mid_k']}K），"
             f"主流行业集中在 {ind_top}。"
         ),
         "dimensions": {
             "industry": {
                 "title": "所属行业分布",
-                "insight": f"在招岗位行业主要分布在：{ind_top}。其中包含您关注的行业关键词岗位共 {stats['industry']['matched_keyword_count']} 个（占比 {stats['industry']['matched_keyword_ratio']}%）。",
+                "insight": f"合规岗位行业主要分布在：{ind_top}。其中命中目标行业关键词的岗位共 {stats['industry']['matched_keyword_count']} 个（占比 {stats['industry']['matched_keyword_ratio']}%）。",
                 "chart_data": stats["industry"]["distribution"],
             },
             "salary": {
                 "title": "薪资水平分布",
-                "insight": f"样本平均起薪 {sal_info['avg_min_k']}K，平均上限 {sal_info['avg_max_k']}K，中位数 {sal_info['median_mid_k']}K；共有 {sal_info['bonus_months_count']} 个岗位提供 13薪及以上年终奖（占比 {sal_info['bonus_months_ratio']}%）。",
+                "insight": f"合规样本平均起薪 {sal_info['avg_min_k']}K，平均上限 {sal_info['avg_max_k']}K，中位数 {sal_info['median_mid_k']}K；共有 {sal_info['bonus_months_count']} 个岗位提供 13薪及以上年终奖（占比 {sal_info['bonus_months_ratio']}%）。",
                 "chart_data": stats["salary"]["buckets"],
                 "metrics": {
                     "avg_min_k": sal_info["avg_min_k"],
@@ -331,45 +345,45 @@ def build_fallback_analysis(
             },
             "skills": {
                 "title": "核心技能要求",
-                "insight": f"企业最为看重的高频技能标签依次为：{skill_top}。建议在简历中突出门店巡检、商品陈列、团队带教及销售业绩提升的具体数据成果。",
+                "insight": f"企业对“{intent.query}”最为看重的高频技能标签依次为：{skill_top or '岗位通用能力'}。建议在简历中结合真实项目与量化成果突出上述核心技能。",
                 "chart_data": stats["skills"]["top_skills"],
             },
             "experience": {
                 "title": "经验与学历门槛",
-                "insight": f"工作经验要求集中在：{exp_top}；学历门槛主要分布在：{deg_top}。整体看用人单位更看重实战连锁门店督导经验。",
+                "insight": f"工作经验要求集中在：{exp_top}；学历门槛主要分布在：{deg_top}。建议对照自身年限与学历背景精准投递匹配度最高的“{intent.query}”岗位。",
                 "experience_data": stats["experience"]["experience_dist"],
                 "degree_data": stats["experience"]["degree_dist"],
             },
             "brand": {
                 "title": "招聘公司品牌知名度",
-                "insight": f"招聘企业规模主要为：{scale_top}。样本中识别到的中大型或知名连锁企业包括：{notable}。",
+                "insight": f"招聘企业规模主要为：{scale_top}。样本中识别到的中大型或上市代表企业包括：{notable}。",
                 "scale_data": stats["brand"]["scale_dist"],
                 "stage_data": stats["brand"]["stage_dist"],
                 "notable_companies": stats["brand"]["notable_companies"],
             },
             "welfare": {
                 "title": "福利待遇与作息制度",
-                "insight": f"高频福利标签包括：{welfare_top}。作息制度分布为：{weekend_top}。零售督导岗位需重点甄别总部办公（多为双休/大小周）与驻店巡店（多为排班轮休）的差异。",
+                "insight": f"高频福利标签包括：{welfare_top}。作息制度分布为：{weekend_top}。投递前建议重点核实标明“大小周/单双休”或未注明作息的岗位。",
                 "welfare_data": stats["welfare"]["top_welfare"],
                 "weekend_data": stats["welfare"]["weekend_dist"],
             },
         },
         "match_evaluation": {
             "overall_score": base_score,
-            "verdict": "核心岗位与薪资要求高度匹配，建议重点核实目标企业的周末作息制度",
+            "verdict": f"{intent.city_name}“{intent.query}”核心岗位与薪资分布整体匹配，建议结合具体作息与技能要求择优投递",
             "strengths": [
-                f"{intent.city_name}地区“{intent.query}”岗位需求活跃，共捕获 {total} 条有效在招岗位",
+                f"{intent.city_name}地区“{intent.query}”合规岗位供给充足（合规池 {pool_size} 条）",
                 f"市场主流薪资（{sal_info['avg_min_k']}K-{sal_info['avg_max_k']}K）能够较好覆盖期望月薪水平",
-                f"包含多家成熟规模连锁企业（{notable}），品牌背书较好",
+                f"包含多家成熟规模代表企业（{notable}），平台背书较强",
             ],
             "risks": [
-                "连锁零售及店面督导岗位受终端门店营业时间影响，部分企业采用单双休或月休6-8天排班制",
-                "部分高薪督导岗位在完整 JD 中要求承担区域业绩指标及高频巡店出差",
+                "部分岗位存在大小周/单双休或未明确标注作息制度的情况，需面试前二次确认",
+                "不同企业在核心技能栈与底薪/绩效结构上差异较大，需逐一核对 JD 细节",
             ],
             "advice": [
-                "优先投递下方推荐列表中明确标注【周末双休】或中大型品牌总部的督导岗位",
-                "开聊时第一句话可主动确认：负责门店数量、是否需要驻店排班、底薪与绩效提成比例",
-                "简历中量化过往管辖门店数、同店同比业绩增长率及陈列/培训标准化落地经验",
+                f"优先投递下方 Top {len(top_candidates)} 列表中综合匹配分高且满足核心硬性条件的“{intent.query}”岗位",
+                "开聊时可主动核实：薪资固定底薪与绩效比例、真实周末作息制度及团队业务方向",
+                f"简历中重点量化与高频技能（{skill_top or intent.query}）相关的项目落地成果",
             ],
         },
         "recommended_jobs": recommended,
@@ -380,22 +394,25 @@ def analyze_jobs_with_gemini(
     intent: ParsedSearchIntent,
     jobs: List[Dict[str, Any]],
     top_candidates: List[Dict[str, Any]],
-    model_name: str = "gemini-3.8-flash",
+    model_name: str = DEFAULT_STAGE5_ANALYSIS_MODEL,
+    temperature: float = DEFAULT_STAGE5_TEMPERATURE,
     api_key: Optional[str] = None,
     proxy_url: Optional[str] = None,
     resume_profile: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
-    结合 Python 六维统计分布、Top 8 完整 JD 及可选的候选人真实简历画像，
-    通过 Gemini Interactions API 生成深度分析报告与人岗匹配度评分
+    结合 Python 合规池六维统计分布、Top K 完整 JD 及可选的候选人真实简历画像，
+    通过 Gemini Interactions API (默认 gemini-3.8-flash, temp=0.2) 生成领域中立、事实忠实的深度分析报告。
     """
     stats = compute_six_dimension_stats(jobs, top_candidates, intent)
     if not jobs:
         return build_fallback_analysis(intent, stats, top_candidates, "未采集到匹配的岗位数据")
 
-    selected_model = model_name if model_name in ALLOWED_MODELS else "gemini-3.8-flash"
+    selected_model = (
+        model_name if model_name in ALLOWED_MODELS else DEFAULT_STAGE5_ANALYSIS_MODEL
+    )
 
-    # 构造 Top 8 候选岗位的完整上下文（含 Stage 2 抓取的完整 JD）
+    # 构造 Top K 候选岗位的完整上下文
     candidate_blocks = []
     for idx, c in enumerate(top_candidates):
         jd_text = (c.get("完整JD") or "未获取到详情正文")[:700]
@@ -414,14 +431,14 @@ def analyze_jobs_with_gemini(
     resume_context_block = ""
     if resume_profile and isinstance(resume_profile, dict):
         resume_context_block = f"""
-### 候选人个人真实简历画像（已通过 Gemini 简历解析提取）：
+### 候选人个人真实简历画像（已通过 Stage 1 简历解析提取）：
 - 核心头衔/方向：{resume_profile.get('candidate_title', '未注明')}
 - 工作年限与资历：{resume_profile.get('years_of_experience', '未注明')}
 - 学历背景：{resume_profile.get('education_summary', '未注明')}
 - 过往行业背景：{resume_profile.get('industry_background', [])}
 - 核心专业技能：{resume_profile.get('core_skills', [])}
 - 关键业绩与履历亮点：{resume_profile.get('experience_highlights', [])}
-（请在评估整体匹配度 `overall_match_score`、求职建议 `actionable_advice` 以及对 Top {len(top_candidates)} 候选岗位的 `match_score` 与 `match_reason` 点评时，深度结合候选人的上述真实简历资历与岗位 JD 要求进行【人岗真实履历契合度】诊断！）
+（请在评估 `overall_match_score`、`actionable_advice` 以及全部 Top {len(top_candidates)} 候选岗位的 `match_score` 与 `match_reason` 时，深度结合候选人真实简历资历与岗位 JD 进行【人岗履历契合度】诊断！）
 """
 
     prompt = f"""你是一位资深的招聘市场数据分析专家与职业顾问。
@@ -431,9 +448,9 @@ def analyze_jobs_with_gemini(
 - 行业关键词偏好：{intent.industry_keywords}
 - 全部软性要求：{intent.soft_requirements}
 {resume_context_block}
-我们已经通过两阶段爬虫从 BOSS直聘 实时采集了 {stats['total_jobs']} 条真实在招岗位，并对排名 Top {len(top_candidates)} 的候选岗位抓取了详情页完整职位描述 (JD)。
+本次共采集 {stats['total_jobs']} 条岗位，其中经过 Stage 4 过滤后的合规目标岗位池为 {stats['compliant_jobs_count']} 条（已隔离异地/低薪降权岗位 {stats['demoted_jobs_count']} 条），并提取了排名 Top {len(top_candidates)} 的候选岗位详情。
 
-### 全量样本六维统计数据：
+### 合规样本池六维精确统计数据（请严格引用，禁止编造数据）：
 1. 【所属行业分布】: {stats['industry']}
 2. 【薪资水平分布】: {stats['salary']}
 3. 【技能要求 Top 15】: {stats['skills']}
@@ -441,13 +458,14 @@ def analyze_jobs_with_gemini(
 5. 【公司品牌知名度(规模/融资/头部企业)】: {stats['brand']}
 6. 【福利待遇与作息制度】: {stats['welfare']}
 
-### Top {len(top_candidates)} 候选岗位详情（含详情页完整 JD）：
+### Top {len(top_candidates)} 候选岗位详情（含完整 JD）：
 {candidates_context}
 
-请基于上述真实采集数据，严格按照 JSON Schema 生成：
-1. 六个维度的专业洞察总结（请引用上面的真实统计数字、百分比与代表性公司名称，语言精炼、有洞察力）。
-2. 针对用户全部诉求（尤其是行业是否对口、薪资是否达到 {intent.min_salary_k}K、是否满足周末双休等）给出客观的整体匹配度评分 (`overall_match_score`, 0-100) 及具体原因分析 (`match_strengths`, `match_risks`, `actionable_advice`)。
-3. 对全部 {len(top_candidates)} 个候选岗位（`job_index` 从 0 到 {len(top_candidates) - 1}）逐一给出 `match_score` (0-100)、`match_reason`、`highlights` 和 `risks`。
+【严格事实忠实度与输出红线】：
+1. 所有引用的统计数字、百分比、薪资区间、企业名称与作息制度（如“周末双休” vs “大小周/单双休”）必须 100% 来源于上方真实统计数据或候选岗位 JD，严禁编造任何未出现的数据或公司名。
+2. 所有分析与建议必须紧扣当前目标岗位「{intent.query}」与真实行业赛道，严禁套用任何无关行业的模板话术。
+3. 必须对全部 {len(top_candidates)} 个候选岗位（`job_index` 从 0 到 {len(top_candidates) - 1}，一个都不能少）逐一给出 `match_score` (0-100 整数)、`match_reason`、`highlights` 和 `risks`。
+4. 若某候选岗位作息为“大小周/单双休”或“排班轮休/单休”而用户要求双休，必须在 `risks` 中明确指出并合理下调其 `match_score`。
 """
 
     try:
@@ -455,7 +473,7 @@ def analyze_jobs_with_gemini(
             model=selected_model,
             prompt=prompt,
             schema_cls=GeminiAnalysisLLMOutput,
-            temperature=0.2,
+            temperature=temperature,
             api_key=api_key,
             proxy_url=proxy_url,
         )

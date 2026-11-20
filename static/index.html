@@ -88,6 +88,12 @@
           </div>
         </div>
         <div class="resume-upload-actions">
+          <label class="mini-control-label resume-city-picker" title="上传简历前必须先选择与 BOSS直聘 官方编码 1:1 映射的意向城市">
+            意向城市 *
+            <select id="resume-target-city-select" class="mini-input resume-city-select">
+              <option value="">请先选择意向城市</option>
+            </select>
+          </label>
           <input
             type="file"
             id="resume-file-input"
@@ -123,13 +129,13 @@
             <div class="profile-query-controls">
               <label class="mini-control-label">
                 意向城市
-                <input
-                  type="text"
+                <select
                   id="profile-city-override"
-                  class="mini-input"
-                  placeholder="如 深圳"
-                  title="可修改意向城市并基于当前简历画像秒级重生成 Query（无需重传简历）"
-                />
+                  class="mini-input resume-city-select"
+                  title="动态切换 BOSS直聘 意向城市后将自动更新 Stage 1 画像 JSON 并重新传递给 Stage 2（无需重传简历）"
+                >
+                  <option value="">请选择城市</option>
+                </select>
               </label>
               <label class="mini-control-label">
                 月薪底线

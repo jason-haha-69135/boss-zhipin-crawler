@@ -1,0 +1,653 @@
+{
+  "run_id": "run_stage5_analysis_20261120_142620",
+  "stage_id": "stage5_analysis",
+  "created_at": "2026-11-20 14:26:20",
+  "evaluation_mode": "llm_as_a_judge_stage5_grounded_analysis",
+  "extract_model": "gemini-3.8-flash",
+  "judge_model": "gemini-4-argon",
+  "temperature_used": 0.2,
+  "source_manifest": "eval/dataset/stage5/stage5_analysis_manifest.json",
+  "total_scenarios": 6,
+  "mean_score_10": 9.47,
+  "schema_complete_rate": 1.0,
+  "top_k_coverage_rate": 1.0,
+  "zero_domain_bias_rate": 1.0,
+  "stat_grounding_rate": 1.0,
+  "mean_analysis_latency_s": 29.35,
+  "mean_judge_latency_s": 9.82,
+  "dimension_labels": {
+    "jd_groundedness_score": "JD与统计事实忠实度",
+    "profile_alignment_score": "人岗简历契合诊断",
+    "risk_identification_score": "风险与作息陷阱识别",
+    "advice_actionability_score": "求职建议可执行性"
+  },
+  "per_dimension_mean_scores_10": {
+    "jd_groundedness_score": 9.67,
+    "profile_alignment_score": 9.55,
+    "risk_identification_score": 9.15,
+    "advice_actionability_score": 9.33
+  },
+  "scenario_evaluations": [
+    {
+      "scenario_id": "S5-SCEN-01",
+      "source_stage4_scenario_id": "S4-SCEN-01",
+      "source_sample_id": "QUAL-01",
+      "industry_category": "互联网/新媒体运营",
+      "intent": {
+        "raw_query": "互联网新媒体行业的新媒体运营岗位，月薪至少0.7w",
+        "query": "新媒体运营",
+        "city_name": "上海",
+        "city_code": "101020100",
+        "salary_code": "404",
+        "salary_label": "5-10K",
+        "min_salary_k": 7,
+        "industry_keywords": [
+          "互联网",
+          "新媒体",
+          "MCN",
+          "文化传媒",
+          "社交网络",
+          "广告营销"
+        ],
+        "require_double_weekend": false,
+        "soft_requirements": [
+          "互联网新媒体行业",
+          "月薪至少7K"
+        ]
+      },
+      "stats_summary": {
+        "total_jobs": 16,
+        "compliant_jobs_count": 12,
+        "demoted_jobs_count": 4,
+        "avg_min_k": 7.7,
+        "avg_max_k": 11.3,
+        "median_mid_k": 9.5
+      },
+      "ground_truth_anchor": {
+        "expected_score_min": 80,
+        "expected_score_max": 92,
+        "must_cite_facts": [
+          "合规池共12个岗位（总计16个，降级4个），100%满足7K起薪底线，平均薪资区间为7.7K-11.3K，薪资中位数为9.5K",
+          "互联网/新媒体/MCN/广告营销等目标行业高度契合，共匹配11个岗位（占比91.7%）",
+          "合规池中33.3%（4个岗位）提供13薪/14薪等年底多薪福利，8个岗位明确提供周末双休（占比66.7%）",
+          "包含得物App、哔哩哔哩、蜂群文化、喜马拉雅、时趣互动等知名头部或垂类代表企业"
+        ],
+        "key_profile_matches": [
+          "候选人核心技能「新媒体矩阵运营」「文案撰写与传播策划」「活动策划与落地执行」与合规池Top高频技能需求（分别出现7次、7次、6次）完全吻合",
+          "候选人具备的「社群与校园用户运营」能力精准命中哔哩哔哩（新媒体运营-校园用户方向）及蜂群文化的核心岗位要求",
+          "候选人持有「大学英语六级(CET-6)」证书，与迈吉客广告（新媒体运营-双语方向，9-14K）的差异化技能要求高度契合",
+          "候选人「互联网/新媒体」与「广告/公关/市场营销」的行业背景与得物App、哔哩哔哩、蜂群文化等头部阵地无缝衔接"
+        ],
+        "must_flag_risks": [
+          "休息制度风险：尚品电商传媒为「排班轮休/单休」，优家物业服务为「大小周/单双休」，蜂群MCN上海分部未明确注明双休，需在面试中重点核实作息安排",
+          "行业偏离与噪音风险：Top-8及合规池中混入华域机械制造（机械设备/机电/重工）、优家物业服务（生活服务）以及财务/审计/税务类非目标行业岗位，与互联网新媒体求职意向存在偏差",
+          "临界起薪风险：蜂群MCN上海分部（7-12K）与优家物业服务（7-10K）的起薪下限恰好卡在7K期望底线上，存在压薪风险"
+        ]
+      },
+      "deterministic_checks": {
+        "schema_complete_ok": true,
+        "top_k_coverage_ok": true,
+        "zero_domain_bias_ok": true,
+        "leaked_bias_tokens": [],
+        "stat_grounding_ok": true
+      },
+      "judge_scores": {
+        "jd_groundedness_score": 9.8,
+        "profile_alignment_score": 9.6,
+        "risk_identification_score": 9.5,
+        "advice_actionability_score": 9.5
+      },
+      "overall_score_10": 9.63,
+      "diagnosis_comment": "报告统计数据100%忠实于真实合规池，零幻觉；人岗匹配深度结合了候选人CET-6、校园用户与矩阵运营等差异化标签，且精准识别了非双休作息、7K临界起薪与传统行业偏离三大核心风险，梯度扣分与投递建议极具实操价值。",
+      "report_overall_match_score": 88,
+      "report_verdict": "人岗画像与行业偏好高度共振，薪资全面达标，需通过补充简历履历细节锁定大厂及优质双休机会。",
+      "report_executive_summary": "上海地区新媒体运营岗位针对7K+月薪需求呈现出供需高度契合的态势。12个样本岗位薪资达标率达100%，平均起薪7.7K、平均上限11.3K、薪资中位数9.5K，且33.3%岗位提供13-14薪。目标偏好行业占比达91.7%，企业聚焦于互联网、广告与MCN赛道。候选人技能与市场核心诉求（矩阵运营、文案、社群与活动）重合度极高，整体求职竞争力良好。",
+      "top_3_recommended": [
+        {
+          "rank": 1,
+          "job_name": "新媒体运营（校园用户方向）",
+          "company_name": "哔哩哔哩",
+          "salary_desc": "8-13K·14薪",
+          "weekend_policy": "周末双休",
+          "match_score": 95
+        },
+        {
+          "rank": 2,
+          "job_name": "新媒体运营专员",
+          "company_name": "得物App",
+          "salary_desc": "8-12K·13薪",
+          "weekend_policy": "周末双休",
+          "match_score": 93
+        },
+        {
+          "rank": 3,
+          "job_name": "新媒体运营（双语方向）",
+          "company_name": "迈吉客广告",
+          "salary_desc": "9-14K",
+          "weekend_policy": "周末双休",
+          "match_score": 91
+        }
+      ],
+      "gt_latency_s": 17.87,
+      "analysis_latency_s": 34.68,
+      "judge_latency_s": 8.76
+    },
+    {
+      "scenario_id": "S5-SCEN-02",
+      "source_stage4_scenario_id": "S4-SCEN-02",
+      "source_sample_id": "QUAL-02",
+      "industry_category": "互联网广告/电子商务",
+      "intent": {
+        "raw_query": "数字营销与广告技术行业的大客户销售经理岗位，月薪至少1.2w，要求周末双休",
+        "query": "大客户销售经理",
+        "city_name": "北京",
+        "city_code": "101010100",
+        "salary_code": "405",
+        "salary_label": "10-20K",
+        "min_salary_k": 12,
+        "industry_keywords": [
+          "数字营销",
+          "广告技术",
+          "广告营销",
+          "互联网广告",
+          "营销服务"
+        ],
+        "require_double_weekend": true,
+        "soft_requirements": [
+          "行业偏好：数字营销与广告技术",
+          "最低月薪：12K",
+          "周末双休"
+        ]
+      },
+      "stats_summary": {
+        "total_jobs": 16,
+        "compliant_jobs_count": 12,
+        "demoted_jobs_count": 4,
+        "avg_min_k": 13.1,
+        "avg_max_k": 21.6,
+        "median_mid_k": 17.0
+      },
+      "ground_truth_anchor": {
+        "expected_score_min": 80,
+        "expected_score_max": 92,
+        "must_cite_facts": [
+          "合规池共12个岗位（总计16个，降权4个），平均薪资区间为13.1K-21.6K，薪资中位数为17.0K，且66.7%（8个）的岗位提供多薪（13/14薪）。",
+          "行业分布中，匹配数字营销与广告技术相关关键词的岗位有8个，占比66.7%（涵盖互联网广告2个、广告技术2个、营销服务2个、数字营销1个、广告营销1个）。",
+          "作息与福利方面，合规池中有10个岗位明确为周末双休（占比83.3%），另有2个岗位为大小周/单双休。",
+          "高频核心技能要求依次为：大客户开拓与维护（10次）、广告投放方案规划（6次）、线上渠道资源销售（5次）、需求调研与方案编写（5次）。",
+          "经验与学历主要集中在3-5年（8个）和本科学历（10个），代表性企业包括引力引擎科技、聚量星图营销、极客流量平台等。"
+        ],
+        "key_profile_matches": [
+          "候选人具备的“大客户开拓与维护”、“广告投放方案规划”、“线上渠道资源销售”三大核心技能，与Top-8岗位（如引力引擎科技、智投互联、聚量星图营销）的高频技能要求实现100%精准覆盖。",
+          "候选人额外的“需求调研与方案编写”、“电商系统产品设计”及“项目管理”复合技能，与数智引力AdTech的“大客户销售经理（广告技术SaaS）”（15-28K·14薪）岗位要求高度契合，具备冲击高薪岗位的明显优势。",
+          "候选人的“广告/营销/公关”与“互联网/电子商务”行业背景，无缝契合Top-8全部岗位的细分领域（数字营销、广告技术、互联网广告、营销服务）。"
+        ],
+        "must_flag_risks": [
+          "作息不符风险：Top-8中的传漾互动营销（广告大客户销售经理，12-20K）为“大小周/单双休”（合规池中共有2个此类岗位），不符合候选人“要求周末双休”的硬性诉求。",
+          "薪资下限临界或微瑕风险：蜂巢传媒科技（品牌营销BD经理）薪资为11-18K·13薪，其底薪下限（11K）略低于候选人“月薪至少1.2w”的底线要求；极客流量平台（12-19K）与传漾互动营销（12-20K）起薪处于12K临界线，需在面试中重点确认底薪与提成结构。",
+          "合规池长尾跨行业噪音风险：虽然Top-8行业高度垂直，但整个12岗合规池中仍混入了少量非目标行业岗位（如机械设备/中科智造集团、农林牧渔/鲜果直达优选、批发零售等共4个岗位），投递时需注意甄别剔除。"
+        ]
+      },
+      "deterministic_checks": {
+        "schema_complete_ok": true,
+        "top_k_coverage_ok": true,
+        "zero_domain_bias_ok": true,
+        "leaked_bias_tokens": [],
+        "stat_grounding_ok": true
+      },
+      "judge_scores": {
+        "jd_groundedness_score": 9.8,
+        "profile_alignment_score": 9.6,
+        "risk_identification_score": 9.3,
+        "advice_actionability_score": 9.4
+      },
+      "overall_score_10": 9.57,
+      "diagnosis_comment": "报告数据引用精准无幻觉，深度结合了候选人广告销售与电商产品设计的复合技能背景，并准确对大小周（传漾互动营销）及起薪临界/偏低（蜂巢传媒、极客流量）岗位进行了风险预警与合理降分；唯宏观风险部分可进一步点明合规池长尾的4个跨行业噪音岗位。",
+      "report_overall_match_score": 92,
+      "report_verdict": "市场与用户期望及简历画像契合度极高，薪资达标率100%，核心头部岗位高度适配且多数严守双休。",
+      "report_executive_summary": "北京地区“数字营销与广告技术”赛道的大客户销售经理岗位整体供给充足且高度契合需求。样本池中行业匹配度达66.7%，100%的岗位达到或超过12K最低月薪要求，平均薪资为13.1-21.6K，中位数为17.0K，66.7%提供年终多薪；作息上周末双休占比高达83.3%（10/12）。整体人岗技能与诉求匹配度极高。",
+      "top_3_recommended": [
+        {
+          "rank": 1,
+          "job_name": "数字营销大客户销售经理",
+          "company_name": "引力引擎科技",
+          "salary_desc": "14-24K·13薪",
+          "weekend_policy": "周末双休",
+          "match_score": 96
+        },
+        {
+          "rank": 2,
+          "job_name": "大客户销售经理（互联网广告）",
+          "company_name": "智投互联",
+          "salary_desc": "15-25K·14薪",
+          "weekend_policy": "周末双休",
+          "match_score": 95
+        },
+        {
+          "rank": 3,
+          "job_name": "大客户销售经理（广告技术SaaS）",
+          "company_name": "数智引力AdTech",
+          "salary_desc": "15-28K·14薪",
+          "weekend_policy": "周末双休",
+          "match_score": 94
+        }
+      ],
+      "gt_latency_s": 21.84,
+      "analysis_latency_s": 25.94,
+      "judge_latency_s": 9.16
+    },
+    {
+      "scenario_id": "S5-SCEN-03",
+      "source_stage4_scenario_id": "S4-SCEN-03",
+      "source_sample_id": "QUAL-03",
+      "industry_category": "互联网/艺术与视觉设计",
+      "intent": {
+        "raw_query": "人工智能与大数据行业的交互设计师岗位，月薪至少0.8w，要求周末双休",
+        "query": "交互设计师",
+        "city_name": "上海",
+        "city_code": "101020100",
+        "salary_code": "404",
+        "salary_label": "5-10K",
+        "min_salary_k": 8,
+        "industry_keywords": [
+          "人工智能",
+          "AI",
+          "大数据",
+          "数据服务",
+          "互联网",
+          "软件服务"
+        ],
+        "require_double_weekend": true,
+        "soft_requirements": [
+          "人工智能与大数据行业",
+          "月薪至少8K",
+          "周末双休"
+        ]
+      },
+      "stats_summary": {
+        "total_jobs": 16,
+        "compliant_jobs_count": 12,
+        "demoted_jobs_count": 4,
+        "avg_min_k": 12.0,
+        "avg_max_k": 17.8,
+        "median_mid_k": 14.8
+      },
+      "ground_truth_anchor": {
+        "expected_score_min": 80,
+        "expected_score_max": 92,
+        "must_cite_facts": [
+          "合规池共有12个岗位（总检索池16个，降权过滤4个），其中行业匹配关键词的岗位占75.0%（9个）",
+          "合规池薪资平均起薪为12.0K、平均上限为17.8K，薪资中位数为14.8K，且58.3%（7个）的岗位提供多薪（13-15薪）",
+          "技能需求高度集中于Axure RP（11次）、UI/交互设计（10次）、Adobe Photoshop（7次）及Adobe Illustrator（5次）",
+          "合规池中明确标注周末双休的岗位有9个（占75%），而Top-8候选岗位全部为周末双休，代表企业包括携趣互联网、慧策数据、云极大数据等"
+        ],
+        "key_profile_matches": [
+          "候选人掌握的UI/交互设计、Axure RP、PS、AI、AE、InDesign等核心技能100%覆盖Top-8岗位的高频硬技能要求",
+          "候选人具备互联网/新媒体背景，与Top-8中携趣互联网、数澜互联网等互联网及数据服务企业的业务场景契合度高",
+          "候选人掌握Adobe After Effects（AE），能够直接胜任携趣互联网（18-28K·15薪）和智源未来AI（14-20K·13薪）对动效交互的高阶要求"
+        ],
+        "must_flag_risks": [
+          "Top-8中的「灵动云软-UI/UX交互设计师」薪资为7-10K，其起薪（7K）低于候选人8K的底线要求，且无多薪福利，需注意谈薪底线",
+          "候选人过往背景偏向互联网/新媒体与文化传媒，缺乏直接的AI、大数据或B端数据平台项目经验，投递深维AI、云极大数据等垂类岗位时存在一定跨行业认知门槛",
+          "整体合规池（12个岗位）中仍混有3个非双休岗位（2个大小周/单双休、1个排班轮休）以及机械重工、餐饮等偏离行业，若浏览Top-8以外的岗位需注意甄别排雷"
+        ]
+      },
+      "deterministic_checks": {
+        "schema_complete_ok": true,
+        "top_k_coverage_ok": true,
+        "zero_domain_bias_ok": true,
+        "leaked_bias_tokens": [],
+        "stat_grounding_ok": true
+      },
+      "judge_scores": {
+        "jd_groundedness_score": 9.8,
+        "profile_alignment_score": 9.5,
+        "risk_identification_score": 9.2,
+        "advice_actionability_score": 9.5
+      },
+      "overall_score_10": 9.54,
+      "diagnosis_comment": "报告数据引用100%忠实于真实统计与JD，精准结合了候选人AE、InDesign及双外语等细分技能点进行人岗匹配分析。准确识别了灵动云软起薪低于8K底线的风险并合理降分（75分），仅在整体风险汇总时对跨B端/AI行业经验门槛的强调略弱（主要分散在了单岗风险与建议中），整体质量极高。",
+      "report_overall_match_score": 86,
+      "report_verdict": "市场供给与薪资作息完美契合，候选人设计软件技能高度对口，核心风险在于简历缺失工作年限与学历标注。",
+      "report_executive_summary": "本次针对上海地区「交互设计师」岗位的调研显示，合规样本池共12条。目标行业（AI、大数据、数据服务、互联网等）契合度高达75.0%。薪资表现强劲，平均区间为12.0K-17.8K，薪资中位数14.8K，达标率（≥8K）达100.0%，且58.3%提供13-15薪等年终奖励。作息上，75.0%严格实行周末双休。候选人设计与原型工具链（Axure、PS、AI、AE）与市场核心需求高度吻合，但简历未注明学历与年限，需防范硬性门槛阻碍。",
+      "top_3_recommended": [
+        {
+          "rank": 1,
+          "job_name": "交互设计师（数据服务）",
+          "company_name": "慧策数据",
+          "salary_desc": "12-18K·13薪",
+          "weekend_policy": "周末双休",
+          "match_score": 95
+        },
+        {
+          "rank": 2,
+          "job_name": "交互设计师（AI应用）",
+          "company_name": "智源未来AI",
+          "salary_desc": "14-20K·13薪",
+          "weekend_policy": "周末双休",
+          "match_score": 94
+        },
+        {
+          "rank": 3,
+          "job_name": "UX体验设计师",
+          "company_name": "云极大数据",
+          "salary_desc": "12-18K·13薪",
+          "weekend_policy": "周末双休",
+          "match_score": 93
+        }
+      ],
+      "gt_latency_s": 13.85,
+      "analysis_latency_s": 31.99,
+      "judge_latency_s": 11.14
+    },
+    {
+      "scenario_id": "S5-SCEN-04",
+      "source_stage4_scenario_id": "S4-SCEN-04",
+      "source_sample_id": "QUAL-04",
+      "industry_category": "互联网/后端研发",
+      "intent": {
+        "raw_query": "互联网软件行业的Java开发工程师岗位，月薪至少1w，要求周末双休",
+        "query": "Java开发工程师",
+        "city_name": "广州",
+        "city_code": "101280100",
+        "salary_code": "405",
+        "salary_label": "10-20K",
+        "min_salary_k": 10,
+        "industry_keywords": [
+          "互联网",
+          "计算机软件",
+          "软件开发",
+          "信息技术",
+          "IT服务"
+        ],
+        "require_double_weekend": true,
+        "soft_requirements": [
+          "互联网软件行业",
+          "月薪至少10K",
+          "周末双休"
+        ]
+      },
+      "stats_summary": {
+        "total_jobs": 16,
+        "compliant_jobs_count": 12,
+        "demoted_jobs_count": 4,
+        "avg_min_k": 11.7,
+        "avg_max_k": 17.9,
+        "median_mid_k": 14.5
+      },
+      "ground_truth_anchor": {
+        "expected_score_min": 82,
+        "expected_score_max": 92,
+        "must_cite_facts": [
+          "合规池共12个岗位（总池16个，降权4个），平均起薪11.7K、平均上限17.9K，薪资中位数14.5K，75%（9个）岗位提供多薪（13-14薪）",
+          "行业匹配度达75.0%（9/12），集中在互联网（3个）、软件开发（2个）、计算机软件（2个）、信息技术及IT服务领域",
+          "周末双休岗位占比83.3%（10/12），且Top-8候选岗位100%满足周末双休",
+          "头部代表企业包括欢聚集团(YY)、唯品会、酷狗音乐、佳都科技等，已上市企业占比达50%（6/12）"
+        ],
+        "key_profile_matches": [
+          "候选人掌握的Java/Kotlin、Spring Boot/Spring Cloud微服务技术栈，与Top-8全部岗位的核心开发要求高度吻合",
+          "简历中的MySQL及SQL优化、Redis/分布式锁、ElasticSearch及消息队列(MQ)经验，精准命中欢聚集团(YY)、唯品会、酷狗音乐、智汇信息科技等高薪岗位的进阶技能要求",
+          "候选人具备的互联网/软件及信息技术行业背景，与Top-8岗位所在的行业属性（互联网、软件开发、计算机软件、信息技术、IT服务）完全契合"
+        ],
+        "must_flag_risks": [
+          "易讯IT服务的「中级Java开发工程师」薪资为9-14K·13薪，其底薪下限（9K）低于求职者要求的10K红线，需在谈薪时重点确认保底月薪",
+          "合规池整体存在2个「大小周/单双休」岗位，以及建筑/工程、医疗健康、外贸/进出口共3个非互联网软件类跨行业岗位（如广建市政、康美医药、傲基跨境），拓宽投递范围时需注意甄别",
+          "技能统计中夹杂少量非研发技能标签（如大客户开发、商务谈判、英语流利），提示部分外围岗位职责可能不纯粹，需仔细核对JD"
+        ]
+      },
+      "deterministic_checks": {
+        "schema_complete_ok": true,
+        "top_k_coverage_ok": true,
+        "zero_domain_bias_ok": true,
+        "leaked_bias_tokens": [],
+        "stat_grounding_ok": true
+      },
+      "judge_scores": {
+        "jd_groundedness_score": 9.5,
+        "profile_alignment_score": 9.5,
+        "risk_identification_score": 8.8,
+        "advice_actionability_score": 9.2
+      },
+      "overall_score_10": 9.3,
+      "diagnosis_comment": "报告对统计数据与Top-8 JD的事实还原度极高，逐岗点评精准关联了候选人的Java/Kotlin、Redis分布式锁及微服务调优等细分技能，且在Rank 8（易讯IT服务）准确识别出9K起薪低于10K预期的风险并予以合理降分。唯一微小改进点在于整体风险提示中未显式点出技能统计里混杂的少量非研发标签（如大客户开发、商务谈判），且薪酬维度描述“起薪均达到10K”与Rank 8的9K底薪略有表述矛盾。",
+      "report_overall_match_score": 88,
+      "report_verdict": "市场薪资与作息诉求100%完全契合，候选人技术栈高度匹配，首要任务是明确简历中的学历与工作年限以突破初筛硬门槛。",
+      "report_executive_summary": "广州地区面向互联网与软件行业的Java开发工程师岗位供给充沛。12个合规样本中，75.0%集中于互联网与IT软件赛道。薪资达标率达到100.0%，平均起薪11.7K、平均上限17.9K、中位薪资14.5K，且75.0%提供13-14薪。福利方面，83.3%（10家）严格执行周末双休。学历门槛100%要求本科，年限主要分布在1-3年（50%）与3-5年（50%）。候选人微服务及高并发技术栈与市场高度契合，但需补齐简历中未注明的学历与工作年限信息。",
+      "top_3_recommended": [
+        {
+          "rank": 1,
+          "job_name": "Java开发工程师",
+          "company_name": "唯品会",
+          "salary_desc": "14-22K·14薪",
+          "weekend_policy": "周末双休",
+          "match_score": 93
+        },
+        {
+          "rank": 2,
+          "job_name": "高级Java开发工程师",
+          "company_name": "欢聚集团(YY)",
+          "salary_desc": "15-25K·13薪",
+          "weekend_policy": "周末双休",
+          "match_score": 92
+        },
+        {
+          "rank": 3,
+          "job_name": "后端研发工程师(J2EE/微服务)",
+          "company_name": "酷狗音乐",
+          "salary_desc": "12-18K·13薪",
+          "weekend_policy": "周末双休",
+          "match_score": 91
+        }
+      ],
+      "gt_latency_s": 12.53,
+      "analysis_latency_s": 30.73,
+      "judge_latency_s": 9.47
+    },
+    {
+      "scenario_id": "S5-SCEN-05",
+      "source_stage4_scenario_id": "S4-SCEN-05",
+      "source_sample_id": "QUAL-05",
+      "industry_category": "教育培训/国际贸易与行政管理",
+      "intent": {
+        "raw_query": "跨境电商出海行业的海外商务经理岗位，月薪至少1.1w",
+        "query": "海外商务经理",
+        "city_name": "武汉",
+        "city_code": "101200100",
+        "salary_code": "405",
+        "salary_label": "10-20K",
+        "min_salary_k": 11,
+        "industry_keywords": [
+          "跨境电商",
+          "出海",
+          "电子商务",
+          "国际贸易",
+          "进出口",
+          "海外业务"
+        ],
+        "require_double_weekend": false,
+        "soft_requirements": [
+          "跨境电商出海行业",
+          "月薪至少11K"
+        ]
+      },
+      "stats_summary": {
+        "total_jobs": 16,
+        "compliant_jobs_count": 12,
+        "demoted_jobs_count": 4,
+        "avg_min_k": 11.5,
+        "avg_max_k": 17.2,
+        "median_mid_k": 14.2
+      },
+      "ground_truth_anchor": {
+        "expected_score_min": 78,
+        "expected_score_max": 90,
+        "must_cite_facts": [
+          "合规池共12个岗位（总计16个，降权4个），其中8个岗位（占比66.7%）匹配跨境电商/出海/国际贸易等目标行业关键词",
+          "合规池平均起薪11.5K，平均最高薪资17.2K，薪资中位数14.2K，66.7%（8个）的岗位提供多薪激励（13-14薪）",
+          "12个合规岗位100%要求本科学历，其中75%（9个）要求3-5年工作经验，25%（3个）要求1-3年经验",
+          "福利方面，9个岗位（75%）明确周末双休，2个为大小周/单双休，Top-8候选岗位全部为周末双休"
+        ],
+        "key_profile_matches": [
+          "候选人具备的「商务礼仪与谈判」与合规池最核心高频技能（9个岗位要求，Top-8全覆盖）高度吻合",
+          "候选人的「活动策划与组织协调」（5个岗位要求）、「宣传与新媒体运营」（3个岗位要求）及「Adobe设计软件应用」与盛世潮品跨境、光谷互娱出海等头部岗位需求直接契合",
+          "候选人拥有「国际贸易/进出口」行业背景及外贸专员、英语口语讲师经历，契合楚天跨境供应链、致远出海科技等对国际贸易与英语口语表达的要求"
+        ],
+        "must_flag_risks": [
+          "部分Top-8岗位起薪低于11K底线（如极客远航科技9-14K、蓝海环球电商10-15K），需依赖谈薪或年终多薪才能达到期望下限",
+          "合规池中75%（9个）的岗位要求3-5年经验，且部分高薪岗（如光谷互娱出海）要求英语专业八级或资深海外渠道/BD开发经验，候选人作为专员/管培生背景在硬性资历与深度海外渠道资源上可能存在门槛",
+          "合规池中存在33.3%（4个）非目标行业岗位（如机械重工、医疗器械、新能源、建筑设计），且整体池中有2个大小周/单双休岗位和1个作息未明岗位，投递时需注意甄别"
+        ]
+      },
+      "deterministic_checks": {
+        "schema_complete_ok": true,
+        "top_k_coverage_ok": true,
+        "zero_domain_bias_ok": true,
+        "leaked_bias_tokens": [],
+        "stat_grounding_ok": true
+      },
+      "judge_scores": {
+        "jd_groundedness_score": 9.8,
+        "profile_alignment_score": 9.6,
+        "risk_identification_score": 9.3,
+        "advice_actionability_score": 9.2
+      },
+      "overall_score_10": 9.53,
+      "diagnosis_comment": "报告对统计数据与Top-8 JD细节引用极为精准，将候选人“英语讲师+外贸+设计/活动策划”的跨界背景与各岗位特殊需求（如新人英语内训、Adobe物料审核、海外展会策划）实现了深度绑定；准确识别了3-5年经验门槛与部分岗位起薪低于11K的风险，唯整体建议中引用的岗位原始编号（#4/#6/#7）与重排后的推荐位次（Rank 5/6/8）存在轻微指代偏差。",
+      "report_overall_match_score": 86,
+      "report_verdict": "市场薪资与出海方向100%契合诉求，候选人的英语口语、谈判与活动策划专长高度匹配，核心需弥补年限硬性门槛与过往B2B量化业绩。",
+      "report_executive_summary": "武汉海外商务经理岗位共筛选出12条合规样本，整体对口度与薪资达标率极高。期望月薪达标率达100.0%，平均薪资区间为11.5K-17.2K，中位数达14.2K，且66.7%的岗位提供年终奖或多薪。行业分布以跨境电商、电商及进出口出海为主（占66.7%）。候选人具备流利英语、商务谈判及活动策划跨界背景，与当前市场对出海BD与展会策划的核心诉求契合度良好。",
+      "top_3_recommended": [
+        {
+          "rank": 1,
+          "job_name": "海外商务经理",
+          "company_name": "楚天跨境供应链",
+          "salary_desc": "11-16K·14薪",
+          "weekend_policy": "周末双休",
+          "match_score": 93
+        },
+        {
+          "rank": 2,
+          "job_name": "海外商务经理",
+          "company_name": "盛世潮品跨境",
+          "salary_desc": "13-20K·14薪",
+          "weekend_policy": "周末双休",
+          "match_score": 92
+        },
+        {
+          "rank": 3,
+          "job_name": "海外商务经理",
+          "company_name": "致远出海科技",
+          "salary_desc": "12-18K·14薪",
+          "weekend_policy": "周末双休",
+          "match_score": 90
+        }
+      ],
+      "gt_latency_s": 19.1,
+      "analysis_latency_s": 27.12,
+      "judge_latency_s": 9.2
+    },
+    {
+      "scenario_id": "S5-SCEN-06",
+      "source_stage4_scenario_id": "S4-SCEN-06",
+      "source_sample_id": "QUAL-08",
+      "industry_category": "互联网/项目管理与视觉设计",
+      "intent": {
+        "raw_query": "人工智能与大数据行业的研发项目经理岗位，月薪至少2.0w，要求周末双休",
+        "query": "研发项目经理",
+        "city_name": "北京",
+        "city_code": "101010100",
+        "salary_code": "406",
+        "salary_label": "20-50K",
+        "min_salary_k": 20,
+        "industry_keywords": [
+          "人工智能",
+          "AI",
+          "大数据",
+          "计算机软件",
+          "互联网"
+        ],
+        "require_double_weekend": true,
+        "soft_requirements": [
+          "人工智能与大数据行业",
+          "月薪至少2.0w",
+          "周末双休"
+        ]
+      },
+      "stats_summary": {
+        "total_jobs": 16,
+        "compliant_jobs_count": 12,
+        "demoted_jobs_count": 4,
+        "avg_min_k": 21.8,
+        "avg_max_k": 31.6,
+        "median_mid_k": 26.5
+      },
+      "ground_truth_anchor": {
+        "expected_score_min": 80,
+        "expected_score_max": 92,
+        "must_cite_facts": [
+          "合规池共有12个岗位（总检索16个，降级4个），其中满足人工智能、大数据及泛TMT相关行业的岗位有9个，行业契合度为75.0%",
+          "薪资平均区间为21.8K-31.6K，中位数达26.5K，100%（12个）岗位最高薪资覆盖20K期望，且91.7%（11个）岗位带有多薪奖励（13-16薪）",
+          "合规池中明确标注周末双休的岗位有10个（占比83.3%），另有2个为大小周/单双休",
+          "高频技能需求依次为项目管理与统筹（11次）、办公软件应用（8次）、C++基础（5次）、UI设计（5次）及网页设计（4次）"
+        ],
+        "key_profile_matches": [
+          "候选人核心技能「项目管理与统筹」「C++基础」「UI设计」「办公软件应用」与深瞳视觉AI（24-36K·16薪）、智源大模型科技（25-35K·15薪）、百川云海软件（22-32K·15薪）等头部AI及软件岗位的技能要求高度重合",
+          "候选人具备「互联网/IT」「计算机软件」行业背景，契合Top-8中人工智能（2家）、大数据（2家）、计算机软件（2家）及互联网（2家）的行业赛道要求",
+          "候选人兼具「平面设计」「网页设计」等视觉与前端设计基因，与九章大数据科技、极客未来计算机等产研及软件研发管理岗位的复合技能要求精准匹配"
+        ],
+        "must_flag_risks": [
+          "作息不达标风险：合规池中有2个岗位为「大小周/单双休」，其中Top-8中的「闪电快跑网络（互联网研发项目经理，23-32K·13薪）」为大小周/单双休，违背候选人周末双休的明确诉求",
+          "起薪临界与议价风险：Top-8中「云途智联网络」薪资为18-25K·13薪（底薪下限低于20K），且「九章大数据科技（20-28K）」「数智矩阵大数据（20-26K）」起薪压线20K，需在面试中重点争取定薪中上位",
+          "跨行业与敏捷方法论补齐风险：合规池中混有3个非TMT行业岗位（盛世宏图地产集团、康泰生物医药、京华重工机械），且头部AI岗位（如智源大模型科技）要求「敏捷开发」技能，候选人简历未直接体现，需提前准备话术"
+        ]
+      },
+      "deterministic_checks": {
+        "schema_complete_ok": true,
+        "top_k_coverage_ok": true,
+        "zero_domain_bias_ok": true,
+        "leaked_bias_tokens": [],
+        "stat_grounding_ok": true
+      },
+      "judge_scores": {
+        "jd_groundedness_score": 9.3,
+        "profile_alignment_score": 9.5,
+        "risk_identification_score": 8.8,
+        "advice_actionability_score": 9.2
+      },
+      "overall_score_10": 9.23,
+      "diagnosis_comment": "六维统计与Top-8企业信息高度忠实，仅“所有合规岗位均在20K起跳”表述略欠严谨（云途智联底薪18K，实际是最高薪资100%覆盖20K）；人岗复合技能画像契合度极佳，大小周与起薪风险扣分准确，若补充敏捷开发技能缺口提示将更完美。",
+      "report_overall_match_score": 85,
+      "report_verdict": "市场需求、薪资给付及双休要求高度契合，候选人跨界设计与管理技能匹配度亮眼，核心风险仅在个人资历年限与学历待补齐。",
+      "report_executive_summary": "北京地区「研发项目经理」在人工智能、大数据及互联网领域的招聘市场表现强劲。合规样本池中 100.0% 的岗位薪资达标（期望≥20K），平均薪资区间为 21.8K-31.6K，中位数达 26.5K，且 91.7% 提供 13-16 薪。周末双休岗位占比高达 83.3%（10/12），企业多处于 B 轮至上市阶段，整体人岗匹配基础优异。",
+      "top_3_recommended": [
+        {
+          "rank": 1,
+          "job_name": "研发项目经理",
+          "company_name": "百川云海软件",
+          "salary_desc": "22-32K·15薪",
+          "weekend_policy": "周末双休",
+          "match_score": 95
+        },
+        {
+          "rank": 2,
+          "job_name": "AI研发项目经理",
+          "company_name": "深瞳视觉AI",
+          "salary_desc": "24-36K·16薪",
+          "weekend_policy": "周末双休",
+          "match_score": 92
+        },
+        {
+          "rank": 3,
+          "job_name": "产研项目统筹专家",
+          "company_name": "极客未来计算机",
+          "salary_desc": "22-30K·14薪",
+          "weekend_policy": "周末双休",
+          "match_score": 91
+        }
+      ],
+      "gt_latency_s": 23.14,
+      "analysis_latency_s": 25.63,
+      "judge_latency_s": 11.21
+    }
+  ]
+}
