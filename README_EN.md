@@ -3,7 +3,7 @@
 # BOSS Zhipin Job Intelligence Agent & Eval Suite
 ### BOSS直聘 智能求职分析 Agent 与全链路评测工作台
 
-🌐 **Language / 语言切换**: **English** &nbsp;|&nbsp; **[简体中文](./README_ZH.md)** &nbsp;·&nbsp; *([Bilingual Single-Page](./README.md))*
+🌐 **Language / 语言切换**: **English** &nbsp;|&nbsp; **[简体中文](./README_ZH.md)** &nbsp;·&nbsp; *([Bilingual Single-Page](./README.md))* &nbsp;|&nbsp; 📚 **[Step-by-Step Tutorial](./tutorials/README.md)**
 
 </div>
 
@@ -62,6 +62,7 @@ boss-zhipin-crawler/
 │   ├── AGENTS.md                        # OpenSpec Explore -> Propose -> Apply -> Archive workflow rules
 │   ├── specs/                           # Canonical AST-validated master specs (stage1 ~ stage5)
 │   └── changes/archive/                 # Archived OpenSpec change proposals, designs & task logs
+├── tutorials/                           # Step-by-step bilingual Spec-Driven Agent tutorials (zh/ & en/, 00~06)
 ├── static/
 │   ├── index.html                       # Dual-workspace SPA (Job Search Analytics + 5-Stage Eval Dashboard)
 │   ├── styles.css                       # Responsive UI & evaluation dashboard styles

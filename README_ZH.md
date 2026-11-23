@@ -3,7 +3,7 @@
 # BOSS直聘 智能求职分析 Agent 与全链路评测工作台
 ### BOSS Zhipin Job Intelligence Agent & Eval Suite
 
-🌐 **语言切换 / Language**: **[English](./README_EN.md)** &nbsp;|&nbsp; **简体中文** &nbsp;·&nbsp; *([双语同页版 Bilingual](./README.md))*
+🌐 **语言切换 / Language**: **[English](./README_EN.md)** &nbsp;|&nbsp; **简体中文** &nbsp;·&nbsp; *([双语同页版 Bilingual](./README.md))* &nbsp;|&nbsp; 📚 **[从0到1实战教程](./tutorials/README.md)**
 
 </div>
 
@@ -64,6 +64,7 @@ boss-zhipin-crawler/
 │   ├── AGENTS.md                        # OpenSpec Explore -> Propose -> Apply -> Archive 流程规则
 │   ├── specs/                           # 5 份 100% 符合 OpenSpec AST 规范的主规范 (stage1 ~ stage5)
 │   └── changes/archive/                 # 已归档的 OpenSpec 变更提案、设计文档与任务清单
+├── tutorials/                           # 从 0 到 1 中英双语 Spec-Driven Agent 实战教程 (zh/ & en/, 00~06)
 ├── static/
 │   ├── index.html                       # 双工作台单页应用 (求职六维分析工作台 + 5 阶段全链路评测看板)
 │   ├── styles.css                       # 响应式样式表与评测矩阵样式
