@@ -9,6 +9,13 @@
 
 ---
 
+> [!IMPORTANT]
+> **⚠️ Disclaimer & Security Notice**
+> - **Educational & Research Use Only**: This project is intended solely for personal learning, AI Agent architecture research, and LLM evaluation benchmarking. Please strictly comply with the target platform's Terms of Service, `robots.txt`, and applicable laws. Do **NOT** use this tool for commercial scraping, high-frequency harvesting, or unauthorized data redistribution.
+> - **Localhost Only**: The FastAPI server binds to `127.0.0.1:8000` by default without authentication. **Never** expose it directly to `0.0.0.0` or the public internet without adding authentication, rate limiting, and CORS restrictions.
+
+---
+
 An end-to-end **Conversational Job Intelligence Agent & 6-Dimension Visual Analytics Platform** built with **Playwright (CDP)**, **FastAPI (SSE Streaming)**, **Google Gemini Interactions API**, and **Apache ECharts**, paired with an in-house **LLM-as-a-Judge Multi-Stage Evaluation Suite & Interactive Dashboard**.
 
 ### ✨ Key Features
@@ -33,27 +40,40 @@ An end-to-end **Conversational Job Intelligence Agent & 6-Dimension Visual Analy
 
 ```text
 boss-zhipin-crawler/
+├── .github/workflows/ci.yml             # CI gate: Stage 3/4/5 unit tests, OpenSpec AST & secret hygiene
 ├── core/
 │   ├── gemini_client.py                 # Adaptive Gemini Interactions API client (Vertex AI & AI Studio)
-│   ├── resume_parser.py                 # Stage 1 (Profile Extraction + PII Masking) & Stage 2 (Query Generation)
-│   ├── intent_parser.py                 # Stage 3 Natural language job intent & filter parser
-│   ├── boss_crawler.py                  # Stage 4 Two-stage Playwright CDP job crawler & Excel exporter
-│   └── gemini_analyzer.py               # Stage 5 6-dimension statistics & Gemini deep JD matching
-├── resume_eval_benchmark/
-│   ├── schema_and_validator.py          # 9-field schema validator, file signature & PII redline guardrails
-│   ├── llm_judge_evaluator.py           # LLM-as-a-Judge 9-field atomic classification scorer (0~10 scale)
-│   ├── evaluate_parser.py               # CLI evaluation runner (supports --live-gemini & --llm-judge)
-│   ├── eval_store.py                    # Unified 3-layer evaluation protocol adapter & run archive store
-│   ├── dataset/                         # 25 multimodal qualified samples + 20 disqualified security samples
-│   └── runs/                            # Archived evaluation run JSON reports for the web dashboard
+│   ├── resume_parser.py                 # Stage 1: Multimodal resume profile extraction + deterministic PII masking
+│   ├── query_generator.py               # Stage 2: 10-strategy 3-element job query generator (with BOSS city 1:1)
+│   ├── intent_parser.py                 # Stage 3: NL/Stage 2 intent parser, 48-city priority & official whitelists
+│   ├── boss_crawler.py                  # Stage 4: Two-stage Playwright CDP crawler + offline rank_and_filter_jobs
+│   └── gemini_analyzer.py               # Stage 5: Compliant-pool 6D statistics & grounded Gemini deep JD matching
+├── eval/
+│   ├── eval_store.py                    # Unified multi-stage eval store & protocol adapter (Stage 1 ~ Stage 5)
+│   ├── stage1_eval/                     # Stage 1: 9-field atomic judge, schema validator & dataset generator
+│   ├── stage2_eval/                     # Stage 2: 10-strategy query evaluator & Argon LLM-as-a-Judge
+│   ├── stage3_eval/                     # Stage 3: Argon URL Ground Truth generator, evaluator & judge
+│   ├── stage4_eval/                     # Stage 4: Offline candidate-pool generator, NDCG@8 evaluator & judge
+│   ├── stage5_eval/                     # Stage 5: Automated Ground Truth anchors, 6D report evaluator & judge
+│   ├── dataset/                         # Stage-isolated evaluation datasets & manifests (stage1/ ~ stage5/)
+│   └── runs/                            # Archived evaluation run JSON reports & latest_stage1..5_eval_report.json
+├── openspec/
+│   ├── project.md                       # OpenSpec project conventions & architecture overview
+│   ├── AGENTS.md                        # OpenSpec Explore -> Propose -> Apply -> Archive workflow rules
+│   ├── specs/                           # Canonical AST-validated master specs (stage1 ~ stage5)
+│   └── changes/archive/                 # Archived OpenSpec change proposals, designs & task logs
 ├── static/
-│   ├── index.html                       # Dual-workspace SPA (Job Search Analytics + Eval Dashboard)
-│   ├── styles.css                       # Responsive UI & evaluation table styles
-│   └── app.js                           # Frontend controller & ECharts rendering (XSS-safe DOM APIs)
-├── design/                              # System architecture & BOSS Zhipin API reference docs
-├── app.py                               # FastAPI server entry point (SSE streaming + REST + Eval APIs)
+│   ├── index.html                       # Dual-workspace SPA (Job Search Analytics + 5-Stage Eval Dashboard)
+│   ├── styles.css                       # Responsive UI & evaluation dashboard styles
+│   └── app.js                           # Frontend controller & Apache ECharts rendering (XSS-safe DOM APIs)
+├── design/                              # Synced architecture design doc & BOSS Zhipin API reference
+├── system_design.md                     # 6-page end-to-end system design & architecture documentation
+├── app.py                               # FastAPI server entry point (SSE streaming, REST & Stage 1~5 APIs)
 ├── start_chrome.sh                      # Helper script to launch Chrome with remote debugging port 9222
-└── requirements.txt                     # Python dependencies
+├── .env.example                         # Environment variable template (gemini-3.8-flash / gemini-4-argon)
+├── requirements.txt                     # Python dependencies
+├── LICENSE                              # MIT License
+└── SECURITY.md                          # Security policy & localhost-only deployment guidelines
 ```
 
 ---
@@ -91,9 +111,12 @@ python app.py
 - **Job Search & 6D Analytics Workspace**: `http://127.0.0.1:8000/`
 - **Multi-Stage Evaluation Dashboard**: `http://127.0.0.1:8000/#eval`
 
-#### 5. Run Stage 1 CLI Evaluation Benchmark
+#### 5. Run Multi-Stage CLI Evaluation Benchmarks (`eval/`)
 ```bash
-# Run live Gemini extraction + LLM-as-a-Judge 9-field atomic evaluation on selected samples
-python resume_eval_benchmark/evaluate_parser.py \
-  --live-gemini --llm-judge --sample-ids QUAL-001,QUAL-002
+# Stage 1 ~ Stage 5 independent evaluation scripts (Analyzer: gemini-3.8-flash | Judge: gemini-4-argon)
+python eval/stage1_eval/evaluate_stage1_parser.py --live-gemini --llm-judge
+python eval/stage2_eval/evaluate_stage2_queries.py
+python eval/stage3_eval/evaluate_stage3_intent.py
+python eval/stage4_eval/evaluate_stage4_ranking.py
+python eval/stage5_eval/evaluate_stage5_analysis.py
 ```

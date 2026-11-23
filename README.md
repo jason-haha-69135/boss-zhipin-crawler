@@ -48,27 +48,40 @@ An end-to-end **Conversational Job Intelligence Agent & 6-Dimension Visual Analy
 
 ```text
 boss-zhipin-crawler/
+├── .github/workflows/ci.yml             # CI gate: Stage 3/4/5 unit tests, OpenSpec AST & secret hygiene
 ├── core/
 │   ├── gemini_client.py                 # Adaptive Gemini Interactions API client (Vertex AI & AI Studio)
-│   ├── resume_parser.py                 # Stage 1 (Profile Extraction + PII Masking) & Stage 2 (Query Generation)
-│   ├── intent_parser.py                 # Stage 3 Natural language job intent & filter parser
-│   ├── boss_crawler.py                  # Stage 4 Two-stage Playwright CDP job crawler & Excel exporter
-│   └── gemini_analyzer.py               # Stage 5 6-dimension statistics & Gemini deep JD matching
-├── resume_eval_benchmark/
-│   ├── schema_and_validator.py          # 9-field schema validator, file signature & PII redline guardrails
-│   ├── llm_judge_evaluator.py           # LLM-as-a-Judge 9-field atomic classification scorer (0~10 scale)
-│   ├── evaluate_parser.py               # CLI evaluation runner (supports --live-gemini & --llm-judge)
-│   ├── eval_store.py                    # Unified 3-layer evaluation protocol adapter & run archive store
-│   ├── dataset/                         # 25 multimodal qualified samples + 20 disqualified security samples
-│   └── runs/                            # Archived evaluation run JSON reports for the web dashboard
+│   ├── resume_parser.py                 # Stage 1: Multimodal resume profile extraction + deterministic PII masking
+│   ├── query_generator.py               # Stage 2: 10-strategy 3-element job query generator (with BOSS city 1:1)
+│   ├── intent_parser.py                 # Stage 3: NL/Stage 2 intent parser, 48-city priority & official whitelists
+│   ├── boss_crawler.py                  # Stage 4: Two-stage Playwright CDP crawler + offline rank_and_filter_jobs
+│   └── gemini_analyzer.py               # Stage 5: Compliant-pool 6D statistics & grounded Gemini deep JD matching
+├── eval/
+│   ├── eval_store.py                    # Unified multi-stage eval store & protocol adapter (Stage 1 ~ Stage 5)
+│   ├── stage1_eval/                     # Stage 1: 9-field atomic judge, schema validator & dataset generator
+│   ├── stage2_eval/                     # Stage 2: 10-strategy query evaluator & Argon LLM-as-a-Judge
+│   ├── stage3_eval/                     # Stage 3: Argon URL Ground Truth generator, evaluator & judge
+│   ├── stage4_eval/                     # Stage 4: Offline candidate-pool generator, NDCG@8 evaluator & judge
+│   ├── stage5_eval/                     # Stage 5: Automated Ground Truth anchors, 6D report evaluator & judge
+│   ├── dataset/                         # Stage-isolated evaluation datasets & manifests (stage1/ ~ stage5/)
+│   └── runs/                            # Archived evaluation run JSON reports & latest_stage1..5_eval_report.json
+├── openspec/
+│   ├── project.md                       # OpenSpec project conventions & architecture overview
+│   ├── AGENTS.md                        # OpenSpec Explore -> Propose -> Apply -> Archive workflow rules
+│   ├── specs/                           # Canonical AST-validated master specs (stage1 ~ stage5)
+│   └── changes/archive/                 # Archived OpenSpec change proposals, designs & task logs
 ├── static/
-│   ├── index.html                       # Dual-workspace SPA (Job Search Analytics + Eval Dashboard)
-│   ├── styles.css                       # Responsive UI & evaluation table styles
-│   └── app.js                           # Frontend controller & ECharts rendering (XSS-safe DOM APIs)
-├── design/                              # System architecture & BOSS Zhipin API reference docs
-├── app.py                               # FastAPI server entry point (SSE streaming + REST + Eval APIs)
+│   ├── index.html                       # Dual-workspace SPA (Job Search Analytics + 5-Stage Eval Dashboard)
+│   ├── styles.css                       # Responsive UI & evaluation dashboard styles
+│   └── app.js                           # Frontend controller & Apache ECharts rendering (XSS-safe DOM APIs)
+├── design/                              # Synced architecture design doc & BOSS Zhipin API reference
+├── system_design.md                     # 6-page end-to-end system design & architecture documentation
+├── app.py                               # FastAPI server entry point (SSE streaming, REST & Stage 1~5 APIs)
 ├── start_chrome.sh                      # Helper script to launch Chrome with remote debugging port 9222
-└── requirements.txt                     # Python dependencies
+├── .env.example                         # Environment variable template (gemini-3.8-flash / gemini-4-argon)
+├── requirements.txt                     # Python dependencies
+├── LICENSE                              # MIT License
+└── SECURITY.md                          # Security policy & localhost-only deployment guidelines
 ```
 
 ---
@@ -106,11 +119,14 @@ python app.py
 - **Job Search & 6D Analytics Workspace**: `http://127.0.0.1:8000/`
 - **Multi-Stage Evaluation Dashboard**: `http://127.0.0.1:8000/#eval`
 
-#### 5. Run Stage 1 CLI Evaluation Benchmark
+#### 5. Run Multi-Stage CLI Evaluation Benchmarks (`eval/`)
 ```bash
-# Run live Gemini extraction + LLM-as-a-Judge 9-field atomic evaluation on selected samples
-python resume_eval_benchmark/evaluate_parser.py \
-  --live-gemini --llm-judge --sample-ids QUAL-001,QUAL-002
+# Stage 1 ~ Stage 5 independent evaluation scripts (Analyzer: gemini-3.8-flash | Judge: gemini-4-argon)
+python eval/stage1_eval/evaluate_stage1_parser.py --live-gemini --llm-judge
+python eval/stage2_eval/evaluate_stage2_queries.py
+python eval/stage3_eval/evaluate_stage3_intent.py
+python eval/stage4_eval/evaluate_stage4_ranking.py
+python eval/stage5_eval/evaluate_stage5_analysis.py
 ```
 
 ---
@@ -148,27 +164,40 @@ python resume_eval_benchmark/evaluate_parser.py \
 
 ```text
 boss-zhipin-crawler/
+├── .github/workflows/ci.yml             # GitHub Actions CI 门禁（Stage 3/4/5 单测 + OpenSpec AST + 密钥扫描）
 ├── core/
 │   ├── gemini_client.py                 # Gemini Interactions API 自适应双通道客户端 (Vertex AI & AI Studio)
-│   ├── resume_parser.py                 # Stage 1 (简历画像提取 + PII脱敏) & Stage 2 (多策略 Query 生成)
-│   ├── intent_parser.py                 # Stage 3 自然语言求职意图解析器
-│   ├── boss_crawler.py                  # Stage 4 两阶段 BOSS直聘爬虫引擎与 Excel 导出
-│   └── gemini_analyzer.py               # Stage 5 六维统计计算与 Gemini 人岗匹配深度分析
-├── resume_eval_benchmark/
-│   ├── schema_and_validator.py          # 9字段 Schema 校验器、文件签名检测与 PII 脱敏红线门禁
-│   ├── llm_judge_evaluator.py           # LLM-as-a-Judge 9字段原子核对评分引擎 (0~10分制)
-│   ├── evaluate_parser.py               # 命令行评测运行器 (支持 --live-gemini 与 --llm-judge)
-│   ├── eval_store.py                    # 统一三层评测协议转换器与历史评测批次归档存储
-│   ├── dataset/                         # 25份多格式正例简历样本 + 20份反例攻击/损坏安全测试样本
-│   └── runs/                            # 自动归档的历史评测报告 JSON (供前端评测大盘读取与对比)
+│   ├── resume_parser.py                 # Stage 1：多模态简历画像提取 + 确定性 PII 脱敏
+│   ├── query_generator.py               # Stage 2：10 策略三要素 Query 生成器（含 BOSS 城市 1:1 映射）
+│   ├── intent_parser.py                 # Stage 3：自然语言/Stage 2 意图解析、48 城优先级与全量官方白名单
+│   ├── boss_crawler.py                  # Stage 4：两阶段 Playwright CDP 爬虫 + 离线粗排降权引擎 (rank_and_filter_jobs)
+│   └── gemini_analyzer.py               # Stage 5：合规池六维统计计算与 Gemini 人岗匹配深度分析
+├── eval/
+│   ├── eval_store.py                    # 全链路 5 阶段统一评测存储与协议适配器 (Stage 1 ~ Stage 5)
+│   ├── stage1_eval/                     # Stage 1：9 字段原子裁判、Schema/文件签名校验与数据集生成器
+│   ├── stage2_eval/                     # Stage 2：10 策略 Query 评测器与 Argon LLM-as-a-Judge
+│   ├── stage3_eval/                     # Stage 3：Argon URL Ground Truth 生成器、评测器与裁判
+│   ├── stage4_eval/                     # Stage 4：离线候选岗位池生成器、NDCG@8 评测器与裁判
+│   ├── stage5_eval/                     # Stage 5：自动事实锚点生成、六维报告评测器与裁判
+│   ├── dataset/                         # 分阶段隔离的评测数据集与基准清单 (stage1/ ~ stage5/)
+│   └── runs/                            # 历史评测报告快照与最新汇总 (latest_stage1..5_eval_report.json)
+├── openspec/
+│   ├── project.md                       # OpenSpec 项目规范与架构约定
+│   ├── AGENTS.md                        # OpenSpec Explore -> Propose -> Apply -> Archive 流程规则
+│   ├── specs/                           # 5 份 100% 符合 OpenSpec AST 规范的主规范 (stage1 ~ stage5)
+│   └── changes/archive/                 # 已归档的 OpenSpec 变更提案、设计文档与任务清单
 ├── static/
-│   ├── index.html                       # 双工作台单页应用 (求职六维分析工作台 + 全链路评测工作台)
+│   ├── index.html                       # 双工作台单页应用 (求职六维分析工作台 + 5 阶段全链路评测看板)
 │   ├── styles.css                       # 响应式样式表与评测矩阵样式
-│   └── app.js                           # 前端交互与 ECharts 渲染逻辑 (全量采用安全 DOM API)
-├── design/                              # 系统架构设计文档与 BOSS直聘 接口字典
-├── app.py                               # FastAPI 后端服务主入口
+│   └── app.js                           # 前端交互与 Apache ECharts 渲染逻辑 (全量采用安全 DOM API)
+├── design/                              # 同步后的系统架构设计文档与 BOSS直聘接口字典
+├── system_design.md                     # 6 页端到端系统设计与架构总览文档
+├── app.py                               # FastAPI 后端服务主入口 (SSE 流式分析 + 独立 Stage 1~5 REST API)
 ├── start_chrome.sh                      # 启动带 9222 调试端口的独立 Chrome 脚本
-└── requirements.txt                     # Python 依赖列表
+├── .env.example                         # 环境变量配置模板 (gemini-3.8-flash / gemini-4-argon)
+├── requirements.txt                     # Python 依赖列表
+├── LICENSE                              # MIT 开源协议
+└── SECURITY.md                          # 安全漏洞披露政策与本地安全部署边界说明
 ```
 
 ---
@@ -206,9 +235,12 @@ python app.py
 - **智能求职采集与六维分析工作台**：`http://127.0.0.1:8000/`
 - **全链路评测可视化工作台 (Eval Dashboard)**：`http://127.0.0.1:8000/#eval`（或点击页面顶部导航栏按钮一键切换）
 
-#### 第五步：命令行运行 Stage 1 批量评测（自动同步至前端历史库）
+#### 第五步：命令行运行 Stage 1 ~ Stage 5 分阶段评测（自动同步至前端 `#eval` 看板）
 ```bash
-# 对指定样本执行真实 Gemini 提取 + LLM-as-a-Judge 9字段原子核对
-python resume_eval_benchmark/evaluate_parser.py \
-  --live-gemini --llm-judge --sample-ids QUAL-001,QUAL-002
+# 主链路默认 gemini-3.8-flash | LLM-as-a-Judge 默认 gemini-4-argon
+python eval/stage1_eval/evaluate_stage1_parser.py --live-gemini --llm-judge
+python eval/stage2_eval/evaluate_stage2_queries.py
+python eval/stage3_eval/evaluate_stage3_intent.py
+python eval/stage4_eval/evaluate_stage4_ranking.py
+python eval/stage5_eval/evaluate_stage5_analysis.py
 ```
