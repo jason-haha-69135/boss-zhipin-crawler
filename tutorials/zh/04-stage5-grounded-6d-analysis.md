@@ -1,75 +1,76 @@
-# 第 04 章：确定性统计 + 受控 LLM 推理——打造零幻觉六维分析报告（Stage 5）
+# 第 04 章：算术归 Python，分析归大模型——写出绝不瞎编数字的报告（Stage 5）
 
 > 🌐 **语言切换**: **简体中文** | **[English](../en/04-stage5-grounded-6d-analysis.md)**
-> 🧭 **章节导航**: **[← 上一章：03 · 搜索召回与 I/O 解耦](./03-stage3-stage4-intent-and-ranking.md)** | **[返回教程总目录](../README.md)** | **[下一章：05 · Eval 评测飞轮与看板 →](./05-eval-driven-flywheel-and-dashboard.md)**
+> 🧭 **章节导航**: **[← 上一章：03 · 拼链接与挑好岗位](./03-stage3-stage4-intent-and-ranking.md)** | **[返回教程总目录](../README.md)** | **[下一章：05 · 自动打分与评测看板 →](./05-eval-driven-flywheel-and-dashboard.md)**
 
 ---
 
-## 1. 本章你将学会
-1. **数据分析型 Agent 的第一性原理**：“绝不让 LLM 做算术统计”——Python 精确计算与 Gemini 语义洞察如何分工；
-2. **统计口径污染治理**：为什么要把 Stage 4 标记降权的异地/低薪岗位从六维市场统计中隔离出去；
-3. **清除隐性领域偏置（Domain-Bias Leakage）**：为什么 Schema 示例或兜底模板里的一句“门店督导”会污染所有技术岗报告；
-4. **前端 XSS 安全渲染与独立离线接口 `POST /api/analysis/evaluate`**。
+## 1. 这一章咱们学什么？
+1. **做数据分析 Agent 最核心的一条铁律**：千万别让大模型自己去数数、算平均工资！用 Python 算好精确数字，再喂给大模型写点评；
+2. **算平均工资前先剔除干扰项**：把上一关挑出来的异地岗、低薪岗先挪开再统计，免得把市场真实工资拉低；
+3. **一个特别隐蔽的翻车现场**：为什么早期测试时随手写的一句“服装店长”例子，会串台跑到 Java 程序员的分析报告里？
+4. **网页防注入小常识**：爬回来的岗位文字怎么安全地显示在网页上？
 
 ---
 
-## 2. 架构心法：Python 算术零误差 + Gemini 归因深洞察
+## 2. 核心思路：让专业的人干专业的事（Python 算账 + 大模型写分析）
 
-新手做“市场分析报告 Agent”时，经常把抓回来的 150 条岗位 JSON 直接全塞进 Prompt 让大模型自己算平均薪资、中位数和行业占比。这会导致两个灾难：
-1. **算术幻觉**：LLM 数错条数、算错中位数几乎是必然事件，而且每次刷新数字还不一样；
-2. **Token 爆炸与注意力稀释**：150 条原始 JSON 占满上下文，导致模型对真正重要的 Top-8 岗位完整 JD 反而分析得很肤浅。
+拿到抓回来的 150 个岗位之后，新手最容易干的一件事就是：把这 150 个岗位的文字一股脑全塞给大模型，说*“帮我统计一下平均工资、画图数据，再挑 8 个岗位点评一下”*。
 
-正确的工程架构（见 [`core/gemini_analyzer.py`](../../core/gemini_analyzer.py)）是**严格二八分工**：
+这么干百分百会翻车：
+1. **大模型算术真的很差**：让它数 150 个数算平均值和中位数，它每次算出来的数都不一样，经常张口就来；
+2. **塞太多杂活会让它分心**：150 条简略列表把上下文塞得满满当当，到了真正需要仔细阅读的前 8 名完整岗位职责（JD）时，它反而草草敷衍两句就完事了。
+
+所以在 Stage 5（[`core/gemini_analyzer.py`](../../core/gemini_analyzer.py)）里，我们把活儿分得清清楚楚：
 
 ```mermaid
 flowchart LR
-    Pool["📦 Stage 4 全量排序池\n(含 is_demoted 标记)"]
-    Filter["🛡️ 合规池统计隔离\n仅统计 not is_demoted 岗位"]
-    PyStat["🐍 Python 精确六维统计\n(compute_six_dimension_stats)\n均薪/中位数/分桶/Top15技能"]
-    LLM["🤖 Gemini 3.8 Flash (temp=0.2)\n输入：6维精确数字 + Top8 完整JD\n+ Stage 1 真实脱敏简历画像"]
-    UI["📊 ECharts 六维图表\n+ 0~100 人岗匹配精评卡片"]
+    Jobs["📦 上一步排好序的全部岗位"]
+    Clean["🧹 先把异地/低薪岗挑出去\n只留正常符合条件的岗位算账"]
+    PyMath["🐍 Python 精确算好 6 组统计数\n(平均工资/中位数/前15名技能/双休比例)"]
+    Gemini["🤖 Gemini 3.8 Flash (温度 0.2)\n看着算好的真数字 + 前8名完整JD\n+ 用户的简历亮点写深度点评"]
+    Page["📊 网页画 6 张图表\n+ 前 8 名逐个打分卡片"]
 
-    Pool --> Filter --> PyStat
-    PyStat -->|"图表数据直供前端"| UI
-    PyStat -->|"统计事实注入 Prompt"| LLM --> UI
+    Jobs --> Clean --> PyMath
+    PyMath -->|"画图数字直接给网页"| Page
+    PyMath -->|"算准的数字发给大模型参考"| Gemini --> Page
 ```
 
-1. **图表数据 100% 由 Python 直接喂给前端 ECharts**：行业饼图、薪资 7 档柱状图、Top 15 技能条形图、经验/学历双环图、规模/融资分布、作息与福利统计——**零幻觉、毫秒级完成**；
-2. **合规池隔离（Compliant-Pool Isolation）**：`compute_six_dimension_stats` 自动剔除 Stage 4 标记 `is_demoted=True` 的异地与低薪陷阱岗（仅统计 `compliant_jobs`），防止几条 5K 低薪陷阱把真实市场均薪拉低，同时显式输出 `compliant_jobs_count` 与 `demoted_jobs_count`；
-3. **Gemini 只做它最擅长的两件事**：
-   - 基于给定的真实统计数字撰写 6 段精炼的专家解读（Prompt 红线强制规定：**所有引用的数字、比例、企业名必须 100% 来自输入，严禁捏造**）；
-   - 将候选人的 **Stage 1 真实简历画像**（核心技能、过往行业、量化亮点）与 **Top-8 完整 JD** 逐一比对，输出 `0~100` 匹配分、推荐理由、亮点标签与风险预警（如点明某岗是“单双休”或“起薪略低于期望”）。
+1. **网页上的 6 张图表，数字 100% 由 Python 直接算出来**：行业占比、工资分档、最常考的 15 个技能、学历经验要求、大公司名单、双休比例——半毛钱不用大模型操心，又快又准；
+2. **算账前先把“搅局的”踢出去**：上一章我们把外地岗位和不够底薪的岗位留在了列表最底下（贴了 `is_demoted=True` 标签）。Python 在算市场平均工资时，会自动跳过这些降级岗位只算正常岗位——不然混进两条 5K 的打杂岗，整个市场的平均起薪就被拉低了！
+3. **给大模型戴上“不准瞎编”的紧箍咒**：我们把 Python 算好的现成数字、前 8 名的完整 JD，还有用户 Stage 1 提出来的简历技能摆在大模型面前，明确规定：**报告里提到的每一个数字、每一家公司名，必须原封不动来自上面给你的材料；如果某个岗位写着单双休而用户想要双休，必须在风险栏里点名扣分！**
 
 ---
 
-## 3. 真实踩坑复盘：警惕 Schema 描述与 Fallback 中的“领域偏置污染”
+## 3. 真实翻车故事：别让测试时写的例子“串台”！
 
-在早期原型开发时，我们最初是用“深圳服装店面督导”这个例子调通的全流程，当时顺手在 Pydantic `Field(description=...)` 和离线兜底函数 `build_fallback_analysis` 里写了诸如 `"如巡店督导、商品陈列"`、`"建议突出管辖门店数"` 的示例文字。
+跟大家分享一个我们自己开发时真实遇到的搞笑 Bug：
+最开始写第一版代码时，我们拿“深圳服装店面督导”当测试例子，顺手就在代码的数据结构说明和断网备选模板（`build_fallback_analysis`）里写了句：*“建议在简历中突出门店巡检、商品陈列经验”*。
 
-后来在 `OpenSpec Explore Stage 5` 审查时发现：**哪怕用户搜的是“广州 Java 开发工程师”，一旦网络抖动触发兜底、甚至偶尔在模型推理受 Schema 示例暗示时，报告里竟会冒出“门店巡检”！**
+结果后来测“广州 Java 开发工程师”时，有一次网络超时触发了备选模板，网页上竟然一本正经地建议这位 Java 程序员去“突出门店巡检和商品陈列经验”！
 
-**重要教训**：
-> 通用 Agent 的 Pydantic Schema 描述、System Prompt 和离线 Fallback 模板必须保持 **100% 领域中立（Domain-Agnostic）**，动态引用 `{intent.query}`、`{intent.city_name}` 与 `{skill_top}`，绝不能硬编码某一个垂直行业的业务术语。
+**这个教训特别实用**：
+> 写通用 Agent 的时候，Prompt、字段说明和断网兜底文字里**千万别写死某一个具体行业的词**！全部用变量（比如当前搜的岗位名 `{intent.query}` 和算出来的高频技能 `{skill_top}`）动态填进去，这样不管搜程序员、设计师还是销售，说出来的话都严丝合缝。
 
 ---
 
-## 4. 从 0 到 1 Vibe Coding 实战：生成并验证 Stage 5
+## 4. 从 0 到 1 跟 AI 对话：搭出 Stage 5 分析器
 
-### 💬 Stage 5 `Propose` Prompt 模板
+### 💬 实战 Prompt（复制发给 AI）
 ```text
-发起 Stage 5 (`core/gemini_analyzer.py` & `app.py`) 的 OpenSpec propose：
-1. 合规池统计隔离：`compute_six_dimension_stats` 优先在 `not is_demoted` 的合规岗位池上计算六维分布，并输出 `compliant_jobs_count` 与 `demoted_jobs_count`；
-2. 清除领域偏置：彻底移除 Schema 字段描述与 `build_fallback_analysis` 中任何特定行业（如门店/服装/督导）硬编码话术，改为完全动态绑定 `intent.query` 与真实统计结果；
-3. 结构化与防幻觉护栏：默认使用 `gemini-3.8-flash` (`temperature=0.2`)，对 `overall_match_score` 和 `match_score` 强制加上 Pydantic `ge=0, le=100` 校验，Prompt 强制要求 1:1 覆盖全部 `0..N-1` 候选岗、严格溯源真实统计与 JD 且对非双休岗显式预警扣分；
-4. 新增免爬虫独立接口 `POST /api/analysis/evaluate`，前端渲染全量使用 `textContent` / `createElement` 严防存储型/反射型 XSS。
-先输出提案文档供我审阅。
+发起 Stage 5（`core/gemini_analyzer.py` & `app.py`）的 OpenSpec propose：
+1. 算账先踢掉干扰项：`compute_six_dimension_stats` 只拿正常符合条件的岗位（`not is_demoted`）算平均工资、中位数和行业分布，同时返回正常岗位有几条、降级岗位有几条；
+2. 别留固定行业套话：检查所有字段说明和断网兜底函数 `build_fallback_analysis`，把以前写死的“服装/门店督导”之类的话全清掉，改成根据当前搜索岗位动态生成；
+3. 管住大模型不瞎编：默认用 `gemini-3.8-flash`（`temperature=0.2`），所有匹配分限制在 `0~100` 之间，要求前 N 个候选岗位必须一个不落地逐个打分点评，遇到大小周或单休要明确写进风险提示里；
+4. 加一个不用开爬虫也能单独调的接口 `POST /api/analysis/evaluate`；前端把文字填进网页时全部用安全的 `textContent`，防止外部网页文字里带恶意脚本。
+先写提案文档给我审阅。
 ```
 
 ---
 
-## 5. 立即在本仓库运行验证：测试合规池隔离与 Stage 5 独立接口
+## 5. 马上在本仓库动手试一下：看看干扰项是不是真被隔离了
 
-运行下面这段命令，直接调用本仓库 `POST /api/analysis/evaluate` 接口（注意看深圳异地岗是如何被自动隔离出薪资统计之外的）：
+保持 `python app.py` 运行，复制下面这条命令跑一下——注意我们故意塞了 1 条广州 `15-22K` 的正常好工作，和 1 条深圳 `5-7K` 已经被降级的干扰项：
 
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/analysis/evaluate \
@@ -102,15 +103,13 @@ curl -s -X POST http://127.0.0.1:8000/api/analysis/evaluate \
   }' | python3 -m json.tool
 ```
 
-**验证结果**：
-- `stats.compliant_jobs_count` 为 `1`，`stats.demoted_jobs_count` 为 `1`；
-- `stats.salary.avg_min_k` 精准等于 `15.0`（完全没有被那条降权的 `5-7K` 岗拉低！）；
-- `report.recommended_jobs[0].match_reason` 会直接结合候选人简历里的 `SpringBoot` / `Redis` / `高并发订单重构` 给出定制化点评。
+看一眼返回的 JSON：
+- `stats.salary.avg_min_k` 稳稳当当是 **`15.0`**（那条 5K 的干扰岗完全没把平均数拉低！）；
+- 点评文字里还会专门提到候选人简历里的 `SpringBoot`、`Redis` 和微服务经验跟这家公司正好对口！
 
 ---
 
-## 6. 新手最容易踩的坑
-- **坑 1：把外部爬回来的岗位标题/JD 直接拼进前端 `innerHTML`** —— 如果某条招聘 JD 里含有 `<img src=x onerror=alert(1)>`，前端就会直接触发 XSS 漏洞！查看 [`static/app.js`](../../static/app.js) 可以看到，本项目全量使用 `document.createElement` 与 `textContent` 安全渲染。
-- **坑 2：只关注主流程，忽略离线兜底 (`build_fallback_analysis`) 的质量** —— 网络超时或配额耗尽在生产环境随时会发生，干净、准确的确定性统计兜底能保证用户体验永不白屏。
+## 6. 新手避坑小贴士
+- **爬回来的网页文字千万别直接拼进 HTML 代码里（`innerHTML`）**：万一外面某条招聘简介里藏了一段恶意网页脚本，你的浏览器打开就会中招。像本项目 [`static/app.js`](../../static/app.js) 这样用 `textContent` 填纯文本是最安全的。
 
-五阶段业务流水线已经全部打通！但**你怎么证明你改完 Prompt 后系统是真的变强了，而不是拆东墙补西墙？** 下一章进入全教程最核心的护城河：**[第 05 章：Eval-Driven Agent 开发——构建 Human-in-the-Loop 真值闭环与 `#eval` 看板](./05-eval-driven-flywheel-and-dashboard.md)**！
+到这里，5 个阶段的业务功能就全串通了！但最关键的问题来了：**以后你每次改 Prompt、换模型，怎么知道系统是变聪明了还是变笨了？** 下一章咱们来搭最酷的“自动考试打分系统”：**[第 05 章：怎么知道改得好不好？人工把关参考答案 + 自动评测看板](./05-eval-driven-flywheel-and-dashboard.md)**！

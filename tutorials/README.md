@@ -1,9 +1,9 @@
 <div align="center">
 
-# Spec-Driven Agent Engineering Tutorial
-### 从 0 到 1 手把手构建规范驱动（Spec-Driven）与评测驱动（Eval-Driven）AI Agent 系统
+# 手把手教你用 Vibe Coding 做出靠谱的 AI Agent
+### Hands-On Guide: Building a Reliable Multi-Stage AI Agent with Spec & Eval
 
-🌐 **[简体中文路径 (Chinese Track)](#简体中文教程目录)** &nbsp;|&nbsp; **[English Track](#english-tutorial-track)** &nbsp;|&nbsp; **[返回仓库主页 / Back to Repo](../README.md)**
+🌐 **[简体中文目录 (Chinese)](#简体中文教程目录)** &nbsp;|&nbsp; **[English Track](#english-tutorial-track)** &nbsp;|&nbsp; **[返回项目主页 / Back to Repo](../README.md)**
 
 </div>
 
@@ -11,64 +11,66 @@
 
 <a id="简体中文教程目录"></a>
 
-## 🇨🇳 简体中文版：从空白文件夹到生产级五阶段求职 Agent
+## 🇨🇳 简体中文版：从空白文件夹到能上线的求职分析 Agent
 
 ### 为什么要写这套教程？
-大多数刚开始接触 **Vibe Coding 工具**（如 Antigravity、Codex、Claude Code、Cursor）的开发者都会经历同一个困境：
-- **第 1 天**：“太神了！一句话就生成了一个能跑的 Demo！”
-- **第 3 天**：“怎么改了 B 功能，A 功能坏了？Prompt 越写越长，幻觉越来越多，根本不敢上线……”
+很多刚用上 **Antigravity、Codex、Claude Code、Cursor** 这类 Vibe Coding 工具的朋友，都会经历过山车一样的心态：
+- **第 1 天**：“太爽了！我说了两句话，AI 就帮我把页面和后端全写出来了！”
+- **第 3 天**：“坏了……让它改个小功能，结果把前面写好的逻辑全改崩了；大模型还老瞎编数据，根本不敢拿出去用。”
 
-这套教程以本仓库 **BOSS直聘智能求职分析 Agent（`boss-zhipin-crawler`）** 为真实蓝本，手把手带你模拟**从空白文件夹出发**，如何用 **OpenSpec（规范驱动开发）** + **LLM-as-a-Judge（评测驱动开发）** 驾驭 Vibe Coding 工具，一步步完成**需求挖掘 → 架构拆解 → 分阶段实现 → 真值人工审核与评测 → 安全加固与开源上线**的全流程。
+其实问题不在工具，在于**我们缺了一套“管住 AI”的简单办法**。
 
-### 双轨学习方式（强烈推荐结合使用）
-1. **跑通现成仓库（对照验证）**：先按第 0 章把本仓库跑起来，每学完一章直接运行对应 Stage 的独立 API 与评测脚本观察真实效果；
-2. **从 0 到 1 亲手复刻（Vibe Coding 实战）**：新建一个空白目录，直接复制每章提供的 **Antigravity / Codex 实战 Prompt 模板**，完整体验 `Explore → Propose → Apply → Manual Review → Eval → Archive` 工程闭环。
+这套教程就拿本仓库这个真实的 **BOSS直聘智能求职助手** 当例子，像老朋友带路一样，带你模拟**从一个空文件夹开始**，怎么一步步跟 AI 聊天：怎么挖需求、怎么定规矩、怎么写代码、怎么测效果，最后怎么安全地发到 GitHub 上。**全程说人话、不堆造词，所有命令复制就能跑！**
+
+### 推荐你这样学（两条腿走路最稳）
+1. **先把现成项目跑起来（看结果）**：跟着第 00 章花 10 分钟把本仓库跑通，点点界面、跑跑命令，心里先有个直观印象；
+2. **开个空文件夹自己试一遍（练手感）**：每章都给你准备好了可以直接复制给 Antigravity / Codex 的**大白话 Prompt 模板**，你可以跟着亲手搭一遍。
 
 ```mermaid
 flowchart LR
-    C0["00 · 环境与离线沙盒\n10分钟跑通全栈"]
-    C1["01 · OpenSpec 护栏\n告别抽卡式 Vibe Coding"]
-    C2["02 · 需求挖掘与拆解\nStage 1 画像 + Stage 2 策略"]
-    C3["03 · 外部对接与I/O解耦\nStage 3 URL + Stage 4 粗排"]
-    C4["04 · 算术与推理解耦\nStage 5 零幻觉六维报告"]
-    C5["05 · Eval 评测飞轮\nArgon 裁判 + #eval 看板"]
-    C6["06 · 安全审计与上线\n历史脱敏 + CI 自动门禁"]
+    C0["00 · 先跑起来\n不装爬虫也能玩转全流程"]
+    C1["01 · 给 AI 立规矩\n先写方案再改代码"]
+    C2["02 · 读简历与想搜词\nStage 1 & Stage 2"]
+    C3["03 · 拼链接与排岗位\nStage 3 & Stage 4"]
+    C4["04 · 算数据与写点评\nStage 5 不瞎编数字"]
+    C5["05 · 给 AI 打分考试\n人工把关 + 评测看板"]
+    C6["06 · 安全检查与开源\n查黑历史 + 自动测试"]
 
     C0 --> C1 --> C2 --> C3 --> C4 --> C5 --> C6
 ```
 
-### 📑 中文分章导航
+### 📑 中文分章目录
 
-| 章节 | 标题 | 核心工程框架与心法 | 对应本仓库核心源码 |
+| 章节 | 标题 | 这一章主要讲什么大白话道理？ | 对应仓库里的代码 |
 | :---: | :--- | :--- | :--- |
-| **00** | **[快速启动与免爬虫离线沙盒体验](./zh/00-quickstart-and-sandbox.md)** | 双通道凭证自适应、离线 REST 沙盒调试、5 阶段 `#eval` 看板导览 | `app.py`, `.env.example`, `start_chrome.sh` |
-| **01** | **[用 OpenSpec 驯服 Vibe Coding 工具](./zh/01-openspec-foundation.md)** | `project.md` + `AGENTS.md` 契约、`Explore → Propose → Apply → Archive` 四步法、AST 语法树硬校验 | `openspec/project.md`, `openspec/AGENTS.md`, `openspec/specs/` |
-| **02** | **[需求挖掘与双阶段解耦：从简历到求职策略](./zh/02-stage1-stage2-resume-to-queries.md)** | 单一巨型 Prompt 陷阱、温度分层（`0.1` 收敛 vs `0.4` 发散）、纯内存 PII 双端脱敏、平台规则前置（BOSS 48 城 1:1 映射） | `core/resume_parser.py`, `core/query_generator.py` |
-| **03** | **[搜索召回工程与 I/O 解耦：意图 URL 与岗位粗排](./zh/03-stage3-stage4-intent-and-ranking.md)** | 硬筛选白名单 vs 软语义词扩展、将纯计算排序从浏览器反爬 I/O 剥离、非破坏性垫底降权、作息优先级防误判 | `core/intent_parser.py`, `core/boss_crawler.py` |
-| **04** | **[确定性统计 + 受控推理：打造零幻觉六维分析](./zh/04-stage5-grounded-6d-analysis.md)** | “绝不让 LLM 做算术”、合规池统计隔离、清除 Prompt/Fallback 领域偏置污染、结构化 Schema 边界护栏 | `core/gemini_analyzer.py`, `static/app.js` |
-| **05** | **[Eval-Driven 开发：Human-in-the-Loop 真值与评测大盘](./zh/05-eval-driven-flywheel-and-dashboard.md)** | 确定性门禁 + `NDCG@8` + `gemini-4-argon` 裁判、强模型生成真值草案 + 人工 Manual Review 卡点、`#eval` 看板构建 | `eval/eval_store.py`, `eval/stage1_eval/` ~ `eval/stage5_eval/` |
-| **06** | **[从原型到开源/上线：安全审计、CI 门禁与发布清单](./zh/06-security-ci-and-production.md)** | Git 全历史密钥/PII 扫描、`127.0.0.1` 本地安全边界、免责声明与开源三件套、GitHub Actions 自动化守护 | `.github/workflows/ci.yml`, `SECURITY.md`, `LICENSE` |
+| **00** | **[10 分钟跑通项目（不用配爬虫也能玩）](./zh/00-quickstart-and-sandbox.md)** | 配好 API Key，直接打开网页看 5 个阶段的打分看板，用几条命令单独试玩每个模块 | `app.py`, `.env.example`, `start_chrome.sh` |
+| **01** | **[别让 AI 乱改代码：用 OpenSpec 给它立规矩](./zh/01-openspec-foundation.md)** | 为什么不能上来就让 AI 写代码？教你“先盘点 → 写方案 → 再动手 → 最后存档”四步法 | `openspec/project.md`, `openspec/AGENTS.md`, `openspec/specs/` |
+| **02** | **[从简历到搜索词：为什么要拆成两步走？（Stage 1 & 2）](./zh/02-stage1-stage2-resume-to-queries.md)** | 读简历要老实（温度调低不瞎编），想搜索词要灵活（温度调高多给路子）；顺手把姓名电话打码抹掉 | `core/resume_parser.py`, `core/query_generator.py` |
+| **03** | **[拼搜索链接与挑好岗位：把打分和爬虫拆开（Stage 3 & 4）](./zh/03-stage3-stage4-intent-and-ranking.md)** | 怎么搜才能不漏掉大厂好岗位？怎么防止把“单双休”错当成“双休”？把异地、低薪岗排到最后但别删掉 | `core/intent_parser.py`, `core/boss_crawler.py` |
+| **04** | **[算术归 Python，分析归大模型：写出不瞎编的报告（Stage 5）](./zh/04-stage5-grounded-6d-analysis.md)** | 千万别让大模型自己数数算平均工资！先用 Python 剔除干扰项算准数字，再让大模型结合简历写点评 | `core/gemini_analyzer.py`, `static/app.js` |
+| **05** | **[怎么知道改得好不好？搭一套自动打分与可视化看板](./zh/05-eval-driven-flywheel-and-dashboard.md)** | 先让强模型帮拟一份参考答案，咱们人工看一眼确认没问题，以后每次改代码都自动跑分对比 | `eval/eval_store.py`, `eval/stage1_eval/` ~ `eval/stage5_eval/` |
+| **06** | **[准备发到 GitHub 公开：安全大扫除与自动检查](./zh/06-security-ci-and-production.md)** | 检查历史提交里有没有漏掉密钥和真简历，加上免责声明、开源协议和每次提交自动跑的测试 | `.github/workflows/ci.yml`, `SECURITY.md`, `LICENSE` |
 
 ---
 ---
 
 <a id="english-tutorial-track"></a>
 
-## 🌐 English Track: Building a Spec-Driven & Eval-Driven AI Agent from Scratch
+## 🌐 English Track: Build a Reliable AI Agent Step-by-Step (Plain-English Edition)
 
-### Why This Tutorial Series?
-Developers new to **Vibe Coding tools** (Antigravity, Codex, Claude Code, Cursor) quickly hit a wall when moving past single-file demos: prompts bloat, regressions multiply, hallucinations creep in, and external I/O (like browser scraping) makes testing feel impossible.
+### Why This Guide?
+When you start building with **Vibe Coding tools** (Antigravity, Codex, Claude Code, Cursor), single-file demos feel like magic—until day three, when fixing one bug breaks two existing features and the LLM starts making up numbers.
 
-Using this repository (**BOSS Zhipin Job Intelligence Agent**) as a live, runnable reference architecture, this 7-part hands-on guide walks you **from an empty folder to a production-grade 5-stage Agent system** using **OpenSpec (Spec-Driven Development)** and **LLM-as-a-Judge (Eval-Driven Development)**.
+Using this repository (**BOSS Zhipin Job Intelligence Agent**) as a working example, this 7-part guide walks you **from an empty folder to a public-ready 5-stage AI Agent** in plain, practical developer English—no buzzword soup, just clear mental models and copy-pasteable prompts and commands.
 
 ### 📑 English Chapter Index
 
-| Chapter | Title | Core Mental Models & Frameworks | Key Repo Files |
+| Chapter | Title | Plain-English Takeaway | Key Files in Repo |
 | :---: | :--- | :--- | :--- |
-| **00** | **[Quickstart & Browser-Free Offline Sandbox](./en/00-quickstart-and-sandbox.md)** | Dual-channel Gemini auth, testing Stage 1–5 REST APIs without Chrome, touring the `#eval` dashboard | `app.py`, `.env.example`, `start_chrome.sh` |
-| **01** | **[Taming Vibe Coding Tools with OpenSpec](./en/01-openspec-foundation.md)** | `project.md` + `AGENTS.md` contracts, `Explore → Propose → Apply → Archive` loop, OpenSpec AST validation | `openspec/project.md`, `openspec/AGENTS.md`, `openspec/specs/` |
-| **02** | **[Requirement Discovery & Stage Decoupling (Stages 1 & 2)](./en/02-stage1-stage2-resume-to-queries.md)** | Monolithic prompt anti-pattern, temperature stratification (`0.1` vs `0.4`), in-memory PII redaction, upfront domain constraints | `core/resume_parser.py`, `core/query_generator.py` |
-| **03** | **[Search Recall & Decoupling Logic from I/O (Stages 3 & 4)](./en/03-stage3-stage4-intent-and-ranking.md)** | Hard URL whitelists vs soft semantic expansion, isolating `rank_and_filter_jobs` from Playwright CDP, non-destructive bottom demotion | `core/intent_parser.py`, `core/boss_crawler.py` |
-| **04** | **[Deterministic Math + Grounded LLM Reasoning (Stage 5)](./en/04-stage5-grounded-6d-analysis.md)** | "Never let LLMs do arithmetic", compliant-pool isolation, purging domain-bias leakage, bounded Pydantic schemas | `core/gemini_analyzer.py`, `static/app.js` |
-| **05** | **[Eval-Driven Flywheel: Human-in-the-Loop & `#eval` Dashboard](./en/05-eval-driven-flywheel-and-dashboard.md)** | Deterministic gates + `NDCG@8` + `gemini-4-argon` judge, Argon draft Ground Truth + Manual Review gate, 5-stage `#eval` UI | `eval/eval_store.py`, `eval/stage1_eval/` ~ `eval/stage5_eval/` |
-| **06** | **[From Prototype to Public Release: Security Audit & CI Gates](./en/06-security-ci-and-production.md)** | Full git-history secret/PII audit, `127.0.0.1` security boundary, OSS legal/security docs, GitHub Actions CI guardrails | `.github/workflows/ci.yml`, `SECURITY.md`, `LICENSE` |
+| **00** | **[Get It Running in 10 Minutes (No Scraper Needed)](./en/00-quickstart-and-sandbox.md)** | Plug in your Gemini key, explore the 5-stage `/#eval` dashboard, and test individual endpoints with `curl` | `app.py`, `.env.example`, `start_chrome.sh` |
+| **01** | **[Stop AI From Breaking Your Code: Rules with OpenSpec](./en/01-openspec-foundation.md)** | Why "plan before code" saves hours: `Explore → Propose → Apply → Archive` + simple script checks for docs | `openspec/project.md`, `openspec/AGENTS.md`, `openspec/specs/` |
+| **02** | **[From Resume to Search Queries: Why Split Into Two Steps? (Stages 1 & 2)](./en/02-stage1-stage2-resume-to-queries.md)** | Be strict when reading facts (`temp=0.1`), creative when brainstorming searches (`temp=0.4`), and scrub personal info in code | `core/resume_parser.py`, `core/query_generator.py` |
+| **03** | **[Search Links & Job Ranking: Separate Scoring From Scraping (Stages 3 & 4)](./en/03-stage3-stage4-intent-and-ranking.md)** | Avoid killing search results with extra words, catch tricky "every-other-weekend" wording, and push bad-fit jobs to the bottom without deleting them | `core/intent_parser.py`, `core/boss_crawler.py` |
+| **04** | **[Let Python Do the Math, Let LLMs Write the Advice (Stage 5)](./en/04-stage5-grounded-6d-analysis.md)** | Never ask an LLM to average 150 salaries—filter out junk jobs in Python first, then feed clean numbers to Gemini | `core/gemini_analyzer.py`, `static/app.js` |
+| **05** | **[How Do You Know It Got Better? Automated Grading & `#eval` UI](./en/05-eval-driven-flywheel-and-dashboard.md)** | Have a stronger model draft answer keys, review them yourself once, then grade every future change automatically | `eval/eval_store.py`, `eval/stage1_eval/` ~ `eval/stage5_eval/` |
+| **06** | **[Going Public on GitHub: Security Sweep & Auto-Checks](./en/06-security-ci-and-production.md)** | Scan old Git commits for leaked keys, keep local servers off the public internet, and add GitHub Actions tests | `.github/workflows/ci.yml`, `SECURITY.md`, `LICENSE` |

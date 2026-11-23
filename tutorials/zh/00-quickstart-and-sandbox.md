@@ -1,97 +1,99 @@
-# 第 00 章：快速启动与「免爬虫离线沙盒」体验（10 分钟跑通全栈）
+# 第 00 章：10 分钟先把项目跑起来（不用配爬虫也能玩转全流程）
 
 > 🌐 **语言切换**: **简体中文** | **[English](../en/00-quickstart-and-sandbox.md)**
-> 🧭 **章节导航**: **[返回教程总目录](../README.md)** | **[下一章：01 · 用 OpenSpec 驯服 Vibe Coding 工具 →](./01-openspec-foundation.md)**
+> 🧭 **章节导航**: **[返回教程总目录](../README.md)** | **[下一章：01 · 给 AI 立规矩（OpenSpec） →](./01-openspec-foundation.md)**
 
 ---
 
-## 1. 本章目标
-在动手从 0 到 1 复刻整个 Agent 系统之前，我们先花 **10 分钟** 把本仓库在本地完整跑起来。你将学会：
-1. 配置 Python 虚拟环境与 Gemini API 凭证（AI Studio API Key 或 GCP Vertex AI 二选一）；
-2. **无需配置 Chrome 爬虫**，直接在浏览器查看完整的 **Stage 1 ~ Stage 5 全链路评测大盘 (`/#eval`)**；
-3. 用 `curl` 单独调通 Stage 3（意图解析）、Stage 4（离线粗排）、Stage 5（六维诊断）三个**零外部爬虫依赖**的微服务接口；
-4. （可选）启动带 `9222` 调试端口的 Chrome，跑通端到端实时岗位采集。
+## 1. 这一章咱们干什么？
+在从零开始动手写代码之前，咱们先花 **10 分钟** 把现成的项目跑起来看看长啥样。你会发现：
+1. 只要配好 Python 环境和一个 Gemini 密钥（用免费的 AI Studio API Key 或者 Google Cloud 账号都行，代码会自动识别）；
+2. **根本不用开 Chrome 浏览器去爬网站**，直接打开网页就能看完整的 **5 阶段打分看板 (`/#eval`)**；
+3. 用几条简单的 `curl` 命令，就能单独试玩“拼搜索链接”、“给岗位打分排序”、“生成分析报告”这几个核心功能。
 
 ---
 
-## 2. 架构全景速览：我们在构建一个什么样的系统？
+## 2. 先看一眼全局：这项目到底是怎么干活的？
 
-很多初学者做“求职助手 Agent”时，第一反应是写一个大 Prompt：*“给你简历和岗位，帮我挑几个好的”*。但在真实工程场景下，我们会把它拆解为 **5 个职责单一、可独立测试、可量化评分的 Stage**：
+很多刚学做 Agent 的朋友，上来就想把“读简历 + 搜岗位 + 挑岗位 + 写总结”全塞进一段长长的 Prompt 里。结果一跑起来，要么慢得要死，要么中间哪一步错了根本没法查。
+
+所以在这个项目里，我们就像工厂流水线一样，把它切成了 **5 个清清楚楚的小步骤（Stage 1 ~ Stage 5）**：
 
 ```mermaid
 flowchart LR
-    S1["📄 Stage 1\n多模态简历提取\n(temp=0.1 · PII脱敏)"]
-    S2["🎯 Stage 2\n10策略 Query 生成\n(temp=0.4 · 48城1:1)"]
-    S3["🧭 Stage 3\n意图解析与 URL 拼接\n(官方6类白名单)"]
-    S4["📐 Stage 4\n两阶段采集与离线粗排\n(异地/低薪垫底降权)"]
-    S5["📊 Stage 5\n合规池六维统计+精评\n(零幻觉事实溯源)"]
+    S1["📄 Stage 1\n读简历提重点\n(顺手抹掉姓名电话)"]
+    S2["🎯 Stage 2\n结合意向城市\n想出10条搜岗词"]
+    S3["🧭 Stage 3\n把话翻译成\nBOSS直聘搜索链接"]
+    S4["📐 Stage 4\n抓岗位并打分\n把异地/低薪排最后"]
+    S5["📊 Stage 5\nPython算准工资分布\n大模型结合简历点评"]
 
     S1 --> S2 --> S3 --> S4 --> S5
 ```
 
 > [!TIP]
-> **工程设计精髓**：本项目中 **Stage 1、2、3、5 以及 Stage 4 的核心粗排算法 (`rank_and_filter_jobs`) 全部支持纯离线 API 调用**！这意味着即使你不登录招聘网站、不启动浏览器，也能 100% 验证和学习整套 AI Agent 核心逻辑。
+> **对新手最友好的一点**：除了“真去网页上拉数据”那一下需要浏览器，**其他所有动脑子的环节（读简历、生搜词、拼链接、给岗位打分排序、写六维报告）全都有独立的本地接口**！就算你完全不想折腾浏览器爬虫，也能把整套 Agent 学透、跑通。
 
 ---
 
-## 3. 第一步：克隆仓库与配置环境（3 分钟）
+## 3. 第一步：下载代码、装好环境（3 分钟）
 
-打开终端执行以下命令：
+打开终端，一行行复制运行就行：
 
 ```bash
-# 1. 克隆仓库并进入目录
+# 1. 下载代码并进入文件夹
 git clone git@github.com:jason-haha-69135/boss-zhipin-crawler.git
 cd boss-zhipin-crawler
 
-# 2. 创建并激活独立虚拟环境（切勿污染系统全局 Python）
+# 2. 建一个独立的 Python 虚拟环境（免得把你电脑里别的项目包搞乱）
 python3 -m venv .venv
 source .venv/bin/activate
 
-# 3. 安装依赖
+# 3. 安装依赖包
 pip install -r requirements.txt
 
-# 4. 复制环境变量模板
+# 4. 复制一份环境变量配置文件
 cp .env.example .env
 ```
 
-接下来配置 **Gemini 模型访问凭证**（二选一即可，底层 [`core/gemini_client.py`](../../core/gemini_client.py) 会自动探测可用通道）：
+接着配一下 **Gemini 的访问凭证**（下面两种方式**任选一个**就行，[`core/gemini_client.py`](../../core/gemini_client.py) 会自动看你配了哪个就用哪个）：
 
-### 方式 A：使用 Google AI Studio API Key（最简单，推荐个人开发者）
+### 方式 A：用 Google AI Studio 的 API Key（最省事，个人首选）
 ```bash
-export GEMINI_API_KEY="在这里填入你的_GEMINI_API_KEY"
+export GEMINI_API_KEY="填你自己的_GEMINI_API_KEY"
 ```
 
-### 方式 B：使用 Google Cloud Vertex AI（企业/GCP 开发者）
+### 方式 B：用 Google Cloud 登录（适合已经在用 GCP 的同学）
 ```bash
 gcloud auth application-default login
-export GOOGLE_CLOUD_PROJECT="你的_GCP_PROJECT_ID"
+export GOOGLE_CLOUD_PROJECT="填你的_GCP项目ID"
 ```
 
 ---
 
-## 4. 第二步：启动服务并浏览全链路评测工作台（2 分钟）
+## 4. 第二步：启动网页，先逛一圈评测看板（2 分钟）
 
-启动 FastAPI 服务：
+在终端运行：
 
 ```bash
 python app.py
 ```
 
-看到终端输出 `Uvicorn running on http://127.0.0.1:8000` 后，在浏览器打开两个核心工作台：
+看到 `Uvicorn running on http://127.0.0.1:8000` 就说明跑起来了！打开浏览器看两个页面：
 
-1. **全链路 5 阶段评测大盘（零配置立即可看）**：访问 `http://127.0.0.1:8000/#eval`
-   - 依次点击顶部的 **STAGE 1 → STAGE 2 → STAGE 3 → STAGE 4 → STAGE 5** 五张卡片；
-   - 仓库已在 `eval/runs/` 内置了全部 5 个阶段的真实评测基准报告，你可以直观看到每个 Stage 的核心指标（如 Stage 1 的 9 字段原子核对、Stage 2 的 10 策略三要素完整率、Stage 3 的 BOSS URL 精准一致率 `94.4%`、Stage 4 的 `NDCG@8 = 0.9754`、Stage 5 的事实忠实度评分）。
-2. **主求职分析工作台**：访问 `http://127.0.0.1:8000/`
-   - 先在上传框上方选择 **BOSS直聘意向城市**（如 `上海` 或 `广州`），再上传任意一份测试简历（可直接选用 `eval/dataset/stage1/qualified/QUAL-01.pdf`），即可实时体验 **Stage 1 脱敏画像提取 → Stage 2 自动生成推荐求职 Query**，并试试动态切换城市观察 Stage 2 自动刷新！
+1. **先看 5 阶段打分看板（不用做任何操作就能看）**：打开 `http://127.0.0.1:8000/#eval`
+   - 点点最上面一排 **STAGE 1 → STAGE 2 → STAGE 3 → STAGE 4 → STAGE 5** 五张卡片；
+   - 仓库里已经自带了跑好的测试报告，你能直接看到每一关是怎么打分的（比如简历信息提准了没、搜索链接拼对了没、排序有没有把高薪好岗排前面）。
+2. **再看主页面（传份假简历试试）**：打开 `http://127.0.0.1:8000/`
+   - 先在上传框上面选一个 **意向城市**（比如 `上海`），然后把仓库自带的测试假简历 `eval/dataset/stage1/qualified/QUAL-01.pdf` 拖进去；
+   - 等几秒钟，你就能看到提炼出来的简历标签（姓名电话已经被自动打码抹掉了）和 10 条推荐搜索词；你还可以试着把城市切成 `杭州`，看看搜索词是不是秒级自动更新！
 
 ---
 
-## 5. 第三步：免爬虫沙盒实验——用 `curl` 逐个调通 Stage 3 / 4 / 5
+## 5. 第三步：不开浏览器，用命令单独试玩 Stage 3 和 Stage 4
 
-保持 `python app.py` 运行，另开一个终端窗口，依次运行下面 3 条命令，亲眼验证各阶段的数据契约：
+保持刚才的 `python app.py` 别关，新开一个终端窗口，复制下面两条命令跑跑看：
 
-### 实验 1：测试 Stage 3 独立意图解析与 BOSS直聘 URL 拼接 (`POST /api/intent/parse`)
+### 小实验 1：看看 Stage 3 怎么把一句话变成 BOSS直聘链接 (`POST /api/intent/parse`)
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/intent/parse \
   -H "Content-Type: application/json" \
@@ -100,12 +102,12 @@ curl -s -X POST http://127.0.0.1:8000/api/intent/parse \
     "target_city": "杭州"
   }' | python3 -m json.tool
 ```
-**观察重点**：
-- `intent.query` 被提纯为 `"Java开发工程师"`（剥离了 `"互联网软件行业的"` 和 `"岗位"`，防止搜索漏召回）；
-- `intent.city_code` 精准映射为杭州官方编码 `"101210100"`，`salary_code` 映射为 `"405"`（10-20K）；
-- `boss_url` 直接生成可点击的 BOSS直聘标准搜索链接。
+**你可以留意这三点**：
+- 搜索词 `query` 变成了干干净净的 `"Java开发工程师"`（把前面“互联网软件行业的”去掉了，为什么这么干咱们第 03 章细聊）；
+- 杭州自动换成了官方城市编号 `"101210100"`，`1.2w` 换成了 `10-20K` 档位码 `"405"`；
+- 最下面的 `boss_url` 是一条直接点开就能在 BOSS直聘搜出结果的真实网址！
 
-### 实验 2：测试 Stage 4 纯离线岗位粗排与异地/低薪垫底降权 (`POST /api/jobs/rank`)
+### 小实验 2：看看 Stage 4 怎么给岗位打分、把不合适的排到最后 (`POST /api/jobs/rank`)
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/jobs/rank \
   -H "Content-Type: application/json" \
@@ -129,23 +131,19 @@ curl -s -X POST http://127.0.0.1:8000/api/jobs/rank \
     ]
   }' | python3 -m json.tool
 ```
-**观察重点**：
-- 排第 1 名的是 `"高级Java后端开发"`（虽不含完整字面串 `"Java开发工程师"`，但通过词元匹配 + 简历技能重合拿到高分，且 `score_breakdown` 清晰可查）；
-- 深圳异地岗与 `6-8K` 低薪岗均被标记 `is_demoted: true` 并强制沉底，但 `total_jobs` 仍保留为 `3`（非破坏性降权）。
+**你可以留意这两点**：
+- 虽然第 3 个岗位叫 `"高级Java后端开发"`（跟 `"Java开发工程师"` 字面不完全一样），但它靠关键词重合和技能匹配拿到了最高分排第 1；
+- 第 1 个岗位虽然钱多但远在**深圳**（异地），第 2 个岗位只有 **6-8K**（不够 10K 底薪），它俩都被贴上了 `is_demoted: true` 标签排到了最后面，但并没有被偷偷删掉（总条数还是 3 条）。
 
-### 实验 3：（可选）启动调试 Chrome 体验端到端实时采集
-如果你想在主界面点击推荐 Query 抓取真实岗位：
-```bash
-./start_chrome.sh
-```
-在弹出的独立 Chrome 窗口中扫码登录一次 BOSS直聘（Cookie 保存在本地忽略目录 `chrome-profile/` 中），回到 `http://127.0.0.1:8000/` 点击任意 Query 即可流式查看采集与六维图表生成全过程。
+### 小实验 3：（可选）想试真爬虫的话
+运行 `./start_chrome.sh`，在弹出来的 Chrome 窗口里扫码登录一次 BOSS直聘，之后回主网页点任意一条推荐词就能看实时抓取了。
 
 ---
 
-## 6. 本章通关自检清单
-- [x] 本地 `python app.py` 成功在 `127.0.0.1:8000` 启动；
-- [x] 打开 `/#eval` 看到了全部 5 个 Stage 的 `● 已就绪 (Live)` 状态与可视化图表；
-- [x] 成功在主界面上传 `QUAL-01.pdf` 并体验了 Stage 1 → Stage 2 推荐 Query 生成；
-- [x] 用 `curl` 调通了免爬虫的 `/api/intent/parse` 与 `/api/jobs/rank`。
+## 6. 本章打卡清单
+- [x] `python app.py` 成功跑起来了；
+- [x] 打开 `/#eval` 看过了 5 个阶段的打分看板；
+- [x] 在主页传了一次 `QUAL-01.pdf` 测试简历；
+- [x] 用 `curl` 试玩了拼链接和岗位排序接口。
 
-准备好之后，我们正式进入 **[第 01 章：用 OpenSpec 驯服 Vibe Coding 工具](./01-openspec-foundation.md)**——看看如何从空白文件夹开始，给 Antigravity / Codex 立规矩！
+热身结束！下一章咱们正式进入正题：**[第 01 章：别让 AI 乱改代码——用 OpenSpec 给 Vibe Coding 立规矩](./01-openspec-foundation.md)**！

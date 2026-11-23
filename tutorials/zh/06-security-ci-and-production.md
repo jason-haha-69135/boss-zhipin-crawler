@@ -1,93 +1,91 @@
-# 第 06 章：从本地原型到开源/上线——安全审计、CI 门禁与发布 Checklist
+# 第 06 章：准备发到 GitHub 公开——安全大扫除与自动检查
 
 > 🌐 **语言切换**: **简体中文** | **[English](../en/06-security-ci-and-production.md)**
-> 🧭 **章节导航**: **[← 上一章：05 · Eval 评测飞轮与看板](./05-eval-driven-flywheel-and-dashboard.md)** | **[返回教程总目录](../README.md)**
+> 🧭 **章节导航**: **[← 上一章：05 · 自动打分与评测看板](./05-eval-driven-flywheel-and-dashboard.md)** | **[返回教程总目录](../README.md)**
 
 ---
 
-## 1. 本章你将学会
-1. **Make Public 前的致命盲区**：为什么只删最新代码的密钥没用？如何用一条脚本扫描**全量 Git Commit 历史**；
-2. **本地 Agent 服务的部署安全边界**：`127.0.0.1` 绑定、运行时配置文件权限 `0o600`、防路径遍历与爬虫法律免责声明；
-3. **开源项目标配四件套**：`LICENSE`、`.env.example`、`SECURITY.md` 与双语 `README.md`；
-4. **GitHub Actions CI 自动化守护（[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)）**：让每次提交自动核验离线单测、OpenSpec AST 与密钥防泄露。
+## 1. 这一章咱们干什么？
+代码写完了、测试跑通了，你想点一下 GitHub 上的 **Make Public** 把项目公开分享给大家。慢着！点那个按钮之前，咱们花 10 分钟做最后一次安全大扫除：
+1. **查“黑历史”**：为什么只在最新代码里删掉 API Key 根本没用？教你一行命令把所有历史提交记录翻个底朝天；
+2. **守住本地安全边界**：为什么 `app.py` 只绑 `127.0.0.1` 很重要？为什么要加免责声明？
+3. **补齐开源项目的“门面四件套”**：开源协议 `LICENSE`、配置模板 `.env.example`、安全说明 `SECURITY.md`、双语 `README.md`；
+4. **装个“看门保安”（GitHub Actions 自动测试）**：以后每次提交代码，让 GitHub 自动帮你跑一遍测试、查一遍有没有忘删密钥。
 
 ---
 
-## 2. 思维框架：Vibe Coding 原型公开前最容易忽略的 4 大安全风险
+## 2. 公开仓库前，新手最容易踩的 4 个大坑
 
-用 AI 快速写完项目准备点 GitHub `Make public` 时，90% 的个人开发者会踩以下四个雷区：
-
-1. **Git 历史残留（Git History Exposure）**：第 1 次 commit 不小心把 `.env`、API Key、真实个人简历或公司内部项目 ID 提交了进去，第 2 次 commit 把它删了。**一旦仓库公开，任何人执行 `git log -p` 都能在 3 秒内把第 1 次 commit 里的密钥扒出来！**
-2. **公网裸奔风险（`0.0.0.0` vs `127.0.0.1`）**：本地工具型 Agent 通常没有做多租户登录鉴权，如果把 Uvicorn 启动地址写成 `0.0.0.0:8000` 部署到云服务器，全网任何人都能调你的接口消耗你的 Gemini 配额甚至操控调试浏览器；
-3. **文件读写路径遍历（Path Traversal）**：下载 Excel（`GET /api/download/{filename}`）或加载评测报告（`GET /api/eval/runs/{run_id}`）如果不校验文件名与父目录边界，攻击者传入 `../../etc/passwd` 就会造成任意文件读取；
-4. **缺少开源协议与免责声明**：没有 `LICENSE` 的 GitHub 仓库在法律上默认“保留所有权利”，别人无法合法参考；涉及网页采集的项目没有显著免责声明会带来不必要的合规风险。
+1. **以为删了文件别人就看不见了（Git 历史泄露）**：
+   比如你第一天不小心把写着真 API Key 的 `.env` 或者自己的真实个人简历提交进了 Git，第二天发现不对赶紧删掉又提交了一次。**注意：一旦仓库设成公开，任何人都能在历史记录里把你第一天传的文件原封不动翻出来！**
+2. **把没设密码的本地网页直接放到公网上（`0.0.0.0` 陷阱）**：
+   咱们这个工具是为了自己在电脑上用着方便，默认没加账号密码登录。如果你把它放到云服务器上还改成 `0.0.0.0:8000` 对全网开放，路人甲扫到端口就能白嫖你的大模型额度，甚至控制你的浏览器。所以一定要保持默认的 `127.0.0.1:8000`（只允许你自己的电脑访问）。
+3. **下载文件接口没锁死文件夹范围**：
+   像下载 Excel 表格的接口，如果不检查文件名，坏人传个 `../../` 往上翻目录，就能偷看你电脑里的其他文件。
+4. **忘了放 `LICENSE` 开源协议和免责声明**：
+   GitHub 上如果不放 `LICENSE` 文件，法律上默认“别人看归看，不准拿去用或改”；另外凡是带网页抓取功能的项目，在 `README.md` 最显眼的地方写清楚“仅供个人学习研究，严禁商用倒卖数据”，是对自己最好的保护。
 
 ---
 
-## 3. 从 0 到 1 实战：上线前让 Antigravity / Codex 做一次全仓安全审计
+## 3. 从 0 到 1 跟 AI 对话：让 AI 帮你做一次开源前大体检
 
-在公开仓库前，直接把下面这条审计 Prompt 发给你的 Vibe Coding 工具：
+在公开仓库前，直接把这段话发给 Antigravity / Codex：
 
-### 💬 上线前安全审计与加固 Prompt 模板
+### 💬 开源前安全大体检 Prompt（直接复制给 AI）
 ```text
-我准备将这个仓库在 GitHub 上设为 Public，请先帮我做一次完整的开源前安全与工程合规检查：
-1. 扫描全量 Git commit 历史（`git rev-list --all`），检查是否曾经提交过任何 API Key（`AIzaSy` / `sk-` / `PRIVATE KEY`）、真实个人简历、内部项目 ID 或公司域环境注释；
-2. 检查 `.gitignore` 是否已严格排除 `.env`、`.gemini_runtime.json`、`chrome-profile/`、`output/` 和 `*.xlsx`；
-3. 在 `README.md` 顶部添加醒目的中英双语免责声明（仅供个人学习与架构研究，严禁商业化高频抓取；提醒 `app.py` 默认仅绑定 `127.0.0.1:8000`，严禁无鉴权暴露公网）；
-4. 补齐开源标配文件：`LICENSE`（MIT）、`.env.example`、`SECURITY.md`，并编写 `.github/workflows/ci.yml` 在每次 Push/PR 时自动跑离线单元测试、OpenSpec AST 规范校验与密钥防泄露扫描。
+我准备把这个项目在 GitHub 上设成 Public 公开出去，请先帮我做一次安全大扫除和开源准备：
+1. 帮我查一遍从第一次 commit 到现在的所有 Git 历史记录，确认从来没提交过 API Key（比如 `AIzaSy`、`sk-`、私钥）、我自己的真实个人简历、或者公司内部项目编号；
+2. 检查 `.gitignore`，确保 `.env`、`.gemini_runtime.json`、`chrome-profile/`、`output/` 和导出的 Excel 表格全都被排除了；
+3. 在 `README.md` 最顶部加一段醒目的中英双语免责声明与安全提示（仅供个人学习研究，严禁商业高频抓取；提醒服务默认只绑 `127.0.0.1:8000`，千万别裸奔放到公网上）；
+4. 帮我补齐 `LICENSE`（用 MIT 协议）、`.env.example` 配置模板、`SECURITY.md` 安全反馈说明，再写一个 `.github/workflows/ci.yml`，每次 push 代码时自动跑离线测试、检查文档格式、扫描有没有漏掉密钥。
 ```
 
 ---
 
-## 4. 对照本仓库落地实现：四大安全防线逐一拆解
+## 4. 马上在本仓库试一下这几道防线
 
-### 防线 1：全量 Git Commit 历史密钥扫描命令（随时可自查）
-把下面这段命令跑一遍，确认输出全部为 `0 hits` 再公开仓库：
+### 第 1 招：一行命令查遍所有历史 Commit 有没有漏掉密钥
+在终端跑一下这段命令，看到最后输出 `0` 就彻底放心了：
 ```bash
 python3 -c '
 import subprocess
 commits = subprocess.check_output(["git", "rev-list", "--all"]).decode().splitlines()
 pat = r"(AIzaSy[0-9A-Za-z_-]{20,}|sk-[0-9A-Za-z]{20,}|ya29\.[0-9A-Za-z_-]{20,}|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY)"
 hits = [c for c in commits if subprocess.run(["git", "grep", "-n", "-E", pat, c], capture_output=True).returncode == 0]
-print(f"已扫描 {len(commits)} 个历史 Commit，密钥泄露命中数: {len(hits)}")
+print(f"一共检查了 {len(commits)} 次历史提交，发现疑似密钥次数: {len(hits)}")
 '
 ```
-> ⚠️ **万一命中了怎么办？** 第一时间去云控制台**作废并轮换（Rotate）该密钥**，然后用 `git filter-repo` 或新建干净孤立分支重写历史后再推送。
+*(万一真查出来以前提交过密钥怎么办？第一步先去云平台后台把那个旧密钥删掉作废，第二步清空旧 Git 历史重新建干净分支再上传！)*
 
-### 防线 2：服务端代码级安全加固（见 [`app.py`](../../app.py) 与 [`core/boss_crawler.py`](../../core/boss_crawler.py)）
-- **本地回环绑定**：`uvicorn.run("app:app", host="127.0.0.1", port=8000)`；
-- **运行时凭证最小权限**：本地 `.gemini_runtime.json` 写入后立即执行 `os.chmod(RUNTIME_CFG_FILE, 0o600)`（仅当前系统用户可读），且 `GET /api/status` 只返回布尔值 `ai_ready: true/false`，**绝不向前端回传明文 Key**；
-- **路径穿越拦截**：所有文件名先过正则白名单 `SAFE_ID_PATTERN` 或 `os.path.basename()`，再用 `.resolve()` 校验必须位于目标目录内部。
+### 第 2 招：看看 GitHub 自动保安是怎么干活的（[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)）
+你可以点开仓库里的 `.github/workflows/ci.yml` 看看，不用配任何付费密钥，每次你往 GitHub 推代码，它都会免费自动帮你检查三件事：
+1. 把 Stage 3、4、5 的核心逻辑（城市优先级、单双休陷阱、日薪换算、异地低薪排最后、统计剔除干扰项）全测一遍；
+2. 把 `openspec/specs/` 里的 5 份说明书格式全查一遍；
+3. 全仓扫一遍有没有误传密钥，一旦发现立刻标红报警！
 
-### 防线 3：GitHub Actions 持续集成门禁（见 [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)）
-不需要配置任何云端密钥，CI 在每次 Push / PR 时自动在几秒内完成三件事：
-1. **Stage 3 / 4 / 5 纯离线核心逻辑回归测试**（城市优先级、薪资/作息边界、异地低薪垫底降权、合规池统计隔离、零领域污染）；
-2. **OpenSpec 主规范 AST 100% 合规校验**（确保文档与规范永不腐烂）；
-3. **代码库密钥正则扫描**（一旦有人误提交 Key 直接标红阻断合并）。
-
-### 防线 4：开启 GitHub 平台级安全开关（最后 1 分钟操作）
-在把仓库设为 Public 前后，进入 GitHub 仓库页面：
-1. **Settings → Code security** → 开启 **Secret scanning** 与 **Push protection**（GitHub 会在你 `git push` 含密钥的 commit 时直接在服务端拦截拒绝）；
-2. **Settings → Emails**（个人账号设置）→ 若不想暴露个人邮箱，开启 **Keep my email addresses private**。
+### 第 3 招：在 GitHub 网页上顺手打开两个免费开关（1 分钟搞定）
+去你的 GitHub 仓库网页上：
+1. 点 **Settings → Code security**，把 **Secret scanning** 和 **Push protection** 打开——以后万一你不小心要把带密钥的文件 push 上去，GitHub 会在半路直接帮你拦下来！
+2. 如果不想让别人从提交记录里看到你的私人邮箱，可以在 GitHub 个人账号的 **Emails** 设置里勾上 **Keep my email addresses private**。
 
 ---
 
-## 5. 全教程毕业总结与进阶练习 🚀
+## 5. 恭喜通关！送你一道动手练兵的小作业 🎉
 
-恭喜你完整走完了从 **0 到生产级 Spec-Driven & Eval-Driven Agent 系统** 的全部 7 个章节！回顾一下你掌握的核心工程武器库：
+跟着这 7 章一路走下来，你已经把一套**真正能上台面、有规矩、有自动考试、有安全护栏的多阶段 AI Agent** 摸得透透的了！最后总结成五句大白话口诀送给你：
 
-1. **用 OpenSpec 管住 Vibe Coding**：`Explore → Propose → Apply → Archive` 四步法 + AST 语法树硬校验；
-2. **物理拆分与温度分层**：把复杂任务拆成职责单一的 Stage，收敛提取用 `temp=0.1`、策略发散用 `temp=0.4`；
-3. **纯逻辑与脆弱 I/O 分离**：把过滤粗排从浏览器爬虫中剥离，让核心智能毫秒级可测；
-4. **算术归 Python，推理归 LLM**：杜绝统计幻觉与模板领域污染；
-5. **Human-in-the-Loop 评测飞轮**：强模型起草真值 → 人类审核锁死 → 确定性门禁 + `NDCG@8` + LLM-as-a-Judge 持续回归。
+1. **动手之前先写纸上方案**（用 OpenSpec 走 `Explore → Propose → Apply → Archive`）；
+2. **一个阶段只干一件事**（老实提取调低温度 `0.1`，发散想词调高温度 `0.4`）；
+3. **打分逻辑跟浏览器爬虫分家**（不用开浏览器也能毫秒级跑测试）；
+4. **算账交给 Python，写点评交给大模型**（再也不怕大模型算错平均数）；
+5. **参考答案人工看一眼，后面全靠自动跑分**（每次改代码心里都有底）。
 
-### 🎯 留给你的毕业实战挑战（动手练一遍完整流程！）
-试着在本仓库上亲自走一轮完整的 **OpenSpec 四步循环**，给系统增加一个小而实用的新特性：
-> **挑战题目**：在 Stage 4 初筛打分（`core/boss_crawler.py`）中，为 **`HR活跃度 == "在线"` 或 `"刚刚活跃"`** 的岗位增加可配置的活跃度权重，并在 Stage 4 离线评测中验证 `NDCG@8` 不退化！
-> 1. 对 Antigravity / Codex 说：`OpenSpec explore：盘点目前 HR 活跃度在 Stage 4 打分中的权重设计`；
-> 2. 发起 `Propose` → 审阅 `openspec/changes/` 下的 4 份文档；
-> 3. 回复 `开始 apply` → 运行 `.venv/bin/python eval/stage4_eval/evaluate_stage4_ranking.py` 对比 `#eval` 看板分值；
-> 4. 回复 `执行 archive` → 合并规范并通过 CI 校验！
+### 🎯 轮到你亲自试一把了！
+光看不练假把式，你可以在本仓库里试着走一遍完整的四步流程，加一个小改进：
+> **小作业**：在 Stage 4 给岗位打分的时候（`core/boss_crawler.py`），现在只看了 `BOSS在线` 加 2 分。如果详情页抓回来的 `HR活跃度` 写着 **“刚刚活跃”** 或 **“今日活跃”**，能不能也给它加一点分，让爱回消息的 HR 排得更靠前？
+> 1. 跟 AI 说：`OpenSpec explore：看看现在 HR 活跃度在 Stage 4 里是怎么加分的？`
+> 2. 让它写 `Propose` 计划书 → 你看一眼点个头；
+> 3. 说 `开始 apply` 改代码 → 跑一下 `.venv/bin/python eval/stage4_eval/evaluate_stage4_ranking.py` 看看 `/#eval` 看板上的分数；
+> 4. 说 `执行 archive` 存档收工！
 
-祝你在构建下一代可靠 AI Agent 系统的道路上玩得开心！如果这套教程和仓库对你有帮助，欢迎给仓库点一颗 ⭐ Star 或 Fork 开启你的二次创作！
+祝你玩得开心，做出越来越多靠谱又好用的 AI Agent！如果觉得这套教程有用，别忘了给仓库点个 ⭐ Star 呀！

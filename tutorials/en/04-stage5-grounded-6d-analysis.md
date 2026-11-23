@@ -1,71 +1,73 @@
-# Chapter 04: Deterministic Math + Grounded LLM Reasoning — Zero-Hallucination 6D Analysis (Stage 5)
+# Chapter 04: Let Python Do the Math, Let LLMs Write the Advice (Stage 5)
 
 > 🌐 **Language Switcher**: **[简体中文](../zh/04-stage5-grounded-6d-analysis.md)** | **English**
-> 🧭 **Navigation**: **[← Prev: 03 · Search Recall & I/O Decoupling](./03-stage3-stage4-intent-and-ranking.md)** | **[Tutorial Hub](../README.md)** | **[Next: 05 · Eval-Driven Flywheel & Dashboard →](./05-eval-driven-flywheel-and-dashboard.md)**
+> 🧭 **Navigation**: **[← Prev: 03 · Search Links & Job Ranking](./03-stage3-stage4-intent-and-ranking.md)** | **[Tutorial Hub](../README.md)** | **[Next: 05 · Automated Grading & `#eval` UI →](./05-eval-driven-flywheel-and-dashboard.md)**
 
 ---
 
-## 1. What You Will Learn
-1. **First Principle of Analytics Agents**: *"Never let an LLM do arithmetic"*—dividing labor cleanly between exact Python statistics and Gemini semantic reasoning;
-2. **Compliant-Pool Statistical Isolation**: Keeping Stage 4 demoted off-city and low-salary traps out of market salary/industry distributions;
-3. **Purging Domain-Bias Leakage**: How a single vertical example in a Pydantic `Field(description=...)` or fallback template can contaminate completely unrelated domains;
-4. **XSS-Safe Frontend Rendering & Standalone `POST /api/analysis/evaluate`**.
+## 1. What You'll Learn Here
+1. **The #1 rule of data-analysis Agents**: Never ask an LLM to count rows or average 150 salaries! Do the math in Python first, then hand clean numbers to Gemini;
+2. **Filter out junk before averaging**: Exclude Stage 4's demoted wrong-city and low-pay jobs before calculating market salaries so they don't drag down the average;
+3. **A funny real-world bug**: How a leftover *"apparel store supervisor"* example from early testing snuck into a Java developer's report;
+4. **Safe web rendering**: Displaying scraped job text without opening yourself up to script-injection (XSS) bugs.
 
 ---
 
-## 2. Architectural Pattern: Python Computes the Numbers, Gemini Explains the Meaning
+## 2. Divide the Job Cleanly: Python Counts, Gemini Advises
 
-Dumping 150 raw job JSONs into an LLM prompt and asking it to compute averages, medians, and bucket counts causes two failures:
-1. **Arithmetic Hallucinations**: LLMs miscount items and miscalculate medians, yielding different numbers on every run;
-2. **Context Dilution**: 150 list items crowd out attention from the Top-8 full job descriptions that actually need deep resume-to-JD reasoning.
+Once you've collected 150 jobs, it's tempting to dump all 150 JSON items into one prompt and ask the LLM: *"Calculate average pay, make chart numbers, and review the top 8 jobs."*
 
-Stage 5 ([`core/gemini_analyzer.py`](../../core/gemini_analyzer.py)) separates the two concerns strictly:
+That always backfires:
+1. **LLMs are bad calculators**: Ask an LLM for the median of 150 numbers and you'll get a different guess every time;
+2. **Too much noise hurts reading quality**: Stuffing 150 list cards into the prompt leaves the model rushing through the Top-8 full job descriptions that actually matter.
+
+In Stage 5 ([`core/gemini_analyzer.py`](../../core/gemini_analyzer.py)), each side sticks to what it's best at:
 
 ```mermaid
 flowchart LR
-    Pool["📦 Stage 4 Ranked Pool\n(with is_demoted flags)"]
-    Filter["🛡️ Compliant-Pool Isolation\nFilter to not is_demoted"]
-    PyStat["🐍 Exact Python 6D Stats\n(compute_six_dimension_stats)\nAvg / Median / Buckets / Top Skills"]
-    LLM["🤖 Gemini 3.8 Flash (temp=0.2)\nInput: Verified 6D Stats + Top-8 Full JDs\n+ Stage 1 Redacted Resume Profile"]
-    UI["📊 Apache ECharts 6D Charts\n+ 0~100 Deep Match Cards"]
+    Jobs["📦 Ranked Job Pool from Stage 4"]
+    Clean["🧹 Skip Demoted Junk Jobs\nOnly count valid local jobs"]
+    PyMath["🐍 Exact Python Math\n(compute_six_dimension_stats)\nAvg pay / Median / Top 15 skills"]
+    Gemini["🤖 Gemini 3.8 Flash (temp=0.2)\nReads exact Python numbers + Top 8 full JDs\n+ User's resume highlights"]
+    UI["📊 6 ECharts Visuals\n+ Top 8 Personalized Match Cards"]
 
-    Pool --> Filter --> PyStat
-    PyStat -->|"Chart arrays directly to UI"| UI
-    PyStat -->|"Verified facts injected into prompt"| LLM --> UI
+    Jobs --> Clean --> PyMath
+    PyMath -->|"Chart numbers straight to browser"| UI
+    PyMath -->|"Exact facts fed into prompt"| Gemini --> UI
 ```
 
-1. **ECharts Data Comes 100% from Python**: Industry share, 7-bucket salary histograms, Top-15 skills, experience/degree rings, scale/funding tiers, and rest-schedule distributions are exact and instantaneous;
-2. **Compliant-Pool Isolation**: `compute_six_dimension_stats` aggregates `compliant_jobs` (`not is_demoted`) so a few 5K low-salary or off-city traps never skew market salary medians, while explicitly reporting `compliant_jobs_count` and `demoted_jobs_count`;
-3. **Strict Anti-Hallucination Prompting**: Gemini is instructed to cite *only* figures, company names, and rest policies present in `stats` and Top-8 JDs, enforce `0 <= score <= 100` bounds via Pydantic, and cover all `0..N-1` candidates 1:1.
+1. **All 6 charts are powered 100% by Python math**: Industry breakdown, 7 salary brackets, Top 15 skills, experience/degree rings, big-name companies, and weekend-off ratios—zero guesswork, instant speed;
+2. **Kick out demoted jobs before averaging**: Python skips `is_demoted=True` jobs when calculating market averages—so two underpaid `5K` traps won't make a `15K` market look underpaid;
+3. **Strict "stick to the facts" rules for Gemini**: We hand Gemini the exact Python stats, the Top-8 full JDs, and the user's Stage 1 resume profile, telling it: **only quote numbers and companies shown above, score every single Top-8 job from `0` to `100`, and call out non-double-weekend schedules in the `risks` list!**
 
 ---
 
-## 3. Real Post-Mortem: Purging Vertical Domain Bias from Schemas & Fallbacks
+## 3. Real Bug Story: Watch Out for Leftover Examples From Early Testing!
 
-Early in development, our first prototype query was *"Shenzhen apparel store supervisor"*, so several Pydantic `Field(description=...)` strings and `build_fallback_analysis` templates contained examples like `"store inspection"` and `"merchandise display"`.
+When we built the very first prototype of this project, our test query was *"Shenzhen apparel store supervisor."* Without thinking, we wrote examples like *"highlight store inspection and merchandise display"* inside our schema descriptions and our offline backup template (`build_fallback_analysis`).
 
-During `OpenSpec Explore Stage 5`, we discovered that if a `"Java Backend Engineer"` query ever hit offline fallback—or when the model echoed schema hints—apparel phrases leaked into software engineering reports!
+Weeks later, while testing *"Guangzhou Java Engineer,"* a brief network timeout triggered the offline backup—and the app earnestly advised a Java backend engineer to *"highlight store inspection and merchandise display on your resume"*!
 
-> **Takeaway**: Keep every Pydantic schema description, system prompt, and offline fallback template **100% domain-agnostic**, dynamically interpolating `{intent.query}`, `{intent.city_name}`, and `{skill_top}`.
+> **Lesson learned**: Never hardcode industry-specific examples inside general-purpose schemas, prompts, or fallback templates! Use variables like `{intent.query}` and `{skill_top}` so the advice fits Java engineers, designers, and sales managers equally well.
 
 ---
 
-## 4. Vibe Coding From Scratch: Stage 5 `Propose` Prompt
+## 4. From Scratch: Your Plain-English Prompt for Stage 5
 
 ```text
 Initiate an OpenSpec propose for Stage 5 (`core/gemini_analyzer.py` & `app.py`):
-1. Compliant-pool isolation: `compute_six_dimension_stats` computes 6D distributions on `not is_demoted` jobs (with `compliant_jobs_count` & `demoted_jobs_count`);
-2. Purge domain bias: remove all hardcoded retail/store-supervisor phrasing from `JobMatchEvaluationLLM`, `GeminiAnalysisLLMOutput`, and `build_fallback_analysis`;
-3. Grounding & bounds: default to `gemini-3.8-flash` (`temperature=0.2`), add `ge=0, le=100` score validation, enforce 1:1 Top-K coverage, and require explicit risk deductions when rest policies violate `require_double_weekend`;
-4. Expose standalone `POST /api/analysis/evaluate` and render all DOM nodes safely via `createElement` / `textContent`.
-Create only the OpenSpec proposal files first.
+1. Skip demoted jobs when counting: `compute_six_dimension_stats` should calculate salary averages, medians, and industry shares using only valid jobs (`not is_demoted`), while also returning `compliant_jobs_count` and `demoted_jobs_count`;
+2. Remove leftover industry examples: clear out any hardcoded retail/store-supervisor phrases from schema descriptions and `build_fallback_analysis`, using `{intent.query}` dynamically instead;
+3. Keep Gemini grounded: use `gemini-3.8-flash` (`temperature=0.2`), clamp all match scores to `0..100`, require 1:1 reviews for all Top-N candidates, and flag alternating/single-rest schedules under `risks` when the user asked for weekends off;
+4. Add a standalone `POST /api/analysis/evaluate` endpoint so we can test Stage 5 without Chrome, and use `textContent` on the frontend so scraped text can never run scripts.
+Write the plan files first.
 ```
 
 ---
 
-## 5. Verify Right Now on This Repo: Test `POST /api/analysis/evaluate`
+## 5. Try It Right Now: See Junk-Job Filtering in Action
 
-With `python app.py` running, send a 2-job pool (1 compliant Guangzhou Java role + 1 demoted 5–7K Shenzhen trap) and verify that `stats.salary.avg_min_k` equals `15.0` (unskewed by the demoted trap!):
+With `python app.py` running, send 1 good Guangzhou Java job (`15–22K`) plus 1 demoted Shenzhen junk job (`5–7K`):
 
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/analysis/evaluate \
@@ -98,10 +100,11 @@ curl -s -X POST http://127.0.0.1:8000/api/analysis/evaluate \
   }' | python3 -m json.tool
 ```
 
+Check `stats.salary.avg_min_k` in the output—it's cleanly **`15.0`**, completely unaffected by the `5K` demoted job!
+
 ---
 
-## 6. Common Beginner Pitfalls
-- **Pitfall 1: Rendering scraped job titles or JDs with `innerHTML`** — Scraped web text is untrusted input; always render via `textContent` (`static/app.js`) to eliminate XSS vectors.
-- **Pitfall 2: Neglecting offline fallback quality** — A clean, domain-neutral `build_fallback_analysis` ensures users still get accurate 6D charts and stats even during transient LLM quota hiccups.
+## 6. Quick Tip
+- **Never put scraped web text into `innerHTML`**: Always use `textContent` (`static/app.js`) so malicious HTML tags inside a job ad are rendered harmlessly as plain text.
 
-Now that all 5 stages work end-to-end, how do we *prove* every prompt or code change improves quality without regressions? Next: **[Chapter 05: The Eval-Driven Flywheel — Human-in-the-Loop Ground Truth & the `#eval` Dashboard](./05-eval-driven-flywheel-and-dashboard.md)**!
+All 5 stages work! Now for the million-dollar question: **When you tweak a prompt tomorrow, how do you know you didn't break something else?** Let's build our automated grading setup in **[Chapter 05: How Do You Know It Got Better? Human-Reviewed Answer Keys & the `#eval` Scoreboard](./05-eval-driven-flywheel-and-dashboard.md)**!

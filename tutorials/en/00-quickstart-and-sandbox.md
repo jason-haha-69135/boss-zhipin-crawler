@@ -1,65 +1,68 @@
-# Chapter 00: Quickstart & Browser-Free Offline Sandbox (10-Minute Setup)
+# Chapter 00: Get It Running in 10 Minutes (No Scraper Setup Needed!)
 
 > 🌐 **Language Switcher**: **[简体中文](../zh/00-quickstart-and-sandbox.md)** | **English**
-> 🧭 **Navigation**: **[Back to Tutorial Hub](../README.md)** | **[Next: 01 · Taming Vibe Coding with OpenSpec →](./01-openspec-foundation.md)**
+> 🧭 **Navigation**: **[Back to Tutorial Hub](../README.md)** | **[Next: 01 · Stop AI From Breaking Your Code →](./01-openspec-foundation.md)**
 
 ---
 
-## 1. What You Will Accomplish
-Before rebuilding the entire Agent architecture from scratch, let's get the reference repository running on your machine in **10 minutes**. You will:
-1. Set up an isolated Python virtual environment and configure Gemini credentials (Google AI Studio API Key or GCP Vertex AI);
-2. Explore the full **Stage 1 ~ Stage 5 Evaluation Dashboard (`/#eval`)** immediately **without launching Chrome or scraping**;
-3. Test the standalone, browser-free Stage 3 (Intent Parsing), Stage 4 (Offline Ranking), and Stage 5 (6D Analysis) REST endpoints using `curl`;
-4. *(Optional)* Launch debug Chrome on port `9222` to run live end-to-end job collection.
+## 1. What We're Doing in This Chapter
+Before we build everything from scratch, let's get the existing project running on your laptop in **10 minutes**. You'll see that:
+1. You only need Python and a Gemini credential (either a free AI Studio API key or a Google Cloud login—the app automatically uses whichever one you have);
+2. **You don't even need to open Chrome or scrape a website** to explore the full **5-Stage Evaluation Dashboard (`/#eval`)**;
+3. With two quick `curl` commands, you can test the URL builder and job-ranking brain completely offline.
 
 ---
 
-## 2. System Architecture at a Glance
+## 2. The Big Picture: How Does This Agent Actually Work?
 
-Beginners often try to build a "Job Assistant Agent" with one giant prompt: *"Here is my resume and some jobs, pick the best ones."* In production engineering, we decompose the workflow into **5 decoupled, independently testable, quantitatively evaluated Stages**:
+When beginners build a "Job Search Agent," the first instinct is to stuff everything—reading the resume, searching jobs, picking the best ones, and writing a summary—into one giant prompt. When that breaks, you have no idea *where* it went wrong.
+
+Instead, we split the job into **5 clean, bite-sized steps (Stage 1 to Stage 5)**, just like an assembly line:
 
 ```mermaid
 flowchart LR
-    S1["📄 Stage 1\nMultimodal Resume Parser\n(temp=0.1 · PII Redaction)"]
-    S2["🎯 Stage 2\n10-Strategy Query Gen\n(temp=0.4 · 48-City 1:1)"]
-    S3["🧭 Stage 3\nIntent & BOSS URL Builder\n(6 Official Whitelists)"]
-    S4["📐 Stage 4\n2-Stage Crawl & Ranker\n(Non-Destructive Demotion)"]
-    S5["📊 Stage 5\nCompliant 6D Stats + Match\n(Zero-Hallucination Grounding)"]
+    S1["📄 Stage 1\nRead resume facts\n(scrub name & phone)"]
+    S2["🎯 Stage 2\nPick target city &\nbrainstorm 10 searches"]
+    S3["🧭 Stage 3\nTurn text into a\nBOSS Zhipin URL"]
+    S4["📐 Stage 4\nScore & rank jobs\n(push bad fits to bottom)"]
+    S5["📊 Stage 5\nPython counts salaries\nGemini writes advice"]
 
     S1 --> S2 --> S3 --> S4 --> S5
 ```
 
 > [!TIP]
-> **Key Architectural Insight**: **Stages 1, 2, 3, 5, and Stage 4's core ranking engine (`rank_and_filter_jobs`) all expose pure offline REST APIs.** You can run, test, and study 100% of the AI Agent intelligence without logging into any job board or launching a browser!
+> **Best Part for Learners**: Aside from actually fetching live web pages in Chrome, **every single thinking step has its own local API**. Even if you never touch the browser scraper, you can run and test 100% of the Agent's intelligence right from your terminal!
 
 ---
 
-## 3. Step 1: Clone & Configure Environment (3 Minutes)
+## 3. Step 1: Download the Code & Set Up Python (3 Minutes)
+
+Copy and run these commands in your terminal:
 
 ```bash
-# 1. Clone the repository
+# 1. Clone the repo
 git clone git@github.com:jason-haha-69135/boss-zhipin-crawler.git
 cd boss-zhipin-crawler
 
-# 2. Create and activate an isolated virtual environment
+# 2. Create a clean virtual environment so we don't mess up global Python packages
 python3 -m venv .venv
 source .venv/bin/activate
 
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Copy the environment variable template
+# 4. Copy the config template
 cp .env.example .env
 ```
 
-Configure your **Gemini credentials** (pick **one** option; [`core/gemini_client.py`](../../core/gemini_client.py) auto-detects the active channel):
+Now set up **one** way to talk to Gemini ([`core/gemini_client.py`](../../core/gemini_client.py) checks both and uses whichever is available):
 
-### Option A: Google AI Studio API Key (Simplest for Individual Developers)
+### Option A: Google AI Studio API Key (Easiest for Personal Projects)
 ```bash
 export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
 ```
 
-### Option B: Google Cloud Vertex AI (Application Default Credentials)
+### Option B: Google Cloud Login (If You Already Use GCP)
 ```bash
 gcloud auth application-default login
 export GOOGLE_CLOUD_PROJECT="YOUR_GCP_PROJECT_ID"
@@ -67,27 +70,30 @@ export GOOGLE_CLOUD_PROJECT="YOUR_GCP_PROJECT_ID"
 
 ---
 
-## 4. Step 2: Start the Server & Tour the 5-Stage `#eval` Dashboard (2 Minutes)
+## 4. Step 2: Start the Web App & Tour the Scoreboard (2 Minutes)
+
+Run:
 
 ```bash
 python app.py
 ```
 
-Once `Uvicorn running on http://127.0.0.1:8000` appears, open two tabs in your browser:
+When you see `Uvicorn running on http://127.0.0.1:8000`, open these two pages in your browser:
 
-1. **5-Stage Evaluation Dashboard (Zero-Setup Ready)**: `http://127.0.0.1:8000/#eval`
-   - Click through **STAGE 1 → STAGE 2 → STAGE 3 → STAGE 4 → STAGE 5** in the top stepper;
-   - Pre-archived benchmark runs in `eval/runs/` let you inspect every stage immediately: Stage 1 9-field atomic verification, Stage 2 10-strategy compliance (`9.46/10`), Stage 3 BOSS URL exact match (`94.4%`), Stage 4 ranking quality (`NDCG@8 = 0.9754`), and Stage 5 groundedness (`9.47/10`).
-2. **Main Job Intelligence Workspace**: `http://127.0.0.1:8000/`
-   - First select a **Target City** (mapped 1:1 to BOSS Zhipin city codes, e.g., `上海`), then upload a sample resume from `eval/dataset/stage1/qualified/QUAL-01.pdf` to watch **Stage 1 PII-redacted profile extraction → Stage 2 multi-strategy query generation** in real time. Try switching the city dropdown afterward—Stage 2 regenerates queries dynamically without re-uploading the PDF!
+1. **The 5-Stage Scoreboard (Works Out of the Box)**: `http://127.0.0.1:8000/#eval`
+   - Click the **STAGE 1 → STAGE 2 → STAGE 3 → STAGE 4 → STAGE 5** cards along the top;
+   - We've included real test reports in `eval/runs/` so you can immediately see how each step is graded (resume accuracy, search query format, URL match rate, job ranking order, and report accuracy).
+2. **The Main Workspace (Try a Sample Resume)**: `http://127.0.0.1:8000/`
+   - Pick a **Target City** above the upload box (say, `上海`), then drop in the fake test resume `eval/dataset/stage1/qualified/QUAL-01.pdf`;
+   - Watch Stage 1 extract skills (with name and phone number scrubbed out) and Stage 2 generate 10 search ideas. Now switch the city dropdown to `杭州`—notice how Stage 2 updates the searches in seconds without re-uploading the PDF!
 
 ---
 
-## 5. Step 3: Browser-Free Sandbox Lab — Test Stage 3 & Stage 4 via `curl`
+## 5. Step 3: Play With Stage 3 & Stage 4 From Your Terminal (No Browser!)
 
-Keep `python app.py` running, open a second terminal, and run these two commands:
+Leave `python app.py` running, open a second terminal tab, and try these two commands:
 
-### Lab 1: Standalone Stage 3 Intent Parsing & BOSS URL Assembly (`POST /api/intent/parse`)
+### Try It 1: Watch Stage 3 Turn a Sentence Into a Real BOSS Zhipin Link (`POST /api/intent/parse`)
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/intent/parse \
   -H "Content-Type: application/json" \
@@ -96,12 +102,12 @@ curl -s -X POST http://127.0.0.1:8000/api/intent/parse \
     "target_city": "杭州"
   }' | python3 -m json.tool
 ```
-**What to observe**:
-- `intent.query` is purified to `"Java开发工程师"` (stripping industry modifiers and `"岗位"` so search recall isn't throttled);
-- `intent.city_code` resolves 1:1 to Hangzhou (`"101210100"`) and `salary_code` maps to `"405"` (`10-20K`);
-- `boss_url` outputs the exact BOSS Zhipin search URL ready for Stage 4.
+**Notice what happened**:
+- `intent.query` was trimmed down to just `"Java开发工程师"` (we stripped out `"互联网软件行业的"`—you'll see why in Chapter 03!);
+- Hangzhou became official code `"101210100"`, and `1.2w` became salary bracket `"405"` (`10-20K`);
+- `boss_url` is a real, clickable search link!
 
-### Lab 2: Standalone Stage 4 Offline Ranking & Non-Destructive Demotion (`POST /api/jobs/rank`)
+### Try It 2: Watch Stage 4 Rank Jobs & Push Bad Fits to the Bottom (`POST /api/jobs/rank`)
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/jobs/rank \
   -H "Content-Type: application/json" \
@@ -125,19 +131,18 @@ curl -s -X POST http://127.0.0.1:8000/api/jobs/rank \
     ]
   }' | python3 -m json.tool
 ```
-**What to observe**:
-- `"高级Java后端开发"` ranks `#1` via tokenized title matching + resume skill overlap (`score_breakdown` shows every point);
-- Both the off-city Shenzhen job and the under-budget `6-8K` job are flagged `is_demoted: true` and pushed to the bottom, while `total_jobs` remains `3`!
+**Notice what happened**:
+- `"高级Java后端开发"` took the `#1` spot even though its title wasn't an exact word-for-word match;
+- Both the wrong-city Shenzhen job and the underpaid `6-8K` job were marked `is_demoted: true` and moved to the very bottom—without deleting them (`total_jobs` is still `3`).
 
-### Lab 3: *(Optional)* Live Crawling with Debug Chrome
-To run live Playwright CDP crawling from the main UI, run `./start_chrome.sh`, log in to `zhipin.com` once in the opened Chrome window, and click any recommended query on `http://127.0.0.1:8000/`.
+*(Optional: If you want to try live scraping too, run `./start_chrome.sh`, log in to `zhipin.com` once in that Chrome window, and click any query on the main page.)*
 
 ---
 
-## 6. Checkpoint Checklist
-- [x] `python app.py` is running on `http://127.0.0.1:8000`;
-- [x] Viewed all 5 `Live` stage tabs on `http://127.0.0.1:8000/#eval`;
-- [x] Uploaded `QUAL-01.pdf` and tested dynamic city switching on the main page;
-- [x] Verified `/api/intent/parse` and `/api/jobs/rank` via `curl` without launching Chrome.
+## 6. Quick Checklist
+- [x] `python app.py` is running locally;
+- [x] Clicked through all 5 stages on `/#eval`;
+- [x] Uploaded `QUAL-01.pdf` and switched cities on the main page;
+- [x] Tested `/api/intent/parse` and `/api/jobs/rank` with `curl`.
 
-Next up: **[Chapter 01: Taming Vibe Coding Tools with OpenSpec](./01-openspec-foundation.md)**—how to establish machine-verifiable engineering guardrails starting from an empty folder!
+Warm-up complete! Next: **[Chapter 01: Stop AI From Breaking Your Code — Setting Clear Rules with OpenSpec](./01-openspec-foundation.md)**!

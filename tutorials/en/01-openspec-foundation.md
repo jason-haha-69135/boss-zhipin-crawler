@@ -1,86 +1,97 @@
-# Chapter 01: Taming Vibe Coding Tools — Spec-Driven Guardrails with OpenSpec
+# Chapter 01: Stop AI From Breaking Your Code — Setting Clear Rules with OpenSpec
 
 > 🌐 **Language Switcher**: **[简体中文](../zh/01-openspec-foundation.md)** | **English**
-> 🧭 **Navigation**: **[← Prev: 00 · Quickstart & Sandbox](./00-quickstart-and-sandbox.md)** | **[Tutorial Hub](../README.md)** | **[Next: 02 · Stage 1 & 2 Decoupling →](./02-stage1-stage2-resume-to-queries.md)**
+> 🧭 **Navigation**: **[← Prev: 00 · 10-Min Quickstart](./00-quickstart-and-sandbox.md)** | **[Tutorial Hub](../README.md)** | **[Next: 02 · Resumes to Search Queries →](./02-stage1-stage2-resume-to-queries.md)**
 
 ---
 
-## 1. What You Will Learn
-1. Why unstructured "chat-only Vibe Coding" collapses after a few iterations on multi-stage Agents;
-2. How **Spec-Driven Development (OpenSpec)** structures persistent context (`openspec/project.md`, `openspec/AGENTS.md`, `specs/`, `changes/`);
-3. How to drive Antigravity, Codex, or Claude Code using the strict **`Explore → Propose → Apply → Archive`** 4-step protocol;
-4. How **OpenSpec AST validation** turns Markdown specifications into compiler-grade checks.
+## 1. What Problem Are We Solving Here?
+Building a tiny script with Antigravity or Codex feels effortless. Once your project grows past three files, though, you hit classic Vibe Coding headaches:
+- **AI "helps" too much**: You ask to tweak a button label, and it quietly renames a backend JSON field, breaking your UI;
+- **Long-chat amnesia**: Early on, you told it *"never save uploaded resumes to disk."* Twenty messages later (or in a new chat tab), it writes `open('temp.pdf', 'wb')`;
+- **Coding before agreeing**: You ask a casual "what if" question, and it immediately rewrites 8 files before you even agree on the plan.
+
+In this chapter, you'll learn a dead-simple habit called **OpenSpec (write down the plan and rules in plain files *before* letting AI touch code)** that fixes all three problems.
 
 ---
 
-## 2. Mental Model: Why Chat-Only Vibe Coding Fails at Scale
+## 2. The Core Habit: Put Rules in Your Repo, Not Just in Chat
 
-When developers use AI coding agents without written specifications, three failure modes appear almost immediately:
-- **Silent Assumption Drift**: You ask for "a city filter," and the AI hardcodes a default city, alters an API payload, and breaks the frontend without telling you;
-- **Context Rot Across Sessions**: By turn 25—or in a fresh chat window—the AI forgets critical invariants like *"never write uploaded resumes to disk"* or *"never use unescaped `innerHTML`"*;
-- **No Pre-Code Brake Pedal**: Before you even agree on the design, the agent edits 8 files at once.
-
-**The Solution**: Move architectural invariants and change proposals out of ephemeral chat history and into **machine-validated OpenSpec files inside the repository**.
+Think of it like renovating a kitchen:
+1. **Explore (Measure the room)**: AI reads the current code, spots hidden traps, and gives you options—**zero code changes allowed**;
+2. **Propose (Draw the blueprint)**: AI writes a short plan (`proposal.md`, `design.md`, `tasks.md`, and `spec.md`)—**still zero code changes until you say yes**;
+3. **Apply (Build to the checklist)**: Once you say *"Start apply,"* AI writes the code and tests item by item;
+4. **Archive (File the blueprint)**: When tests pass, AI merges the new rules into your master spec folder (`openspec/specs/`) and archives the proposal.
 
 ```mermaid
 flowchart TD
-    Explore["🔍 1. Explore (Read-Only)\nAudit current code, edge cases & eval risks\nZero code edits allowed"]
-    Propose["📝 2. Propose (Plan Before Code)\nCreate proposal / design / delta spec / tasks\nWait for human approval"]
-    Apply["⚙️ 3. Apply (Controlled Execution)\nImplement tasks.md + run eval gates"]
-    Archive["📦 4. Archive (Living Truth)\nMerge delta spec into openspec/specs/\nSync system_design.md & archive change"]
+    Explore["🔍 1. Explore (Look, Don't Touch)\nRead code, spot bugs & list options"]
+    Propose["📝 2. Propose (Plan on Paper)\nWrite short design + checklist\nWait for your green light"]
+    Apply["⚙️ 3. Apply (Write & Test)\nFollow checklist & run tests"]
+    Archive["📦 4. Archive (Save the Rules)\nUpdate master specs & archive plan"]
 
     Explore --> Propose --> Apply --> Archive
 ```
 
 ---
 
-## 3. Hands-On From Scratch: Bootstrapping OpenSpec in an Empty Folder
+## 3. From Scratch: Your Very First Prompt in an Empty Folder
 
-Suppose you just ran `mkdir my-job-agent && cd my-job-agent && git init`. **Before writing a single line of Python**, send this bootstrap prompt to Antigravity or Codex:
+Imagine you just created an empty folder (`mkdir my-job-agent && cd my-job-agent && git init`). **Before writing any Python**, paste this into Antigravity or Codex:
 
-### 💬 Step 1 Prompt (Copy-Paste to Antigravity / Codex)
+### 💬 Step 1 Prompt (Copy-Paste to AI)
 ```text
-We are building a 5-stage "BOSS Zhipin Job Intelligence Agent" from scratch (FastAPI + Google GenAI SDK + Playwright CDP + Vanilla JS / Apache ECharts).
-Before writing any application code, initialize our OpenSpec Spec-Driven Development directory `openspec/`:
-1. Create `openspec/project.md` defining the tech stack, 5-stage physical module separation (Stage 1 Resume Parser, Stage 2 Query Generator, Stage 3 Intent & URL Parser, Stage 4 Two-Stage Crawler & Offline Ranker, Stage 5 6D Stats & Deep Matcher), model roles (`gemini-3.8-flash` for pipeline tasks, `gemini-4-argon` for Eval LLM-as-a-Judge), and 4 non-negotiable security rules (in-memory-only resume parsing, dual-end PII zero leakage, path-traversal protection, no unescaped `innerHTML`).
-2. Create `openspec/AGENTS.md` enforcing our 4-phase workflow: `Explore` (read-only audit), `Propose` (create `proposal.md`, `design.md`, `tasks.md`, and delta `specs/<capability>/spec.md` under `openspec/changes/<id>/` with ZERO business code edits until I approve), `Apply`, and `Archive`. Include strict Fission-AI/OpenSpec AST rules (`### Requirement:` MUST contain uppercase `SHALL` or `MUST`; `#### Scenario:` MUST use `- **WHEN**` and `- **THEN**`).
-Create only these two files for my review.
+We are building a 5-stage "BOSS Zhipin Job Assistant" from scratch (FastAPI + Google GenAI SDK + Playwright + Vanilla JS / ECharts).
+Before writing any app code, create an `openspec/` folder with two rulebook files:
+1. `openspec/project.md` (Project Ground Rules): list our tech stack, what each of the 5 stages does (Stage 1 read resume, Stage 2 brainstorm search queries, Stage 3 build BOSS Zhipin URL, Stage 4 scrape & rank jobs, Stage 5 calculate stats & write advice), which models we use (`gemini-3.8-flash` for daily tasks, `gemini-4-argon` for grading tests), and 4 hard safety rules (read resumes in memory only—never save to disk; scrub names/phones/addresses; block `../` file path tricks; never use raw `innerHTML`).
+2. `openspec/AGENTS.md` (AI Workflow Rules): when I say Explore, only read files and suggest options; when I say Propose, only write plan docs inside `openspec/changes/<name>/` and DO NOT touch app code until I say "Start apply"; also define a consistent `Requirement` + `Scenario (WHEN/THEN)` heading format so a simple script can check our docs.
+Only create those two files for me to review right now.
 ```
 
-Compare what AI generates against the battle-tested files in this repo:
-- Global project invariants: [`openspec/project.md`](../../openspec/project.md)
-- Agent workflow & AST rules: [`openspec/AGENTS.md`](../../openspec/AGENTS.md)
+Check out the actual files in this repo to see how clean and readable they are:
+- Project ground rules: [`openspec/project.md`](../../openspec/project.md)
+- AI workflow rules: [`openspec/AGENTS.md`](../../openspec/AGENTS.md)
 
 ---
 
-## 4. OpenSpec AST Rules: Writing Specs That Code Can Validate
+## 4. Why Use a Fixed `WHEN / THEN` Format in Specs?
 
-Prose design docs rot because nothing verifies them. Every master spec in `openspec/specs/<capability>/spec.md` obeys deterministic AST rules:
-1. **Top-Level Headings**: `# <Capability> Specification`, `## Purpose` (>= 50 chars, no `TBD`), and `## Requirements`;
-2. **Normative Requirements**: `### Requirement: <Name>` followed immediately by body text containing uppercase **`SHALL`** or **`MUST`**;
-3. **Testable Scenarios**: At least one 4-hash `#### Scenario: <Name>` block per requirement using `- **WHEN**`, `- **THEN**`, and optional `- **AND**` bullets;
-4. **Delta Specs During `Propose`**: Stored under `openspec/changes/<change-id>/specs/<capability>/spec.md` using `## ADDED Requirements` or `## MODIFIED Requirements`, then merged into `openspec/specs/` upon `Archive`.
+Free-form docs go stale fast because nobody notices when a detail is missing. OpenSpec uses a simple fill-in-the-blanks pattern inside `openspec/specs/`:
+- Every rule starts with `### Requirement: ...` and includes uppercase **`SHALL`** or **`MUST`**;
+- Every rule has at least one concrete example under `#### Scenario: ...` written with **`WHEN`** (input) and **`THEN`** (expected result).
 
-> 💡 Browse [`openspec/changes/archive/`](../../openspec/changes/archive/) in this repository to inspect real proposals, technical designs, and task checklists from Stages 1 through 5!
+Here's a real example from [`openspec/specs/stage3-intent-parser/spec.md`](../../openspec/specs/stage3-intent-parser/spec.md):
+```markdown
+### Requirement: Stage 3 Intent Parsing with Gemini 3.8 Flash and Explicit City Priority
+The `core/intent_parser.py` module MUST resolve the target city according to deterministic priority rules mapped 1:1 to BOSS Zhipin `CITY_CODE_MAP`.
+
+#### Scenario: Use target_city when the search sentence doesn't mention a city
+- **WHEN** `parse_user_intent` receives `"互联网新媒体行业的新媒体运营岗位，月薪至少0.7w"` along with `target_city="武汉"`
+- **THEN** it SHALL resolve `city_name="武汉"` and `city_code="101200100"` instead of falling back to `"深圳"`
+- **AND** `build_boss_url()` SHALL contain `city=101200100`
+```
+Writing `WHEN ... THEN ...` makes edge cases crystal clear to humans *and* lets AI turn each scenario directly into a unit test!
 
 ---
 
-## 5. The 4 Everyday Commands for Driving Your AI Coding Agent
+## 5. The Only 4 Phrases You Need for Every Feature
 
-Once `AGENTS.md` is in place, you steer every feature or refactor with four crisp commands:
+From here on out, building Stages 1 through 5 uses the exact same four everyday prompts:
 
-| Phase | Your Prompt Trigger | What the Agent May Do | Your Human Gate |
+| Step | What You Type to AI | What AI Does | What You Check |
 | :--- | :--- | :--- | :--- |
-| **1. Explore** | `OpenSpec explore Stage X: audit current logic, edge cases & eval needs` | Read-only inspection; surfaces trade-offs & questions | Decide key trade-offs (e.g., hard-drop vs. bottom-demote off-city jobs) |
-| **2. Propose** | `OpenSpec propose Stage X: adopt options 1 & 2` | Write 4 markdown files in `openspec/changes/<id>/` | Review API contracts, edge-case scenarios & review gates in `tasks.md` |
-| **3. Apply** | `Start apply` | Write code, unit tests & eval scripts; pause at manual review gates | Inspect test outputs & approve Ground Truth datasets |
-| **4. Archive** | `Run archive` | Merge delta spec into `openspec/specs/`, move to `archive/`, sync `system_design.md` | Run the AST validator to confirm 100% spec compliance |
+| **1. Scout** | `OpenSpec explore Stage X: what bugs or edge cases should we watch out for?` | Reads code only; lists pitfalls & choices | Pick the option you prefer |
+| **2. Plan** | `OpenSpec propose Stage X: go with option 1` | Writes 4 short plan files in `openspec/changes/` | Skim `design.md` & `tasks.md` (takes 1 minute) |
+| **3. Build** | `Start apply` | Writes code, runs tests & pauses if human review is needed | Check test results & approve sample data |
+| **4. Save** | `Run archive` | Merges new rules into `openspec/specs/` & moves plan to `archive/` | Run the doc-checker script |
+
+> 💡 Want to see the real plans from when we built this repo? Peek inside [`openspec/changes/archive/`](../../openspec/changes/archive/)!
 
 ---
 
-## 6. Verify Right Now on This Repo: Run the OpenSpec AST Validator
+## 6. Try It Right Now: Run the Spec-Checker Script
 
-Run this command in the repo root (the exact same check runs automatically on every push in `.github/workflows/ci.yml`):
+Paste this into your terminal—in one second, it checks that all 5 stage specs in this repo follow every rule:
 
 ```bash
 .venv/bin/python -c "
@@ -100,8 +111,8 @@ for sp in specs:
 
 ---
 
-## 7. Common Beginner Pitfalls
-- **Pitfall 1: Jumping straight to "write the code" without `Explore` + `Propose`** — Spending 2 minutes reviewing a 50-line `design.md` saves 2 hours of untangling multi-file hallucinations.
-- **Pitfall 2: Writing vague requirements ("make parsing accurate and fast")** — Always express requirements as verifiable `WHEN / THEN` contracts (e.g., `WHEN input contains "1.2w" THEN min_salary_k SHALL equal 12 AND salary_code SHALL equal "405"`).
+## 7. Quick Tips Before Moving On
+- **Never skip `Propose`**: Reading a 30-line plan takes 60 seconds; undoing an 8-file mess takes an afternoon.
+- **Be specific, not vague**: Instead of *"handle salaries well,"* write *"WHEN input has `1.2w` THEN `min_salary_k` MUST be `12`."*
 
-Next, let's build our first two pipeline stages: **[Chapter 02: Requirement Discovery & Stage Decoupling — From Multimodal Resumes to Search Strategies (Stages 1 & 2)](./02-stage1-stage2-resume-to-queries.md)**!
+Now let's build our first real features: **[Chapter 02: From Resume to Search Queries — Why Split Into Two Steps? (Stages 1 & 2)](./02-stage1-stage2-resume-to-queries.md)**!
