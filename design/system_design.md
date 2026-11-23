@@ -88,7 +88,7 @@ Stage 1、Stage 2、Stage 3 与 Stage 5 均通过底层统一客户端 `create_i
 1. **统一采用 `client.interactions.create(...)` 原生接口**：支持多模态输入块列表（`document` / `image` / `text`）与结构化 JSON Schema 约束输出（通过 `clean_json_schema` 自动递归展开 Pydantic `$defs` / `$ref` 嵌套引用）。
 2. **Vertex AI Global 免代理直连 + AI Studio 自动回退双通道**：
    - 优先使用 GCP Vertex AI Global Endpoint (`location="global"`)，在企业网络或中国大陆环境下无需第三方代理即可低延迟直连；
-   - 自动兼容 AI Studio API Key 通道与本地代理端口探测，并内置模型候选回退链缓存 `_RESOLVED_MODEL_CACHE`（支持 `gemini-3.8-flash`、`gemini-3.5-flash-lite`、`gemini-3.1-pro`、`gemini-4-argon`）。
+   - 自动兼容 AI Studio API Key 通道与本地代理端口探测，并内置模型候选回退链缓存 `_RESOLVED_MODEL_CACHE`（主链路统一使用 `gemini-3.8-flash`，Eval LLM-as-a-Judge 统一使用 `gemini-4-argon`）。
 
 <div style="page-break-after: always;"></div>
 

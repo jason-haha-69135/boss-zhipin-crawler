@@ -230,9 +230,7 @@ async def get_status() -> Dict[str, Any]:
         "boss_cities": get_boss_city_options(),
         "models": [
             {"id": "gemini-3.8-flash", "label": "Gemini 3.8 Flash"},
-            {"id": "gemini-3.5-flash-lite", "label": "Gemini 3.5 Flash Light"},
-            {"id": "gemini-3.1-pro", "label": "Gemini 3.1 Pro"},
-            {"id": "gemini-4-argon", "label": "Gemini 4 Argon"},
+            {"id": "gemini-4-argon", "label": "Gemini 4 Argon (Eval Judge)"},
         ],
     }
 
@@ -436,9 +434,7 @@ async def parse_resume_endpoint(request: Request) -> Dict[str, Any]:
 async def parse_intent_endpoint(req: IntentParseRequest) -> Dict[str, Any]:
     """【Stage 3 独立接口】将自然语言或 Stage 2 Query 解析为 BOSS直聘结构化 URL 参数与软性条件"""
     selected_model = (
-        req.model
-        if req.model in ALLOWED_MODELS and req.model != "gemini-3.5-flash-lite"
-        else DEFAULT_STAGE3_INTENT_MODEL
+        req.model if req.model in ALLOWED_MODELS else DEFAULT_STAGE3_INTENT_MODEL
     )
     saved_cfg = load_runtime_config()
     effective_api_key = load_backend_api_key(saved_cfg.get("api_key"))

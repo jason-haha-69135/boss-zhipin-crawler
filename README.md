@@ -10,6 +10,14 @@
 
 ---
 
+> [!IMPORTANT]
+> **⚠️ Disclaimer & Security Notice / 免责声明与安全提示**
+> - **Educational & Research Use Only / 仅供学习与技术研究**：This project is intended solely for personal learning, AI Agent architecture research, and LLM evaluation benchmarking. Please strictly comply with the target platform's Terms of Service, `robots.txt`, and applicable laws. Do **NOT** use this tool for commercial scraping, high-frequency automated harvesting, or unauthorized data redistribution. Users assume full responsibility for their usage.
+> - **本项目仅限个人学习、AI Agent 架构与评测体系研究使用**：请严格遵守目标平台服务条款、`robots.txt` 及相关法律法规，**严禁用于商业化高频抓取、批量数据倒卖或任何侵犯隐私的用途**，由此产生的一切风险与责任由使用者自行承担。
+> - **Localhost Only / 严禁公网裸奔部署**：The FastAPI server binds to `127.0.0.1:8000` by default without authentication. **Never** expose it directly to `0.0.0.0` or the public internet without adding authentication, rate limiting, and CORS restrictions.
+
+---
+
 <a id="english"></a>
 
 ## 🌐 English Version

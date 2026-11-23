@@ -20,7 +20,6 @@ DEFAULT_STAGE5_TEMPERATURE = float(os.environ.get("STAGE5_TEMPERATURE", "0.2"))
 
 ALLOWED_MODELS = {
     "gemini-3.8-flash": "Gemini 3.8 Flash",
-    "gemini-3.1-pro": "Gemini 3.1 Pro",
     "gemini-4-argon": "Gemini 4 Argon",
 }
 

@@ -1,0 +1,113 @@
+name: CI — Offline Unit Tests, OpenSpec AST & Secret Hygiene
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Stage 3 / Stage 4 / Stage 5 Offline Unit Checks
+        run: |
+          python -c "
+          from core.intent_parser import (
+              DEFAULT_STAGE3_INTENT_MODEL,
+              SCALE_CODE_LABELS,
+              STAGE_CODE_LABELS,
+              fallback_parse_intent,
+              resolve_intent_city,
+          )
+          from core.boss_crawler import (
+              detect_weekend_policy,
+              parse_salary_bounds,
+              rank_and_filter_jobs,
+          )
+          from core.gemini_analyzer import (
+              DEFAULT_STAGE5_ANALYSIS_MODEL,
+              build_fallback_analysis,
+              compute_six_dimension_stats,
+          )
+
+          # Stage 3 checks
+          assert DEFAULT_STAGE3_INTENT_MODEL == 'gemini-3.8-flash'
+          assert '301' in SCALE_CODE_LABELS and '808' in STAGE_CODE_LABELS
+          assert resolve_intent_city('上海的后端工程师', target_city='杭州') == ('上海', '101020100')
+          assert resolve_intent_city('互联网软件行业的Java开发工程师岗位，月薪至少1.2w', target_city='杭州') == ('杭州', '101210100')
+          fb = fallback_parse_intent('服装零售行业的店面督导岗位，月薪至少1.2w', target_city='杭州')
+          assert fb.query == '店面督导' and fb.min_salary_k == 12 and fb.salary_code == '405'
+
+          # Stage 4 checks
+          assert detect_weekend_policy('提供单双休、五险一金') == '大小周/单双休'
+          assert detect_weekend_policy('隔周双休，弹性打卡') == '大小周/单双休'
+          assert detect_weekend_policy('非双休，介意勿投') == '排班轮休/单休'
+          assert detect_weekend_policy('周末双休，五险一金') == '周末双休'
+          assert parse_salary_bounds('1.5-2.5W·14薪') == (15, 25, 14)
+          assert parse_salary_bounds('200-300元/天') == (4, 7, 12)
+
+          intent = fallback_parse_intent('互联网软件行业的Java开发工程师岗位，月薪至少1w，周末双休', target_city='广州')
+          jobs = [
+              {'岗位名称': 'Java开发工程师', '薪资范围': '18-25K', '工作地点': '深圳·南山', '所属行业': '互联网', '福利待遇': '周末双休', '技能标签': 'Java'},
+              {'岗位名称': 'Java开发工程师', '薪资范围': '6-8K', '工作地点': '广州·天河', '所属行业': '互联网', '福利待遇': '周末双休', '技能标签': 'Java'},
+              {'岗位名称': '高级Java后端开发', '薪资范围': '12-18K', '工作地点': '广州·海珠', '所属行业': '软件', '福利待遇': '周末双休', '技能标签': 'Java, MySQL'},
+          ]
+          ranked, top = rank_and_filter_jobs(jobs, intent, top_k=2, resume_profile={'core_skills': ['Java', 'MySQL']})
+          assert len(ranked) == 3 and not ranked[0]['is_demoted'] and ranked[1]['is_demoted'] and ranked[2]['is_demoted']
+
+          # Stage 5 checks
+          assert DEFAULT_STAGE5_ANALYSIS_MODEL == 'gemini-3.8-flash'
+          stats = compute_six_dimension_stats(ranked, top, intent)
+          assert stats['compliant_jobs_count'] == 1 and stats['demoted_jobs_count'] == 2
+          fb_rep = build_fallback_analysis(intent, stats, top)
+          serialized = str(fb_rep)
+          assert '门店巡检' not in serialized and '商品陈列' not in serialized
+          print('ALL OFFLINE STAGE 3/4/5 UNIT CHECKS PASSED!')
+          "
+
+      - name: Validate OpenSpec Master Specifications (AST Rules)
+        run: |
+          python -c "
+          import re, pathlib
+          specs = sorted(pathlib.Path('openspec/specs').glob('*/spec.md'))
+          assert len(specs) == 5, f'Expected 5 specs, got {specs}'
+          for sp in specs:
+              txt = sp.read_text(encoding='utf-8')
+              assert '## Requirements' in txt, f'{sp}: missing ## Requirements'
+              reqs = re.findall(r'^### Requirement: .+$', txt, re.M)
+              scens = re.findall(r'^#### Scenario: .+$', txt, re.M)
+              assert reqs and scens, f'{sp}: missing reqs or scenarios'
+              for block in re.split(r'^### Requirement: ', txt, flags=re.M)[1:]:
+                  first_para = block.split('#### Scenario:')[0]
+                  assert ('SHALL' in first_para or 'MUST' in first_para), f'{sp}: requirement missing SHALL/MUST'
+              for sblock in re.split(r'^#### Scenario: ', txt, flags=re.M)[1:]:
+                  assert '- **WHEN**' in sblock and '- **THEN**' in sblock, f'{sp}: scenario missing WHEN/THEN'
+              print(f'[PASS] {sp} -> {len(reqs)} Requirements, {len(scens)} Scenarios')
+          "
+
+      - name: Secret & Credential Hygiene Scan
+        run: |
+          python -c "
+          import subprocess, sys
+          patterns = r'(AIzaSy[0-9A-Za-z_-]{20,}|sk-[0-9A-Za-z]{20,}|ya29\.[0-9A-Za-z_-]{20,}|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY)'
+          p = subprocess.run(['git', 'grep', '-n', '-E', patterns], capture_output=True, text=True)
+          if p.returncode == 0:
+              print('SECRET LEAK DETECTED:\n' + p.stdout)
+              sys.exit(1)
+          print('SECRET HYGIENE CHECK PASSED (0 leaks)')
+          "

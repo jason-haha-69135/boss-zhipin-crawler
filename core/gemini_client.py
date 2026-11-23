@@ -2,11 +2,9 @@
 基于 Interactions API 的智能自适应 Gemini 客户端 (Gemini Interactions API Client)
 核心特性：
 1. 全面采用 Google GenAI Interactions API (`client.interactions.create(...)`) 进行模型交互。
-2. 原生支持用户指定的四大模型：
-   - Gemini 3.8 Flash (`gemini-3.8-flash`)
-   - Gemini 3.5 Flash Light (`gemini-3.5-flash-lite`)
-   - Gemini 3.1 Pro (`gemini-3.1-pro-preview` / `gemini-3.1-pro`)
-   - Gemini 4 Argon (`gemini-4-argon`)
+2. 原生支持双核模型分工：
+   - Gemini 3.8 Flash (`gemini-3.8-flash`)：主链路提取、策略生成、意图解析与六维分析
+   - Gemini 4 Argon (`gemini-4-argon`)：全链路 Eval LLM-as-a-Judge 裁判与基准标注
 3. 针对本地与云端环境提供双通道自适应路由：
    - 通道 A【GCP Vertex AI Global Endpoint (`aiplatform.googleapis.com`, `location="global"`)】：
      自动加载本机 `gcloud` 激活账号或本地运行时配置的 OAuth ADC 凭证。
@@ -33,7 +31,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 import certifi
 
-# 强制为 macOS Python 3.14 注入根证书路径，并禁用 Corp Mac mTLS 客户端证书避免 Vertex AI 报错
+# 强制为 macOS Python 3.14 注入 certifi 根证书路径，并禁用系统 mTLS 客户端证书以避免 Vertex AI SSL 报错
 os.environ.setdefault("SSL_CERT_FILE", certifi.where())
 os.environ.setdefault("REQUESTS_CA_BUNDLE", certifi.where())
 os.environ.setdefault("CURL_CA_BUNDLE", certifi.where())
@@ -51,25 +49,12 @@ DEFAULT_GCLOUD_ACCOUNT = os.environ.get("GCLOUD_ACCOUNT", "")
 DEFAULT_STAGE1_EXTRACT_MODEL: str = os.environ.get("STAGE1_EXTRACT_MODEL", "gemini-3.8-flash")
 DEFAULT_LLM_JUDGE_MODEL: str = os.environ.get("LLM_JUDGE_MODEL", "gemini-4-argon")
 
-# 支持的四大核心模型定义与候选回退链
+# 支持的核心模型定义与候选回退链（主链路统一使用 gemini-3.8-flash，Eval LLM-as-a-Judge 统一使用 gemini-4-argon）
 MODEL_CANDIDATES_MAP: Dict[str, List[str]] = {
     "gemini-3.8-flash": [
         "gemini-3.8-flash",
         "gemini-2.5-flash",
         "gemini-flash-latest",
-        "gemini-2.0-flash",
-    ],
-    "gemini-3.5-flash-lite": [
-        "gemini-3.5-flash-lite",
-        "gemini-2.5-flash-lite",
-        "gemini-2.5-flash",
-        "gemini-3.8-flash",
-    ],
-    "gemini-3.1-pro": [
-        "gemini-3.1-pro-preview",
-        "gemini-3.1-pro",
-        "gemini-2.5-pro",
-        "gemini-3.8-flash",
     ],
     "gemini-4-argon": [
         "gemini-4-argon",
@@ -424,7 +409,7 @@ def create_interaction_with_fallback(
     使用 Google GenAI Interactions API (`client.interactions.create`) 调用 Gemini 模型：
     1. 支持纯文本 `prompt: str` 以及多模态内容块列表 `List[Dict[str, Any]]`
        （如 `{"type": "document", "data": base64, "mime_type": "application/pdf"}` 或 `{"type": "image", ...}`）。
-    2. 支持四大模型：`gemini-3.8-flash` / `gemini-3.5-flash-lite` / `gemini-3.1-pro` / `gemini-4-argon`
+    2. 主链路统一使用 `gemini-3.8-flash`，Eval LLM-as-a-Judge 统一使用 `gemini-4-argon`
     3. 在中国大陆 + Google Corp VPN 环境下，优先或自动切换至 GCP Vertex AI (`location="global"`)，
        彻底绕开 AI Studio (`generativelanguage.googleapis.com`) 的地理位置封锁 (`400 User location is not supported`)。
     4. 若遇到 SSL 证书错误 (`CERTIFICATE_VERIFY_FAILED`)，自动降级 `verify_ssl=False` 重试。
